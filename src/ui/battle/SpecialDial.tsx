@@ -38,12 +38,12 @@ export function SpecialDial({ snapshot }: { snapshot: HudSnapshot }) {
       </svg>
       <span className="dial__text">
         {ready ? (
-          <span className="stamp dial__ready">Call</span>
+          <span className="label dial__ready">Call</span>
         ) : (
           <span className="num dial__count">{Math.ceil(remaining)}</span>
         )}
       </span>
-      <span className="dial__name stamp">{def.name}</span>
+      <span className="label dial__name">{def.name}</span>
     </button>
   );
 }

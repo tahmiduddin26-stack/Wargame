@@ -94,3 +94,18 @@ export function XpGlyph({ size = 13, className }: Props) {
     </svg>
   );
 }
+
+/**
+ * Drawn close mark. A unicode multiplication sign standing in for an icon is a
+ * different stroke weight and optical size from everything around it.
+ */
+export function CloseGlyph({ size = 14, className }: Props) {
+  return (
+    <svg viewBox={box} width={size} height={size} className={className} aria-hidden="true">
+      <g stroke="currentColor" strokeWidth="2.6" strokeLinecap="square">
+        <path d="M5 5 L19 19" />
+        <path d="M19 5 L5 19" />
+      </g>
+    </svg>
+  );
+}

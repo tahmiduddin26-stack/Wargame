@@ -86,11 +86,13 @@
 }
 
 .hud__age {
-  border-left: 0.25em solid var(--accent);
+  /* Inset top rule rather than a coloured left edge: the side-tab callout is
+     the stock AI shape, and a capping rule is what instrument plates do. */
+  box-shadow: inset 0 2px 0 var(--accent);
 }
 
 .hud__enemy {
-  border-left: 0.25em solid var(--oxide);
+  box-shadow: inset 0 2px 0 var(--oxide);
 }
 
 .hud__age-line {
@@ -248,7 +250,7 @@
   width: 22em;
   background: rgba(18, 16, 14, 0.82);
   border: 1px solid var(--rule);
-  border-left: 0.25em solid var(--ochre);
+  box-shadow: inset 0 2px 0 var(--ochre);
   padding: 0.4em 0.8em;
 }
 
@@ -323,7 +325,7 @@
   color: var(--bone-dim);
 }
 
-.unit__role .stamp {
+.unit__role .label {
   font-size: 0.85em;
   letter-spacing: 0.1em;
 }
@@ -361,7 +363,7 @@
 .hud__mid {
   display: flex;
   align-items: end;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.8em;
 }
 
@@ -581,7 +583,7 @@
   cursor: pointer;
 }
 
-.picker__scrap .stamp {
+.picker__scrap .label {
   color: var(--oxide);
 }
 
@@ -694,7 +696,7 @@
   font-size: 1.2em;
 }
 
-.pause__head .stamp {
+.pause__head .label {
   margin-left: auto;
 }
 

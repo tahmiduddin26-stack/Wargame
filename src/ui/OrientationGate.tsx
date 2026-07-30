@@ -15,7 +15,6 @@ export function OrientationGate() {
     <div className="gate">
       <div className="gate__inner">
         <div className="hazard-rule" />
-        <p className="stamp gate__stamp">Orientation check</p>
         <h1 className="gate__title">Turn the device sideways</h1>
         <p className="gate__body">
           The battlefield is one long lane. Field Command needs the width to show you both gates,
@@ -30,7 +29,7 @@ export function OrientationGate() {
               <span className="gate__gate gate__gate--theirs" />
             </div>
           </div>
-          <p className="stamp">16 : 9 landscape</p>
+          <p className="label">16 : 9 landscape</p>
         </div>
 
         <button className="btn btn--ghost" onClick={() => void requestLandscapeLock()}>

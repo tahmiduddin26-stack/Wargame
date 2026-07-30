@@ -23,26 +23,26 @@ export function PauseSheet({
         <header className="pause__head">
           <span className="num">OP.{String(level.id).padStart(2, '0')}</span>
           <h3 className="pause__title">{level.name}</h3>
-          <span className="stamp">Held</span>
+          <span className="label">Held</span>
         </header>
 
         <p className="pause__brief">{level.briefing}</p>
 
         <dl className="pause__stats">
           <div>
-            <dt className="stamp">Your age</dt>
+            <dt className="label">Your age</dt>
             <dd className="num">{AGES[snapshot.ageIndex].name.replace(' Age', '')}</dd>
           </div>
           <div>
-            <dt className="stamp">Their age</dt>
+            <dt className="label">Their age</dt>
             <dd className="num">{AGES[snapshot.enemyAgeIndex].name.replace(' Age', '')}</dd>
           </div>
           <div>
-            <dt className="stamp">Kills</dt>
+            <dt className="label">Kills</dt>
             <dd className="num">{snapshot.stats.player.kills}</dd>
           </div>
           <div>
-            <dt className="stamp">Losses</dt>
+            <dt className="label">Losses</dt>
             <dd className="num">{snapshot.stats.player.losses}</dd>
           </div>
         </dl>
@@ -59,7 +59,7 @@ export function PauseSheet({
         )}
 
         <div className="pause__speed">
-          <span className="stamp">Speed</span>
+          <span className="label">Speed</span>
           {([1, 1.5, 2] as const).map((factor) => (
             <button
               key={factor}

@@ -2,13 +2,36 @@
  * FIELD COMMAND terminal.
  *
  * Direction: military-surplus control panel. Stamped metal plates, hairline
- * rules instead of shadows, stencil-condensed headings, every figure in mono
- * tabular so numbers line up in columns the way a readout does. One flourish
- * only: the ochre hazard stripe, used for locked and dangerous things.
+ * rules instead of shadows, condensed stencil-adjacent headings, every figure in
+ * tabular mono so numbers line up in columns the way a readout does.
  *
  * Sizing: the whole UI is measured in `em` against `.stage`, whose font-size is
  * 1% of the stage width. One HUD, any screen, no breakpoints.
+ *
+ * Two rules worth stating because they are easy to erode:
+ *   1. Mono is for figures only. Gold, reach, damage, timers, mission numbers.
+ *      Using it for prose labels turns it into a costume for "technical".
+ *   2. No label sits above a heading as an eyebrow. Identifiers ride inline with
+ *      the thing they identify.
  */
+
+/* Self-hosted: no CDN, no network dependency in the native shell, and no
+   silent fallback to the platform sans. See src/assets/fonts/LICENSES.md. */
+@font-face {
+  font-family: 'Oswald';
+  src: url('../assets/fonts/oswald-var.woff2') format('woff2-variations');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('../assets/fonts/jetbrains-mono-var.woff2') format('woff2-variations');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: block;
+}
 
 :root {
   /* Surfaces: warm near-black, not navy, not slate. */
@@ -20,31 +43,29 @@
 
   /* Hairlines. */
   --rule: #3a3125;
-  --rule-bright: #544733;
+  --rule-bright: #5c4e39;
 
-  /* Ink. */
+  /*
+   * Ink. Every one of these clears 4.5:1 on --steel-900; --bone-faint used to
+   * sit at 3.3:1, which failed WCAG AA on the labels that carry the readouts.
+   */
   --bone: #ece5d6;
-  --bone-dim: #a79a86;
-  --bone-faint: #6f6555;
+  --bone-dim: #b3a692;
+  --bone-faint: #928471;
 
   /* Functional accents. Ochre = go/affordable, oxide = threat/denied. */
-  --ochre: #d9a227;
+  --ochre: #e0aa2e;
   --ochre-deep: #8f6a12;
-  --oxide: #c0432c;
+  --oxide: #d9563b;
   --oxide-deep: #7a2a1a;
-  --moss: #7d9a5c;
+  --moss: #8fae6a;
 
-  --font-display: 'Oswald', 'Archivo Narrow', 'Roboto Condensed', 'Arial Narrow',
-    'Helvetica Neue Condensed', system-ui, sans-serif;
+  --font-display: 'Oswald', system-ui, sans-serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   /* The one flourish. */
-  --hazard: repeating-linear-gradient(
-    -45deg,
-    var(--ochre-deep) 0 6px,
-    #17130d 6px 12px
-  );
+  --hazard: repeating-linear-gradient(-45deg, var(--ochre-deep) 0 6px, #17130d 6px 12px);
 }
 
 * {
@@ -72,12 +93,26 @@ body {
   place-items: center;
 }
 
-/* Numbers are data. They always get mono tabular figures. */
+/* Figures. Mono, tabular, so columns of numbers align. */
 .num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
   letter-spacing: -0.02em;
+}
+
+/*
+ * Small label. Condensed display face, not mono: these are words, and mono
+ * prose is the "technical" costume. Uppercase is fine here because labels are
+ * two or three words; long copy never gets it.
+ */
+.label {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.05em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
 }
 
 h1,
@@ -86,10 +121,17 @@ h3,
 .display {
   font-family: var(--font-display);
   font-weight: 600;
-  font-stretch: 87.5%;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.01em;
+  line-height: 1.03;
   margin: 0;
+  /* Deliberately NOT uppercase globally. Long headings in caps are slower to
+     read; the few that want caps opt in with .display--caps. */
+  text-transform: none;
+}
+
+.display--caps {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ------------------------------------------------------------------ stage */
@@ -145,25 +187,60 @@ h3,
   opacity: 0.85;
 }
 
+/*
+ * Targeting brackets. This is how a primary surface is marked out, instead of a
+ * thick coloured border down one edge: that side-tab is the stock AI callout and
+ * a survey bracket belongs to this world anyway.
+ */
+.bracket {
+  position: relative;
+}
+
+.bracket::before,
+.bracket::after {
+  content: '';
+  position: absolute;
+  width: 1.1em;
+  height: 1.1em;
+  border-color: var(--ochre);
+  border-style: solid;
+  pointer-events: none;
+}
+
+.bracket::before {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+}
+
+.bracket::after {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 2px 2px 0;
+}
+
 .btn {
   appearance: none;
   font-family: var(--font-display);
   font-size: 1.5em;
   font-weight: 600;
-  font-stretch: 87.5%;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.05em;
   color: var(--bone);
   background: var(--steel-600);
   border: 1px solid var(--rule-bright);
   border-radius: 0;
-  padding: 0.75em 1.4em;
+  padding: 0.6em 1.4em;
   cursor: pointer;
   transition: background 120ms linear, border-color 120ms linear, color 120ms linear;
 }
 
 .btn:active {
   background: var(--steel-500);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ochre);
+  outline-offset: 2px;
 }
 
 .btn:disabled {
@@ -174,7 +251,7 @@ h3,
 
 .btn--primary {
   background: var(--ochre);
-  border-color: #f0bd44;
+  border-color: #f5c451;
   color: #171208;
 }
 
@@ -184,40 +261,37 @@ h3,
 
 .btn--danger {
   border-color: var(--oxide);
-  color: #e9a091;
+  color: #efb1a2;
 }
 
 .btn--ghost {
   background: transparent;
 }
 
-/* Stamped label, e.g. OP. 04 or AGE 2/5. */
-.stamp {
-  font-family: var(--font-mono);
-  font-size: 1.05em;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--bone-faint);
-}
-
 .tag {
-  font-family: var(--font-mono);
-  font-size: 0.95em;
-  letter-spacing: 0.12em;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.05em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--bone-dim);
   border: 1px solid var(--rule);
-  padding: 0.15em 0.5em;
+  padding: 0.1em 0.5em;
   /* Not a pill. */
   border-radius: 0;
   white-space: nowrap;
 }
 
 .tag--warn {
-  color: #e0a893;
+  color: #efb1a2;
   border-color: var(--oxide-deep);
 }
 
+/*
+ * Meters scale a transform rather than animating width. Animating width forces
+ * layout on every frame, and these update ~12 times a second during a battle.
+ * Consumers set --fill to a 0..1 ratio.
+ */
 .meter {
   position: relative;
   height: 0.7em;
@@ -228,9 +302,12 @@ h3,
 
 .meter__fill {
   position: absolute;
-  inset: 0 auto 0 0;
+  inset: 0;
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left center;
   background: var(--ochre);
-  transition: width 90ms linear;
+  transition: transform 90ms linear;
+  will-change: transform;
 }
 
 .meter__fill--enemy {
@@ -259,17 +336,9 @@ h3,
   background: var(--rule-bright);
 }
 
-.scroll-x {
-  overflow-x: auto;
-  overflow-y: hidden;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Motion is for state changes only. 120ms, no entrance animations. */
+/* Motion is for state changes only. One authored moment, nothing scattered. */
 @keyframes deny {
-  0%,
-  100% {
+  0% {
     transform: translateX(0);
   }
   25% {
@@ -278,10 +347,13 @@ h3,
   75% {
     transform: translateX(0.35em);
   }
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .deny {
-  animation: deny 160ms linear;
+  animation: deny 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes blink {
@@ -291,7 +363,7 @@ h3,
   }
   56%,
   100% {
-    opacity: 0.25;
+    opacity: 0.3;
   }
 }
 
@@ -303,5 +375,9 @@ h3,
   .deny,
   .blink {
     animation: none;
+  }
+
+  .meter__fill {
+    transition: none;
   }
 }

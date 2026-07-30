@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AGES } from '@/data/ages';
 import { SLOT_UNLOCK_COST, TURRET_BY_ID, TURRET_ROLE_LABEL, turretsForAge } from '@/data/turrets';
 import { bridge, type HudSnapshot } from '@/game/bridge';
-import { TurretGlyph } from '@/ui/components/Glyph';
+import { CloseGlyph, TurretGlyph } from '@/ui/components/Glyph';
 
 /**
  * Four mounts on the gate. Anything built here upgrades itself on evolve, so
@@ -15,7 +15,7 @@ export function TurretRack({ snapshot, noTurrets }: { snapshot: HudSnapshot; noT
   if (noTurrets) {
     return (
       <div className="rack rack--disabled">
-        <span className="stamp">Emplacements sealed</span>
+        <span className="label">Emplacements sealed</span>
       </div>
     );
   }
@@ -55,10 +55,10 @@ export function TurretRack({ snapshot, noTurrets }: { snapshot: HudSnapshot; noT
             {def ? (
               <>
                 <TurretGlyph role={def.role} size={16} />
-                <span className="stamp mount__label">{TURRET_ROLE_LABEL[def.role]}</span>
+                <span className="label mount__label">{TURRET_ROLE_LABEL[def.role]}</span>
               </>
             ) : (
-              <span className="stamp mount__label">Build</span>
+              <span className="label mount__label">Build</span>
             )}
           </button>
         );
@@ -67,9 +67,9 @@ export function TurretRack({ snapshot, noTurrets }: { snapshot: HudSnapshot; noT
       {picking !== null && (
         <div className="picker panel panel--raised" role="dialog" aria-label="Choose emplacement">
           <header className="picker__head">
-            <span className="stamp">Mount {picking + 1}</span>
+            <span className="label">Mount {picking + 1}</span>
             <button className="picker__close" onClick={() => setPicking(null)} aria-label="Close">
-              &times;
+              <CloseGlyph size={14} />
             </button>
           </header>
           <ul className="picker__list">
@@ -106,7 +106,7 @@ export function TurretRack({ snapshot, noTurrets }: { snapshot: HudSnapshot; noT
                 setPicking(null);
               }}
             >
-              <span className="stamp">Scrap for half</span>
+              <span className="label">Scrap for half</span>
             </button>
           )}
         </div>

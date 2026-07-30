@@ -25,6 +25,53 @@ npx cap add android && npx cap add ios
 npm run cap:sync
 ```
 
+## Design system
+
+The look is a field commander's control panel: warm near-black steel, hairline
+rules instead of shadows, condensed stencil-adjacent headings, and every figure
+in tabular mono so numbers line up the way a readout does. Sharp corners
+throughout, with one flourish (an ochre hazard stripe) reserved for locked and
+dangerous things.
+
+Two typefaces are self-hosted in `src/assets/fonts` (latin subsets, variable
+weight, 52 KB combined). They are bundled rather than loaded from a CDN because
+the game ships in a Capacitor shell with no guaranteed network, and because a
+display face that silently falls back to the platform sans is not the design:
+
+- **Oswald** carries the display voice: headings, unit names, buttons, labels.
+- **JetBrains Mono** carries every figure, so tabular columns align identically
+  on iOS, Android and desktop instead of shifting with whatever mono the platform
+  happens to ship.
+
+Licences and rationale: `src/assets/fonts/LICENSES.md`.
+
+Rules that are easy to erode, so they are stated in `src/styles/global.css`:
+
+- **Mono is for figures only.** Gold, reach, damage, timers, mission numbers.
+  Using it for prose labels turns it into a costume for "technical", so small
+  labels use the condensed display face via `.label`.
+- **No label sits above a heading as an eyebrow.** Identifiers such as the
+  mission number ride inline on the heading's baseline.
+- **No thick coloured border down one edge.** That side-tab is the stock
+  AI callout. Emphasis comes from an inset top rule, or from targeting brackets
+  (`.bracket`) on the two genuinely primary surfaces.
+- **Uppercase is for short labels**, never for headings or body copy.
+- **Meters animate a transform, not width**, because they update about twelve
+  times a second during a battle and animating width forces layout every frame.
+
+The design is checked with [impeccable](https://impeccable.style), whose detector
+runs 58 deterministic anti-pattern rules:
+
+```bash
+npx impeccable detect src                      # static scan
+CI=1 npx impeccable detect http://127.0.0.1:4173/   # rendered page
+```
+
+Its first run on this UI found eight issues: a hero eyebrow chip above the title,
+three runs of all-caps body text, four failing contrast pairs at 3.3:1, and a
+width transition. Both scans are clean now. A clean scan is not proof the design
+is good, but every finding it had was real.
+
 ## Why this stack
 
 **React + TypeScript + Vite** for the shell and HUD, **Phaser 3 + Matter.js** for
@@ -192,10 +239,6 @@ and visible escalation so nothing grinds forever; and the ragdolls.
 ## Known gaps
 
 - **No audio.** No sound effects or music yet.
-- **Fonts are not bundled.** The stack asks for a condensed grotesque (Oswald or
-  similar) and falls back to the platform sans, so headings render wider than
-  intended until a face is self-hosted. `--font-display` in `src/styles/global.css`
-  is the single swap point.
 - **No armoury.** Missions award credits and the store tracks them, but there is
   nothing to spend them on.
 - **Phaser is a 1.2MB chunk** (330KB gzipped). Already split out; worth lazy-loading

@@ -78,7 +78,7 @@ export function BattleView() {
         <Hud snapshot={snapshot} level={level} />
       ) : (
         <div className="battle-boot">
-          <span className="stamp blink">Deploying to {level.name}</span>
+          <span className="label blink">Deploying to {level.name}</span>
         </div>
       )}
     </>

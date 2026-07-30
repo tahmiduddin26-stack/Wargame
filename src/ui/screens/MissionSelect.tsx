@@ -23,7 +23,7 @@ export function MissionSelect() {
           Back
         </button>
         <h2 className="ms__title">Campaign</h2>
-        <span className="stamp ms__credits">
+        <span className="label ms__credits">
           Credits <span className="num">{credits.toLocaleString('en-GB')}</span>
         </span>
       </header>
@@ -31,12 +31,14 @@ export function MissionSelect() {
 
       <div className="ms__body scroll-y">
         {/* Featured op. One full-width row, not a card in a grid. */}
-        <section className="ms__featured">
+        <section className="ms__featured bracket">
           <div className="ms__featured-left">
-            <span className="num ms__featured-op">
-              OP.{String(featured.id).padStart(2, '0')}
-            </span>
-            <h3 className="ms__featured-name">{featured.name}</h3>
+            <h3 className="ms__featured-name">
+              <span className="num ms__featured-op">
+                {String(featured.id).padStart(2, '0')}
+              </span>
+              {featured.name}
+            </h3>
             <p className="ms__featured-brief">{featured.briefing}</p>
             <ul className="ms__mods">
               {featured.modifiers.length === 0 && (
@@ -52,19 +54,19 @@ export function MissionSelect() {
           <div className="ms__featured-right">
             <dl className="ms__spec">
               <div>
-                <dt className="stamp">Structure</dt>
+                <dt className="label">Structure</dt>
                 <dd className="num">{featured.baseHp.toLocaleString('en-GB')}</dd>
               </div>
               <div>
-                <dt className="stamp">War chest</dt>
+                <dt className="label">War chest</dt>
                 <dd className="num">{featured.startGold}</dd>
               </div>
               <div>
-                <dt className="stamp">Income</dt>
+                <dt className="label">Income</dt>
                 <dd className="num">{featured.income}/s</dd>
               </div>
               <div>
-                <dt className="stamp">Age cap</dt>
+                <dt className="label">Age cap</dt>
                 <dd className="num">{AGES[Math.min(featured.maxAge, 4)].name.split(' ')[0]}</dd>
               </div>
             </dl>
@@ -75,7 +77,7 @@ export function MissionSelect() {
         </section>
 
         <div className="ms__list-head">
-          <span className="stamp">All operations</span>
+          <span className="label">All operations</span>
           <div className="rule ms__list-rule" />
         </div>
 
@@ -98,7 +100,7 @@ export function MissionSelect() {
                 <span className="num ms__row-time">
                   {record?.bestTime != null ? mmss(record.bestTime) : '--:--'}
                 </span>
-                <span className="ms__row-state stamp">
+                <span className="label ms__row-state">
                   {state === 'cleared' ? 'Cleared' : state === 'open' ? 'Open' : 'Locked'}
                 </span>
                 <button

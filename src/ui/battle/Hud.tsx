@@ -74,13 +74,16 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
 
         <div className="hud__age" style={{ '--accent': age.accent } as React.CSSProperties}>
           <div className="hud__age-line">
-            <span className="stamp hud__age-name">{age.name.replace(' Age', '')}</span>
+            <span className="label hud__age-name">{age.name.replace(' Age', '')}</span>
             <span className="num hud__age-i">
               {snapshot.ageIndex + 1}/{AGES.length}
             </span>
           </div>
           <div className="meter hud__xp">
-            <div className="meter__fill meter__fill--xp" style={{ width: `${xpProgress * 100}%` }} />
+            <div
+              className="meter__fill meter__fill--xp"
+              style={{ '--fill': xpProgress } as React.CSSProperties}
+            />
           </div>
           <div className="hud__age-line">
             <span className="hud__res-icon">
@@ -101,7 +104,7 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
 
         <div className="hud__enemy">
           <div className="hud__age-line">
-            <span className="stamp">Their gate</span>
+            <span className="label">Their gate</span>
             <span className="num">
               {Math.round((snapshot.enemyBaseHp / snapshot.enemyBaseMaxHp) * 100)}%
             </span>
@@ -109,11 +112,13 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
           <div className="meter">
             <div
               className="meter__fill meter__fill--enemy"
-              style={{ width: `${(snapshot.enemyBaseHp / snapshot.enemyBaseMaxHp) * 100}%` }}
+              style={
+                { '--fill': snapshot.enemyBaseHp / snapshot.enemyBaseMaxHp } as React.CSSProperties
+              }
             />
           </div>
           <div className="hud__age-line">
-            <span className="stamp">
+            <span className="label">
               {AGES[snapshot.enemyAgeIndex].name.replace(' Age', '')}
             </span>
             <span className="num hud__field">
@@ -130,11 +135,11 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
         <div className={`hud__clock${snapshot.timeLeft <= 30 ? ' hud__clock--urgent' : ''}`}>
           <span className="num">{mmss(snapshot.timeLeft)}</span>
           {snapshot.escalation > 1.02 ? (
-            <span className="stamp hud__esc">
+            <span className="label hud__esc">
               Escalation <span className="num">&times;{snapshot.escalation.toFixed(1)}</span>
             </span>
           ) : (
-            <span className="stamp">OP.{String(level.id).padStart(2, '0')}</span>
+            <span className="label">OP.{String(level.id).padStart(2, '0')}</span>
           )}
         </div>
       </div>
@@ -143,11 +148,11 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
 
       {/* Your own structure, read against the gate it belongs to. */}
       <div className="hud__mine">
-        <span className="stamp">Your gate</span>
+        <span className="label">Your gate</span>
         <div className="meter hud__mine-meter">
           <div
             className="meter__fill"
-            style={{ width: `${(snapshot.baseHp / snapshot.baseMaxHp) * 100}%` }}
+            style={{ '--fill': snapshot.baseHp / snapshot.baseMaxHp } as React.CSSProperties}
           />
         </div>
         <span className="num">{snapshot.baseHp.toLocaleString('en-GB')}</span>
@@ -165,10 +170,10 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
               { '--accent': (nextAge ?? age).accent } as React.CSSProperties
             }
           >
-            <span className="stamp evolve__kicker">
+            <span className="label evolve__kicker">
               {capped ? 'Age capped' : nextAge ? 'Evolve to' : 'Final age'}
             </span>
-            <span className="evolve__name display">
+            <span className="evolve__name display display--caps">
               {capped || !nextAge ? age.name.replace(' Age', '') : nextAge.name.replace(' Age', '')}
             </span>
             <span className="num evolve__need">

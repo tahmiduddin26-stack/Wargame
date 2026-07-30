@@ -15,7 +15,7 @@ export function Settings() {
           Back
         </button>
         <h2 className="st__title">Settings</h2>
-        <span className="stamp">Stored on this device</span>
+        <span className="label">Stored on this device</span>
       </header>
       <div className="hazard-rule" />
 
@@ -112,7 +112,7 @@ function Toggle({
           <span className="st__note">{note}</span>
         </span>
         <span className={`st__switch${on ? ' st__switch--on' : ''}`}>
-          <span className="stamp">{on ? 'ON' : 'OFF'}</span>
+          <span className="label">{on ? 'ON' : 'OFF'}</span>
         </span>
       </button>
     </section>

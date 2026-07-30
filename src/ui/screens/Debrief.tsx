@@ -46,37 +46,39 @@ export function Debrief() {
       <div className="hazard-rule" />
       <div className="db__inner">
         <header className="db__head">
-          <span className="num db__op">OP.{String(level.id).padStart(2, '0')}</span>
-          <h2 className="db__verdict">{debrief.won ? 'Valley held' : 'Gate lost'}</h2>
+          <h2 className="db__verdict">
+            <span className="num db__op">{String(level.id).padStart(2, '0')}</span>
+            {debrief.won ? 'Valley held' : 'Gate lost'}
+          </h2>
           <p className="db__sub">{verdictLine(debrief, level.name)}</p>
         </header>
 
         <dl className="db__stats">
           <div>
-            <dt className="stamp">Duration</dt>
+            <dt className="label">Duration</dt>
             <dd className="num">{mmss(debrief.seconds)}</dd>
           </div>
           <div>
-            <dt className="stamp">Kills</dt>
+            <dt className="label">Kills</dt>
             <dd className="num">{debrief.kills}</dd>
           </div>
           <div>
-            <dt className="stamp">Losses</dt>
+            <dt className="label">Losses</dt>
             <dd className="num">{debrief.losses}</dd>
           </div>
           <div>
-            <dt className="stamp">Gold spent</dt>
+            <dt className="label">Gold spent</dt>
             <dd className="num">{debrief.goldSpent.toLocaleString('en-GB')}</dd>
           </div>
           <div>
-            <dt className="stamp">Final age</dt>
+            <dt className="label">Final age</dt>
             <dd className="num">
               {debrief.peakAge + 1}
               <span className="db__of">/{AGES.length}</span>
             </dd>
           </div>
           <div className="db__stat--reward">
-            <dt className="stamp">Credits</dt>
+            <dt className="label">Credits</dt>
             <dd className="num">{debrief.reward > 0 ? `+${debrief.reward}` : '0'}</dd>
           </div>
         </dl>

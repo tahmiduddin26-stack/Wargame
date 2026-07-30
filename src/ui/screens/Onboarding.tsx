@@ -44,12 +44,12 @@ const STEPS: Step[] = [
       <div className="ob-split">
         <div className="ob-pill">
           <GoldGlyph size={15} />
-          <span className="stamp">Gold</span>
+          <span className="label">Gold</span>
           <span className="num">spends</span>
         </div>
         <div className="ob-pill ob-pill--xp">
           <XpGlyph size={15} />
-          <span className="stamp">Experience</span>
+          <span className="label">Experience</span>
           <span className="num">accrues</span>
         </div>
       </div>
@@ -64,7 +64,7 @@ const STEPS: Step[] = [
       <div className="ob-mounts">
         {['RAPID', 'MARKSMAN', 'MORTAR', 'SEALED'].map((label, i) => (
           <div className={`ob-mount${i === 3 ? ' ob-mount--sealed' : ''}`} key={label}>
-            <span className="stamp">{label}</span>
+            <span className="label">{label}</span>
           </div>
         ))}
       </div>
@@ -108,7 +108,10 @@ export function Onboarding() {
     <div className="ob">
       <div className="hazard-rule" />
       <header className="ob__head">
-        <span className="stamp">Field briefing</span>
+        <span className="label">
+          Field briefing <span className="num">{step + 1}</span> of{' '}
+          <span className="num">{STEPS.length}</span>
+        </span>
         <button className="btn btn--ghost ob__skip" onClick={finish}>
           Skip
         </button>
@@ -116,11 +119,15 @@ export function Onboarding() {
 
       <div className="ob__body">
         <div className="ob__text">
-          <span className="num ob__step">{String(step + 1).padStart(2, '0')}</span>
-          <h2 className="ob__title">{current.title}</h2>
+          {/* The step number is real sequence information, so it stays, but it
+              rides inline with the title rather than stacking above it. */}
+          <h2 className="ob__title">
+            <span className="num ob__step">{String(step + 1).padStart(2, '0')}</span>
+            {current.title}
+          </h2>
           <p className="ob__copy">{current.body}</p>
           <div className="ob__rule">
-            <span className="stamp">Remember</span>
+            <span className="label">Remember</span>
             <p>{current.rule}</p>
           </div>
         </div>

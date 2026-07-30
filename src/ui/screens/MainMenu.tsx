@@ -26,8 +26,9 @@ export function MainMenu() {
 
       <div className="menu__grid">
         <header className="menu__brand">
-          <p className="stamp">Valley grid 47-K &middot; Field command terminal</p>
-          <h1 className="menu__title">
+          {/* No kicker above the title. The identifier lives in the footer,
+              where it reads as a plate stamp instead of an eyebrow. */}
+          <h1 className="menu__title display--caps">
             Age of<br />War
           </h1>
           <div className="menu__underline" />
@@ -37,18 +38,18 @@ export function MainMenu() {
 
           <dl className="menu__readout">
             <div>
-              <dt className="stamp">Ops cleared</dt>
+              <dt className="label">Ops cleared</dt>
               <dd className="num">
                 {String(cleared).padStart(2, '0')}
                 <span className="menu__of">/{LEVELS.length}</span>
               </dd>
             </div>
             <div>
-              <dt className="stamp">Credits</dt>
+              <dt className="label">Credits</dt>
               <dd className="num">{credits.toLocaleString('en-GB')}</dd>
             </div>
             <div>
-              <dt className="stamp">Build</dt>
+              <dt className="label">Build</dt>
               <dd className="num">{BUILD}</dd>
             </div>
           </dl>
@@ -56,17 +57,18 @@ export function MainMenu() {
 
         <nav className="menu__actions">
           {/* Featured row. Deliberately not one of three equal cards. */}
-          <button className="menu__deploy" onClick={deploy}>
-            <span className="menu__deploy-head">
-              <span className="stamp">{fresh ? 'Begin campaign' : 'Resume campaign'}</span>
+          <button className="menu__deploy bracket" onClick={deploy}>
+            {/* The op number rides inline with the name it identifies. */}
+            <span className="menu__deploy-name display">
               <span className="num menu__deploy-op">
-                OP.{String(next.id).padStart(2, '0')}
+                {String(next.id).padStart(2, '0')}
               </span>
+              {next.name}
             </span>
-            <span className="menu__deploy-name display">{next.name}</span>
             <span className="menu__deploy-brief">{next.briefing}</span>
             <span className="menu__deploy-go display">
-              {onboardingDone ? 'Deploy' : 'Run briefing'}
+              {fresh ? 'Begin campaign' : 'Resume campaign'}
+              <span className="menu__deploy-arrow" aria-hidden="true" />
             </span>
           </button>
 
@@ -89,9 +91,13 @@ export function MainMenu() {
         </nav>
       </div>
 
+      {/* Plate stamps. Kept to two or three words each: uppercase is for short
+          labels, and a 40-character tracked-caps line is a slog to read. */}
       <footer className="menu__foot">
-        <span className="stamp">Landscape only. Rotate to play.</span>
-        <span className="stamp">Placeholder art. Ragdolls are real.</span>
+        <span className="label">Grid 47-K</span>
+        <span className="label">Field command</span>
+        <span className="menu__foot-spacer" />
+        <span className="label">Placeholder art</span>
       </footer>
     </div>
   );

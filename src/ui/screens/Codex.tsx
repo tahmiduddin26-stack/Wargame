@@ -26,7 +26,7 @@ export function Codex() {
           Back
         </button>
         <h2 className="cx__title">Roster</h2>
-        <span className="stamp cx__count">
+        <span className="label cx__count">
           <span className="num">{AGES.length * 4}</span> units &middot;{' '}
           <span className="num">{AGES.length * 3}</span> emplacements
         </span>
@@ -53,20 +53,20 @@ export function Codex() {
           <h3 className="cx__era-name">{age.name}</h3>
           <p className="cx__era-tag">{age.tagline}</p>
           <div className="cx__era-stats">
-            <span className="stamp">
+            <span className="label">
               Unlock at <span className="num">{age.evolveXp.toLocaleString('en-GB')}</span> XP
             </span>
-            <span className="stamp">
+            <span className="label">
               Gate structure <span className="num">&times;{age.baseArmour}</span>
             </span>
-            <span className="stamp">
+            <span className="label">
               Special <b>{special.name}</b> <span className="num">{special.cooldown}s</span>
             </span>
           </div>
         </div>
 
         <table className="cx__table">
-          <caption className="stamp cx__caption">Field units</caption>
+          <caption className="label cx__caption">Field units</caption>
           <thead>
             <tr>
               <th scope="col">Role</th>
@@ -86,7 +86,7 @@ export function Codex() {
               <tr key={u.id}>
                 <td className="cx__role">
                   <UnitGlyph role={u.role} size={15} />
-                  <span className="stamp">{ROLE_LABEL[u.role]}</span>
+                  <span className="label">{ROLE_LABEL[u.role]}</span>
                 </td>
                 <td>
                   <b className="cx__name">{u.name}</b>
@@ -109,7 +109,7 @@ export function Codex() {
         </table>
 
         <table className="cx__table">
-          <caption className="stamp cx__caption">Emplacements</caption>
+          <caption className="label cx__caption">Emplacements</caption>
           <thead>
             <tr>
               <th scope="col">Role</th>
@@ -126,7 +126,7 @@ export function Codex() {
               <tr key={t.id}>
                 <td className="cx__role">
                   <TurretGlyph role={t.role} size={15} />
-                  <span className="stamp">{TURRET_ROLE_LABEL[t.role]}</span>
+                  <span className="label">{TURRET_ROLE_LABEL[t.role]}</span>
                 </td>
                 <td>
                   <b className="cx__name">{t.name}</b>

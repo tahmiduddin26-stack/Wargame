@@ -30,7 +30,8 @@ await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(500);
 await page.screenshot({ path: `${OUT}/01-menu.png` });
 
-await page.getByRole('button', { name: /Run briefing|Deploy/ }).first().click();
+// Target the featured deploy card by class: its copy is design-owned and moves.
+await page.locator('.menu__deploy').click();
 await page.waitForTimeout(350);
 await page.screenshot({ path: `${OUT}/02-briefing.png` });
 for (let i = 0; i < 2; i++) {

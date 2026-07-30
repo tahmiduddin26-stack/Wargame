@@ -35,7 +35,7 @@ export function UnitBar({ snapshot }: { snapshot: HudSnapshot }) {
             )}
             <span className="unit__role">
               <UnitGlyph role={def.role} size={14} />
-              <span className="stamp">{ROLE_LABEL[def.role]}</span>
+              <span className="label">{ROLE_LABEL[def.role]}</span>
             </span>
             <span className="unit__name">{def.name}</span>
             <span className="unit__foot">
