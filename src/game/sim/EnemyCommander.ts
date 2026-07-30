@@ -2,7 +2,8 @@ import { AGES } from '@/data/ages';
 import { SLOT_UNLOCK_COST } from '@/data/turrets';
 import { turretsForAge } from '@/data/turrets';
 import { unitsForAge } from '@/data/units';
-import type { TurretRole, UnitRole } from '@/data/types';
+import type { ArmourClass, TurretRole, UnitRole } from '@/data/types';
+import { ARMOUR_TABLE } from '@/data/types';
 import { BattleSim } from './BattleSim';
 import { Rng } from './rng';
 
@@ -33,12 +34,12 @@ export class EnemyCommander {
   update(dt: number): void {
     const sim = this.sim;
     if (sim.over) return;
-    if (sim.elapsed < sim.level.enemy.warmup) return;
+    if (sim.elapsed < sim.enemyPlan.warmup) return;
 
     this.thinkTimer -= dt;
     if (this.thinkTimer > 0) return;
 
-    const aggression = sim.level.enemy.aggression;
+    const aggression = sim.enemyPlan.aggression;
     // Aggressive commanders act roughly twice as often.
     this.thinkTimer = this.rng.range(0.55, 1.5) * (1.7 - aggression);
 
@@ -50,25 +51,44 @@ export class EnemyCommander {
     this.considerUnits(threat, aggression);
   }
 
-  /** How much player pressure is inside the enemy half. */
-  private assessThreat(): { units: number; hp: number; nearest: number; hasArty: boolean } {
+  /**
+   * How much player pressure is inside the enemy half, and what it is made of.
+   * The armour breakdown is what lets the commander answer a push with the right
+   * counter instead of buying whatever is most expensive.
+   */
+  private assessThreat(): {
+    units: number;
+    hp: number;
+    nearest: number;
+    hasArty: boolean;
+    /** Armour class holding the most enemy hitpoints in range. */
+    dominantArmour: ArmourClass;
+  } {
     const sim = this.sim;
     const gate = sim.enemy.baseX;
     let units = 0;
     let hp = 0;
     let nearest = Infinity;
     let hasArty = false;
+    const byArmour: Record<ArmourClass, number> = { flesh: 0, plate: 0, hull: 0 };
+
     for (const u of sim.units) {
       if (u.faction !== 'player') continue;
       const d = gate - u.x;
       if (d < 620) {
         units++;
         hp += u.hp;
+        byArmour[u.def.armour] += u.hp;
         if (d < nearest) nearest = d;
         if (u.def.role === 'artillery') hasArty = true;
       }
     }
-    return { units, hp, nearest, hasArty };
+
+    let dominantArmour: ArmourClass = 'flesh';
+    for (const cls of ['plate', 'hull'] as ArmourClass[]) {
+      if (byArmour[cls] > byArmour[dominantArmour]) dominantArmour = cls;
+    }
+    return { units, hp, nearest, hasArty, dominantArmour };
   }
 
   private considerSpecial(threat: { units: number; nearest: number }): boolean {
@@ -91,7 +111,11 @@ export class EnemyCommander {
     return true;
   }
 
-  private considerDefence(threat: { units: number; hasArty: boolean }): boolean {
+  private considerDefence(threat: {
+    units: number;
+    hasArty: boolean;
+    dominantArmour: ArmourClass;
+  }): boolean {
     const sim = this.sim;
     const c = sim.enemy;
     if (sim.level.modifiers.includes('no-turrets')) return false;
@@ -101,9 +125,11 @@ export class EnemyCommander {
     const options = turretsForAge(age);
 
     if (empty >= 0) {
-      // Match the emplacement to what is actually coming down the lane.
+      // Match the emplacement to what is actually coming down the lane: armoured
+      // pushes want the armour-piercing mount, crowds want splash.
       let want: TurretRole = 'rapid';
-      if (threat.hasArty) want = 'marksman';
+      if (threat.dominantArmour !== 'flesh') want = 'marksman';
+      else if (threat.hasArty) want = 'marksman';
       else if (threat.units >= 4) want = 'mortar';
       const pick = options.find((t) => t.role === want) ?? options[0];
       if (c.gold >= pick.gold) {
@@ -130,7 +156,10 @@ export class EnemyCommander {
     return false;
   }
 
-  private considerUnits(threat: { units: number }, aggression: number): void {
+  private considerUnits(
+    threat: { units: number; dominantArmour: ArmourClass },
+    aggression: number,
+  ): void {
     const sim = this.sim;
     const c = sim.enemy;
     const age = AGES[c.ageIndex].id;
@@ -161,9 +190,21 @@ export class EnemyCommander {
       }
     }
 
+    /*
+     * Score = cost weighted by how well the damage kind lands on what the player
+     * is actually fielding.
+     *
+     * Cost has to stay the dominant term. Only the front couple of ranks can
+     * reach each other, so quality per slot beats quantity, and sorting by the
+     * counter multiplier alone made the commander pour gold into fragile
+     * artillery whenever the player fielded infantry: it picked the best matchup
+     * rather than the best unit, and measurably lost more matches for it.
+     */
+    const score = (u: (typeof roster)[number]) =>
+      u.gold * ARMOUR_TABLE[u.damageKind][threat.dominantArmour];
     const wanted = roster
       .filter((u) => this.bought[u.role] < target[u.role])
-      .sort((a, b) => b.gold - a.gold);
+      .sort((a, b) => score(b) - score(a));
 
     for (const def of wanted) {
       if (c.gold < def.gold) continue;

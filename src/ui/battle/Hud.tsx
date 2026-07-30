@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { AGES } from '@/data/ages';
 import type { LevelDef } from '@/data/types';
+import { audio } from '@/game/audio/Audio';
 import { bridge, type HudSnapshot } from '@/game/bridge';
 import { useGame } from '@/state/store';
 import { GoldGlyph, XpGlyph } from '@/ui/components/Glyph';
+import { BattleCoach } from './BattleCoach';
 import { LaneStrip } from './LaneStrip';
 import { PauseSheet } from './PauseSheet';
 import { SpecialDial } from './SpecialDial';
@@ -26,6 +28,9 @@ function mmss(seconds: number): string {
  */
 export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDef }) {
   const showLaneStrip = useGame((s) => s.settings.showLaneStrip);
+  const coachedMissions = useGame((s) => s.records);
+  // Coaching only on the first mission, and only until it has been cleared once.
+  const coach = level.id === 1 && !coachedMissions[1]?.cleared && !snapshot.survival;
   const [denied, setDenied] = useState(false);
   const [paused, setPaused] = useState(false);
 
@@ -36,6 +41,7 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
   useEffect(
     () =>
       bridge.onReject(() => {
+        audio.uiDeny();
         setDenied(true);
         window.setTimeout(() => setDenied(false), 180);
       }),
@@ -132,16 +138,35 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
           is decided on gate integrity and then on ground held, so the player has
           to be able to see how long they have to break through.
         */}
-        <div className={`hud__clock${snapshot.timeLeft <= 30 ? ' hud__clock--urgent' : ''}`}>
-          <span className="num">{mmss(snapshot.timeLeft)}</span>
-          {snapshot.escalation > 1.02 ? (
+        {snapshot.survival ? (
+          <div
+            className={`hud__clock${snapshot.waveCountdown <= 4 ? ' hud__clock--urgent' : ''}`}
+          >
+            <span className="num">WAVE {snapshot.wave}</span>
             <span className="label hud__esc">
-              Escalation <span className="num">&times;{snapshot.escalation.toFixed(1)}</span>
+              {snapshot.veterancy > 1.02 ? (
+                <>
+                  Veterancy <span className="num">&times;{snapshot.veterancy.toFixed(2)}</span>
+                </>
+              ) : (
+                <>
+                  Next in <span className="num">{Math.ceil(snapshot.waveCountdown)}s</span>
+                </>
+              )}
             </span>
-          ) : (
-            <span className="label">OP.{String(level.id).padStart(2, '0')}</span>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className={`hud__clock${snapshot.timeLeft <= 30 ? ' hud__clock--urgent' : ''}`}>
+            <span className="num">{mmss(snapshot.timeLeft)}</span>
+            {snapshot.escalation > 1.02 ? (
+              <span className="label hud__esc">
+                Escalation <span className="num">&times;{snapshot.escalation.toFixed(1)}</span>
+              </span>
+            ) : (
+              <span className="label">OP.{String(level.id).padStart(2, '0')}</span>
+            )}
+          </div>
+        )}
       </div>
 
       {showLaneStrip && <LaneStrip snapshot={snapshot} />}
@@ -190,6 +215,8 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
 
         <SpecialDial snapshot={snapshot} />
       </div>
+
+      {coach && !paused && <BattleCoach snapshot={snapshot} />}
 
       {paused && <PauseSheet snapshot={snapshot} level={level} onResume={() => pause(false)} />}
     </div>

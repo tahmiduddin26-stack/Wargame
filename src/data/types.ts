@@ -44,6 +44,8 @@ export interface UnitDef {
   hp: number;
   damage: number;
   damageKind: DamageKind;
+  /** What this unit is wearing. Decides which damage kinds hurt it. */
+  armour: ArmourClass;
   /** Splash radius in world px. 0 means single target. */
   blast: number;
   /** Attack reach in world px, measured hitbox edge to hitbox edge. */
@@ -146,3 +148,53 @@ export interface LevelDef {
   /** Awarded on first clear. Spent in the armoury between missions. */
   reward: number;
 }
+
+/**
+ * Armour class. Decides how each damage kind lands.
+ *
+ *   flesh  unarmoured bodies: infantry, and the odd artillery crew
+ *   plate  armour and mounts: knights, cavalry, powered suits
+ *   hull   vehicles, tracks and walkers
+ */
+export type ArmourClass = 'flesh' | 'plate' | 'hull';
+
+/**
+ * The counter table. Four damage kinds against three armour classes.
+ *
+ * The original's sequel documents real counters ("Dino Riders are weak to
+ * Slingers", anti-armour troops answering heavies), and this reproduces that
+ * relationship rather than inventing one. Before it existed, `damageKind` was
+ * decorative: four flavours of damage that all resolved identically, which made
+ * the four roles cost tiers rather than answers to each other.
+ *
+ * Assignment is by role and holds across all five ages, so it is learned once:
+ *   melee impact / ranged pierce / artillery blast, and armour follows the body.
+ */
+export const ARMOUR_TABLE: Record<DamageKind, Record<ArmourClass, number>> = {
+  // Clubs, hooves and small arms. Brutal on bodies, useless on a tank.
+  impact: { flesh: 1.1, plate: 0.6, hull: 0.5 },
+  // Arrows, bullets, bayonets, shaped charges. Punches armour, wasted on chaff.
+  pierce: { flesh: 0.85, plate: 1.35, hull: 1.15 },
+  // High explosive. Clears a packed rank; a shell does little to a hull.
+  blast: { flesh: 1.15, plate: 0.9, hull: 0.7 },
+  // Rail, ion, plasma. The late-age answer to everything solid.
+  energy: { flesh: 1.0, plate: 1.2, hull: 1.45 },
+};
+
+/*
+ * The vs-flesh column averages ~1.0 on purpose. Most units in the game are
+ * unarmoured, so a table whose flesh column averaged 1.11 quietly inflated all
+ * damage rather than redistributing it: time to kill dropped everywhere and the
+ * campaign got measurably easier across every strategy. The spread is what
+ * matters, not the level.
+ */
+
+export function armourMultiplier(kind: DamageKind, armour: ArmourClass): number {
+  return ARMOUR_TABLE[kind][armour];
+}
+
+export const ARMOUR_LABEL: Record<ArmourClass, string> = {
+  flesh: 'UNARMOURED',
+  plate: 'PLATED',
+  hull: 'HULL',
+};

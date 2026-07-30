@@ -11,8 +11,10 @@ import { LEVELS, levelById } from '../src/data/levels';
 import { unitsForAge } from '../src/data/units';
 import { turretsForAge } from '../src/data/turrets';
 import { SIM } from '../src/game/config';
+import { DIFFICULTIES, type DifficultyId } from '../src/data/difficulty';
 import { BattleSim } from '../src/game/sim/BattleSim';
 import { EnemyCommander } from '../src/game/sim/EnemyCommander';
+import { SURVIVAL_LEVEL, SurvivalDirector } from '../src/game/sim/SurvivalDirector';
 
 interface Result {
   level: number;
@@ -108,9 +110,14 @@ function playerTurn(sim: BattleSim, strategy: Strategy, tick: number): void {
   }
 }
 
-function run(levelId: number, strategy: Strategy, verbose = false): Result {
+function run(
+  levelId: number,
+  strategy: Strategy,
+  tier: DifficultyId = 'normal',
+  verbose = false,
+): Result {
   const level = levelById(levelId);
-  const sim = new BattleSim(level, 1337 + levelId * 977);
+  const sim = new BattleSim(level, 1337 + levelId * 977, tier);
   const ai = new EnemyCommander(sim, (1337 + levelId * 977) ^ 0x5f3a);
 
   let think = 0;
@@ -192,10 +199,12 @@ function fmt(seconds: number): string {
 const only = process.argv[2] ? Number(process.argv[2]) : null;
 const targets = only ? [levelById(only)] : LEVELS;
 const strategies: Strategy[] = ['greedy', 'swarm', 'mixed'];
+const tier = (process.env.TIER as DifficultyId) ?? 'normal';
+console.log(`tier: ${tier}`);
 
 for (const strategy of strategies) {
   const rows: Result[] = [];
-  for (const level of targets) rows.push(run(level.id, strategy, !!only));
+  for (const level of targets) rows.push(run(level.id, strategy, tier, !!only));
 
   console.log(`\n== ${strategy.toUpperCase()} ==`);
   console.log(
@@ -223,4 +232,35 @@ for (const strategy of strategies) {
   }
   const wins = rows.filter((r) => r.winner === 'player').length;
   console.log(`${strategy}: player wins ${wins}/${rows.length}`);
+}
+
+
+/*
+ * Survival probe. Waves are authored, so the interesting number is how many a
+ * given plan holds before the gate goes down, and whether it ends at all.
+ */
+function runSurvival(strategy: Strategy): { waves: number; seconds: number } {
+  const sim = new BattleSim(SURVIVAL_LEVEL, 909, 'normal');
+  const waves = new SurvivalDirector(sim, 0x77a1);
+  let think = 0;
+  let ticks = 0;
+  const limit = 60 * 25;
+
+  while (!sim.over && sim.elapsed < limit) {
+    sim.advance(SIM.step);
+    waves.update(SIM.step);
+    think -= SIM.step;
+    if (think <= 0) {
+      think = 0.4;
+      playerTurn(sim, strategy, ticks++);
+    }
+    sim.clearEvents();
+  }
+  return { waves: waves.wavesSent, seconds: sim.elapsed };
+}
+
+console.log('\n== SURVIVAL ==');
+for (const strategy of strategies) {
+  const r = runSurvival(strategy);
+  console.log(`${strategy.padEnd(7)} held ${String(r.waves).padStart(3)} waves in ${fmt(r.seconds)}`);
 }

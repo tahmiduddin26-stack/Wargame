@@ -5,7 +5,8 @@ import { nextMission, useGame } from '@/state/store';
 const BUILD = '0.1.0';
 
 export function MainMenu() {
-  const { go, startMission } = useGame();
+  const { go, startMission, startSurvival } = useGame();
+  const survivalBest = useGame((s) => s.survivalBest);
   const records = useGame((s) => s.records);
   const credits = useGame((s) => s.credits);
   const onboardingDone = useGame((s) => s.onboardingDone);
@@ -49,6 +50,13 @@ export function MainMenu() {
               <dd className="num">{credits.toLocaleString('en-GB')}</dd>
             </div>
             <div>
+              <dt className="label">Best watch</dt>
+              <dd className="num">
+                {survivalBest > 0 ? survivalBest : '--'}
+                <span className="menu__of"> waves</span>
+              </dd>
+            </div>
+            <div>
               <dt className="label">Build</dt>
               <dd className="num">{BUILD}</dd>
             </div>
@@ -78,6 +86,14 @@ export function MainMenu() {
             </button>
             <button className="btn btn--ghost" onClick={() => go('codex')}>
               Roster
+            </button>
+          </div>
+          <div className="menu__row">
+            <button className="btn btn--ghost" onClick={() => go('armoury')}>
+              Armoury
+            </button>
+            <button className="btn btn--ghost" onClick={startSurvival}>
+              Survival
             </button>
           </div>
           <div className="menu__row">

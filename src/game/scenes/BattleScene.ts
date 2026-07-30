@@ -2,7 +2,10 @@ import Phaser from 'phaser';
 import { AGES, ageAt, xpToNextAge } from '@/data/ages';
 import { SPECIALS } from '@/data/specials';
 import { UNIT_BY_ID } from '@/data/units';
+import type { DifficultyId } from '@/data/difficulty';
+import { NO_PERKS, type PerkEffects } from '@/data/perks';
 import type { Faction, LevelDef } from '@/data/types';
+import { audio } from '@/game/audio/Audio';
 import { bridge, type HudSnapshot, type LaneBlip } from '@/game/bridge';
 import { CAMERA, MATTER_CATEGORY, SIM, VIEW, WORLD } from '@/game/config';
 import { Backdrop } from '@/game/render/Backdrop';
@@ -12,11 +15,17 @@ import { createRagdollTextures, RagdollPool } from '@/game/render/RagdollPool';
 import { UnitView } from '@/game/render/UnitView';
 import { BattleSim } from '@/game/sim/BattleSim';
 import { EnemyCommander } from '@/game/sim/EnemyCommander';
+import { SURVIVAL_LEVEL, SurvivalDirector } from '@/game/sim/SurvivalDirector';
 import type { SimProjectile } from '@/game/sim/types';
 
 export interface BattleSceneData {
   level: LevelDef;
   seed?: number;
+  difficulty?: DifficultyId;
+  /** Resolved armoury multipliers. Player side only. */
+  perks?: PerkEffects;
+  /** Survival replaces the enemy commander with an authored wave director. */
+  survival?: boolean;
   /** Corpse budget, lowered by the "reduced corpses" setting. */
   corpseCap?: number;
   /** Battle speed from settings. Applied on the first frame. */
@@ -27,7 +36,8 @@ const SNAPSHOT_INTERVAL = 0.08;
 
 export class BattleScene extends Phaser.Scene {
   private sim!: BattleSim;
-  private ai!: EnemyCommander;
+  private ai: EnemyCommander | null = null;
+  private waves: SurvivalDirector | null = null;
   private backdrop!: Backdrop;
   private playerBase!: BaseView;
   private enemyBase!: BaseView;
@@ -52,8 +62,20 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(data: BattleSceneData): void {
-    this.sim = new BattleSim(data.level, data.seed ?? 1337);
-    this.ai = new EnemyCommander(this.sim, (data.seed ?? 1337) ^ 0x5f3a);
+    const survival = !!data.survival;
+    this.sim = new BattleSim(
+      survival ? SURVIVAL_LEVEL : data.level,
+      data.seed ?? 1337,
+      data.difficulty ?? 'normal',
+      data.perks ?? NO_PERKS,
+    );
+    if (survival) {
+      this.waves = new SurvivalDirector(this.sim, (data.seed ?? 1337) ^ 0x77a1);
+      this.ai = null;
+    } else {
+      this.ai = new EnemyCommander(this.sim, (data.seed ?? 1337) ^ 0x5f3a);
+      this.waves = null;
+    }
     this.finished = false;
     this.paused = false;
     this.speed = data.speed ?? 1;
@@ -79,6 +101,9 @@ export class BattleScene extends Phaser.Scene {
 
     this.setupCameraDrag();
     this.exposeQaHandle();
+
+    audio.unlock();
+    audio.startBed(0);
 
     // Both events, because destroying the game from React does not reliably
     // route through SHUTDOWN.
@@ -147,7 +172,8 @@ export class BattleScene extends Phaser.Scene {
 
     if (!this.paused && !this.finished) {
       this.sim.advance(dt);
-      this.ai.update(dt);
+      this.ai?.update(dt);
+      this.waves?.update(dt);
       this.drainEvents();
       this.syncUnits(dt);
       this.syncShells();
@@ -162,6 +188,10 @@ export class BattleScene extends Phaser.Scene {
     if (this.snapshotTimer <= 0) {
       this.snapshotTimer = SNAPSHOT_INTERVAL;
       this.publish();
+      // Tension is how far the enemy has pushed toward your gate.
+      const span = Math.max(1, this.sim.enemy.baseX - this.sim.player.baseX);
+      const pushed = (this.sim.enemy.baseX - this.sim.frontLine('enemy')) / span;
+      audio.setTension(Phaser.Math.Clamp(1 - pushed * 1.6, 0, 1));
     }
   }
 
@@ -223,6 +253,7 @@ export class BattleScene extends Phaser.Scene {
         case 'spawn': {
           const def = UNIT_BY_ID[ev.defId];
           if (!def) break;
+          audio.spawn(this.panAt(this.sim.commander(ev.faction).baseX));
           const accent = Phaser.Display.Color.HexStringToColor(
             ageAt(this.sim.commander(ev.faction).ageIndex).accent,
           ).color;
@@ -256,6 +287,7 @@ export class BattleScene extends Phaser.Scene {
 
         case 'shot':
           this.fx.muzzle(ev.sx, ev.sy, ev.kind);
+          if (this.isOnScreen(ev.sx)) audio.shot(ev.kind, ev.arc, this.panAt(ev.sx));
           if (!ev.arc) {
             const p = this.sim.projectiles.find((q) => q.pid === ev.pid);
             if (p) this.fx.tracer(p.sx, p.sy, p.tx, p.ty, p.kind);
@@ -264,6 +296,10 @@ export class BattleScene extends Phaser.Scene {
 
         case 'impact':
           this.fx.impact(ev.x, ev.y, ev.blast, ev.kind, ev.heavy);
+          if (this.isOnScreen(ev.x)) {
+            if (ev.blast > 0) audio.explosion(ev.blast, this.panAt(ev.x));
+            else audio.hit(ev.kind, ev.heavy, this.panAt(ev.x));
+          }
           if (ev.blast > 0) {
             this.ragdolls.shockwave(ev.x, ev.blast * 1.6, ev.blast / 90);
             if (this.isOnScreen(ev.x)) this.fx.shake(ev.blast > 80);
@@ -272,11 +308,13 @@ export class BattleScene extends Phaser.Scene {
 
         case 'melee':
           this.fx.impact(ev.x, ev.y, ev.heavy ? 18 : 10, ev.kind, false);
+          if (this.isOnScreen(ev.x)) audio.hit(ev.kind, ev.heavy, this.panAt(ev.x));
           break;
 
         case 'baseHit': {
           const view = ev.faction === 'player' ? this.playerBase : this.enemyBase;
           view.flash();
+          if (this.isOnScreen(ev.x)) audio.gateHit(this.panAt(ev.x));
           if (ev.amount > 200 && this.isOnScreen(ev.x)) this.fx.shake(false);
           break;
         }
@@ -288,6 +326,8 @@ export class BattleScene extends Phaser.Scene {
           if (ev.faction === 'player') {
             this.backdrop.setAge(age);
             this.cameras.main.flash(240, 240, 226, 200, false);
+            audio.evolve();
+            audio.setBedAge(ev.ageIndex);
           }
           break;
         }
@@ -300,6 +340,7 @@ export class BattleScene extends Phaser.Scene {
             this.ragdolls.shockwave(x, 150, impulse * 1.4);
           });
           this.fx.shake(true);
+          audio.special();
           break;
         }
 
@@ -379,6 +420,12 @@ export class BattleScene extends Phaser.Scene {
     cam.scrollX += (want - cam.scrollX) * CAMERA.followLerp;
   }
 
+  /** -1..1 across the viewport. Beyond the edges it clamps rather than wraps. */
+  private panAt(x: number): number {
+    const cam = this.cameras.main;
+    return Phaser.Math.Clamp(((x - cam.scrollX) / VIEW.width) * 2 - 1, -1, 1);
+  }
+
   private isOnScreen(x: number): boolean {
     const cam = this.cameras.main;
     return x > cam.scrollX - 80 && x < cam.scrollX + VIEW.width + 80;
@@ -432,6 +479,10 @@ export class BattleScene extends Phaser.Scene {
       cameraSpan: VIEW.width,
 
       elapsed: sim.elapsed,
+      survival: !!this.waves,
+      wave: this.waves?.waveNumber ?? 0,
+      waveCountdown: this.waves?.countdown ?? 0,
+      veterancy: sim.enemy.buff,
       timeLeft: sim.timeLeft,
       timeLimit: sim.level.timeLimit,
       escalation: sim.escalation,
@@ -449,6 +500,7 @@ export class BattleScene extends Phaser.Scene {
   private teardown(): void {
     if (this.tornDown) return;
     this.tornDown = true;
+    audio.stopBed();
     // The handle points at a scene whose Matter world is about to be null, so it
     // goes with the scene.
     delete (window as unknown as Record<string, unknown>).__aow;

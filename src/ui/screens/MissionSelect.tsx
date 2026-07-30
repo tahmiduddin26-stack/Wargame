@@ -1,4 +1,5 @@
 import { AGES } from '@/data/ages';
+import { DIFFICULTIES } from '@/data/difficulty';
 import { LEVELS, MODIFIER_LABEL, MODIFIER_NOTE } from '@/data/levels';
 import { isUnlocked, nextMission, useGame } from '@/state/store';
 
@@ -9,9 +10,13 @@ function mmss(seconds: number): string {
 }
 
 export function MissionSelect() {
-  const { go, startMission } = useGame();
+  const { go, startMission, startSurvival } = useGame();
   const records = useGame((s) => s.records);
   const credits = useGame((s) => s.credits);
+  const tier = useGame((s) => s.difficulty);
+  const setDifficulty = useGame((s) => s.setDifficulty);
+  const survivalBest = useGame((s) => s.survivalBest);
+  const activeTier = DIFFICULTIES.find((d) => d.id === tier)!;
 
   const featuredId = nextMission(records);
   const featured = LEVELS.find((l) => l.id === featuredId)!;
@@ -76,6 +81,49 @@ export function MissionSelect() {
           </div>
         </section>
 
+        {/* Tier applies to every deploy from this screen, so it sits above the
+            list rather than inside the featured card. */}
+        <section className="ms__tier">
+          <div className="ms__tier-head">
+            <span className="label">Difficulty</span>
+            <span className="ms__tier-blurb">{activeTier.blurb}</span>
+          </div>
+          <div className="ms__tier-row" role="radiogroup" aria-label="Difficulty">
+            {DIFFICULTIES.map((d) => (
+              <button
+                key={d.id}
+                role="radio"
+                aria-checked={d.id === tier}
+                className={`ms__tier-btn${d.id === tier ? ' ms__tier-btn--on' : ''}`}
+                onClick={() => setDifficulty(d.id)}
+              >
+                <span className="ms__tier-name">{d.name}</span>
+                <span className="num ms__tier-mult">&times;{d.reward}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="ms__survival">
+          <div className="ms__survival-text">
+            <h3 className="ms__survival-name">The Long Watch</h3>
+            <p className="ms__survival-brief">
+              Endless authored waves on one field. No clock, no relief, and a credit for every wave
+              you hold.
+            </p>
+          </div>
+          <div className="ms__survival-score">
+            <span className="label">Best</span>
+            <span className="num">
+              {survivalBest > 0 ? survivalBest : '--'}
+              <span className="ms__survival-unit"> waves</span>
+            </span>
+          </div>
+          <button className="btn ms__survival-go" onClick={startSurvival}>
+            Stand watch
+          </button>
+        </section>
+
         <div className="ms__list-head">
           <span className="label">All operations</span>
           <div className="rule ms__list-rule" />
@@ -99,6 +147,15 @@ export function MissionSelect() {
                 </span>
                 <span className="num ms__row-time">
                   {record?.bestTime != null ? mmss(record.bestTime) : '--:--'}
+                </span>
+                <span className="ms__row-tiers" aria-label="Tiers cleared">
+                  {DIFFICULTIES.map((d) => (
+                    <span
+                      key={d.id}
+                      title={d.name}
+                      className={`ms__pip${record?.clearedTiers?.includes(d.id) ? ' ms__pip--on' : ''}`}
+                    />
+                  ))}
                 </span>
                 <span className="label ms__row-state">
                   {state === 'cleared' ? 'Cleared' : state === 'open' ? 'Open' : 'Locked'}

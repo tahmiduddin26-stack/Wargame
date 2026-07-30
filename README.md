@@ -116,8 +116,12 @@ src/
   state/           zustand store, persisted to localStorage
 scripts/
   sim-harness.ts   headless balance harness (see below)
-  smoke.mjs        Playwright smoke test
+  smoke.mjs        Playwright smoke test: menu, briefing, a real mission
+  modes.mjs        Survival, Armoury, difficulty ladder and the roster
 ```
+
+`PLAN.md` records what the build-out set out to do and why, including what the
+research changed.
 
 ### The React/Phaser seam
 
@@ -155,7 +159,11 @@ players, because the interesting failures are invisible in a screenshot:
 ```bash
 npx tsx scripts/sim-harness.ts        # all 12 missions x 3 strategies
 npx tsx scripts/sim-harness.ts 6      # one mission, verbose timeline
+TIER=insane npx tsx scripts/sim-harness.ts   # the same, at a difficulty tier
 ```
+
+It also probes Survival, reporting how many waves each plan holds before the gate
+falls.
 
 The first run of it found that **every single mission ground to a draw at the eight
 minute mark with both gates untouched.** Diagnosing that drove most of the design:
@@ -206,6 +214,85 @@ actually produces and recycles corpses. Corpse and Matter body counts live on th
 canvas and are invisible to the DOM, so `BattleScene` exposes read-only counters on
 `window.__aow` for exactly this.
 
+## Modes and systems
+
+**Campaign.** Twelve missions across four difficulty tiers (Easy / Normal / Hard
+/ Insane), as both Age of War games shipped. Tiers multiply the mission's own
+enemy numbers rather than replacing them, and never touch the player's side, so a
+mission keeps its character at every tier. Clears are recorded per tier, shown as
+a four-pip ladder on each row. Measured with the harness: a competent scripted
+plan takes 11/12 on Easy, 9/12 on Normal and 5/12 on Insane.
+
+**Survival: The Long Watch.** Endless authored waves on one field, no clock. The
+enemy has no economy here; a wave is a written composition granted in full and
+bought through the sim's ordinary methods, so nothing about combat is
+special-cased. Two things had to be fixed before it would end at all, both
+documented in `SurvivalDirector`: waves past the queue cap were being silently
+discarded, and once the age ladder tops out quantity cannot escalate past the
+field cap, so late waves gain compounding **veterancy** instead. A run now lasts
+25 to 30 waves in about six minutes.
+
+**Armoury.** Where credits go. Eight perks, bought once and kept, each one a
+single number in the sim. Deliberately small: the whole board is worth about one
+difficulty tier, because the campaign is tuned at Normal with an empty armoury.
+No levels, no currencies to convert, no timers, no adverts.
+
+**Counters.** See below. This is the deepest change of the build-out.
+
+## Counters and armour
+
+Three armour classes and a damage-kind multiplier table, so the four roles
+counter each other instead of being cost tiers:
+
+| | flesh | plate | hull |
+|---|---|---|---|
+| **impact** blunt, hooves, small arms | 1.10 | 0.60 | 0.50 |
+| **pierce** arrows, AP, shaped charges | 0.85 | 1.35 | 1.15 |
+| **blast** high explosive, splash | 1.15 | 0.90 | 0.70 |
+| **energy** rail, ion, plasma | 1.00 | 1.20 | 1.45 |
+
+Assignment is by role and holds across all five ages, so it is learned once:
+melee `impact`, ranged `pierce`, artillery `blast`, and armour follows the body.
+That reproduces the relationship the sequel's own guides describe ("Dino Riders
+are weak to Slingers", anti-armour troops answering heavies) rather than
+inventing one. Before this existed, `damageKind` was decorative: four flavours of
+damage that all resolved identically.
+
+The table is shown in the roster rather than hidden, because "why did my clubmen
+bounce off that knight" is the single most important thing to understand about a
+fight, and it is not inferable from cost and reach.
+
+Two things this pass got wrong first, both caught by the harness:
+
+- The AI sorted purchases by counter multiplier, which made it buy the best
+  *matchup* rather than the best *unit*, pouring gold into fragile artillery
+  whenever the player fielded infantry. Cost has to stay the dominant term
+  because only the front ranks can reach each other. Fixed by scoring
+  `cost x counter`.
+- The first table averaged 1.11 against flesh. Most units in the game are
+  unarmoured, so it quietly inflated all damage rather than redistributing it and
+  every strategy's win rate jumped. The flesh column now averages ~1.0: the
+  spread is what matters, not the level.
+
+## Audio
+
+No sample assets. Every sound is synthesised at runtime through the Web Audio API
+from noise, oscillators, filters and envelopes, which the research confirmed as
+the standard no-asset approach. It costs zero payload, varies naturally shot to
+shot instead of repeating one clip forty times a minute, and is driven directly by
+sim values: blast radius sets the size of a detonation, damage kind picks the
+timbre, and camera position sets the pan.
+
+Three things keep it from becoming noise, all in `src/game/audio/Audio.ts`: voice
+limiting (a concurrency cap and a per-category minimum gap, because one frame can
+produce a dozen deaths plus a whole barrage), panning from the camera, and an
+unlock gated on the first real gesture, since browsers suspend audio contexts
+created without one.
+
+The music is a drone rather than a tune: two detuned oscillators a fifth apart
+through a slow filter sweep. Its root transposes on evolve, and its cutoff opens
+as the enemy front line closes on your gate.
+
 ## What is in the game
 
 **Five ages** (Stone, Medieval, Gunpowder, Modern, Future), gated on banked XP,
@@ -238,9 +325,10 @@ and visible escalation so nothing grinds forever; and the ragdolls.
 
 ## Known gaps
 
-- **No audio.** No sound effects or music yet.
-- **No armoury.** Missions award credits and the store tracks them, but there is
-  nothing to spend them on.
+- **Real art.** Still procedural placeholder rigs. The skeleton spec has a
+  `texture` slot per bone for when sprites arrive.
+- **Versus / multiplayer.** The sim is deterministic and seeded, so it is
+  reachable, but netcode is its own project.
 - **Phaser is a 1.2MB chunk** (330KB gzipped). Already split out; worth lazy-loading
   behind the menu if startup time matters.
 - Balance beyond mission 5 is tuned against scripted players, not humans.

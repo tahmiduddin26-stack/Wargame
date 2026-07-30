@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { useEffect, useRef, useState } from 'react';
+import { difficulty } from '@/data/difficulty';
 import { levelById } from '@/data/levels';
+import { resolvePerks } from '@/data/perks';
+import { audio } from '@/game/audio/Audio';
 import { bridge, type HudSnapshot } from '@/game/bridge';
 import { RAGDOLL } from '@/game/config';
 import { BattleScene, battleGameConfig } from '@/game/scenes/BattleScene';
@@ -11,6 +14,11 @@ export function BattleView() {
   const levelId = useGame((s) => s.activeLevel);
   const settings = useGame((s) => s.settings);
   const finishMission = useGame((s) => s.finishMission);
+  const recordSurvival = useGame((s) => s.recordSurvival);
+  const tierId = useGame((s) => s.difficulty);
+  const perks = useGame((s) => s.perks);
+  const survival = useGame((s) => s.survivalRun);
+  const go = useGame((s) => s.go);
   const level = levelById(levelId);
 
   const hostRef = useRef<HTMLDivElement>(null);
@@ -26,6 +34,9 @@ export function BattleView() {
     bridge.reset();
     reported.current = false;
 
+    audio.setSfx(settings.sfx);
+    audio.setMusic(settings.music);
+
     const game = new Phaser.Game(battleGameConfig(host));
     game.scene.add(
       'battle',
@@ -33,6 +44,9 @@ export function BattleView() {
       true,
       {
         level,
+        survival,
+        difficulty: tierId,
+        perks: resolvePerks(perks),
         seed: 1337 + level.id * 977,
         corpseCap: settings.reducedCorpses ? Math.floor(RAGDOLL.maxActive / 2) : RAGDOLL.maxActive,
         speed: settings.speed,
@@ -45,7 +59,7 @@ export function BattleView() {
     };
     // Settings are read once at deploy; changing them mid-match would be worse.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [level.id]);
+  }, [level.id, survival]);
 
   useEffect(() => bridge.onSnapshot(setSnapshot), []);
 
@@ -58,18 +72,27 @@ export function BattleView() {
   useEffect(() => {
     if (!snapshot?.over || reported.current) return;
     reported.current = true;
+
+    // Survival has no win condition, only how long you lasted.
+    if (snapshot.survival) {
+      recordSurvival(snapshot.wave);
+      go('missions');
+      return;
+    }
+
     const mine = snapshot.stats.player;
     finishMission({
       levelId: level.id,
       won: snapshot.over === 'player',
       decidedBy: snapshot.decidedBy,
+      tierReward: difficulty(tierId).reward,
       seconds: snapshot.elapsed,
       kills: mine.kills,
       losses: mine.losses,
       goldSpent: mine.goldSpent,
       peakAge: mine.peakAge,
     });
-  }, [snapshot?.over, snapshot, level.id, finishMission]);
+  }, [snapshot?.over, snapshot, level.id, finishMission, recordSurvival, go, tierId]);
 
   return (
     <>

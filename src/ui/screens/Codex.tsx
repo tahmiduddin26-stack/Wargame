@@ -3,8 +3,52 @@ import { AGES } from '@/data/ages';
 import { SPECIALS } from '@/data/specials';
 import { turretsForAge, TURRET_ROLE_LABEL } from '@/data/turrets';
 import { ROLE_LABEL, unitsForAge } from '@/data/units';
+import { ARMOUR_LABEL, ARMOUR_TABLE } from '@/data/types';
+import type { ArmourClass, DamageKind } from '@/data/types';
 import { useGame } from '@/state/store';
 import { TurretGlyph, UnitGlyph } from '@/ui/components/Glyph';
+
+const KINDS: DamageKind[] = ['impact', 'pierce', 'blast', 'energy'];
+const CLASSES: ArmourClass[] = ['flesh', 'plate', 'hull'];
+
+/**
+ * The counter table, shown rather than hidden. Reach and cost are legible from
+ * the unit rows, but "why did my clubmen bounce off that knight" is not, and it
+ * is the single most important thing to understand about a fight.
+ */
+function CounterMatrix() {
+  return (
+    <table className="cx__table cx__matrix">
+      <caption className="label cx__caption">Damage against armour</caption>
+      <thead>
+        <tr>
+          <th scope="col">Damage</th>
+          {CLASSES.map((c) => (
+            <th scope="col" className="cx__n" key={c}>
+              {ARMOUR_LABEL[c]}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {KINDS.map((kind) => (
+          <tr key={kind}>
+            <td className="cx__kind">{kind}</td>
+            {CLASSES.map((cls) => {
+              const v = ARMOUR_TABLE[kind][cls];
+              const tone = v >= 1.2 ? ' cx__mult--good' : v <= 0.8 ? ' cx__mult--bad' : '';
+              return (
+                <td className={`num cx__n cx__mult${tone}`} key={cls}>
+                  {v.toFixed(2)}&times;
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
 
 /**
  * The roster, as a readout rather than a set of cards. Every figure is mono
@@ -65,12 +109,15 @@ export function Codex() {
           </div>
         </div>
 
+        <CounterMatrix />
+
         <table className="cx__table">
           <caption className="label cx__caption">Field units</caption>
           <thead>
             <tr>
               <th scope="col">Role</th>
               <th scope="col">Unit</th>
+              <th scope="col">Armour</th>
               <th scope="col" className="cx__n">Gold</th>
               <th scope="col" className="cx__n">HP</th>
               <th scope="col" className="cx__n">Dmg</th>
@@ -91,6 +138,10 @@ export function Codex() {
                 <td>
                   <b className="cx__name">{u.name}</b>
                   <span className="cx__brief">{u.brief}</span>
+                </td>
+                <td className="cx__armour">
+                  <span className="label">{ARMOUR_LABEL[u.armour]}</span>
+                  <span className="cx__kind">{u.damageKind}</span>
                 </td>
                 <td className="num cx__n">{u.gold.toLocaleString('en-GB')}</td>
                 <td className="num cx__n">{u.hp.toLocaleString('en-GB')}</td>
@@ -114,6 +165,7 @@ export function Codex() {
             <tr>
               <th scope="col">Role</th>
               <th scope="col">Emplacement</th>
+              <th scope="col">Damage</th>
               <th scope="col" className="cx__n">Gold</th>
               <th scope="col" className="cx__n">Dmg</th>
               <th scope="col" className="cx__n">Rate</th>
@@ -131,6 +183,9 @@ export function Codex() {
                 <td>
                   <b className="cx__name">{t.name}</b>
                   <span className="cx__brief">{t.brief}</span>
+                </td>
+                <td className="cx__armour">
+                  <span className="cx__kind">{t.damageKind}</span>
                 </td>
                 <td className="num cx__n">{t.gold.toLocaleString('en-GB')}</td>
                 <td className="num cx__n">

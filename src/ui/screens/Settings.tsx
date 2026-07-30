@@ -37,6 +37,20 @@ export function Settings() {
         </section>
 
         <Toggle
+          label="Sound effects"
+          note="Impacts, gunfire and detonations. All synthesised at runtime, so there is nothing to download."
+          on={settings.sfx}
+          onChange={(v) => setSetting('sfx', v)}
+        />
+
+        <Toggle
+          label="Music bed"
+          note="A drone that shifts with the age and tightens as the fighting reaches your gate."
+          on={settings.music}
+          onChange={(v) => setSetting('music', v)}
+        />
+
+        <Toggle
           label="Reduced corpses"
           note="Halves the ragdoll cap. Use on older phones if the frame rate dips during a push."
           on={settings.reducedCorpses}

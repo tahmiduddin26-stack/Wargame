@@ -1,7 +1,10 @@
 import { AGES, AGE_COUNT } from '@/data/ages';
+import { difficulty, type DifficultyId } from '@/data/difficulty';
+import { NO_PERKS, type PerkEffects } from '@/data/perks';
 import { SPECIALS } from '@/data/specials';
 import { SLOT_UNLOCK_COST, TURRET_BY_ID, TURRET_SLOTS, turretsForAge } from '@/data/turrets';
 import { UNIT_BY_ID } from '@/data/units';
+import { armourMultiplier } from '@/data/types';
 import type { AgeId, DamageKind, Faction, LevelDef, UnitDef } from '@/data/types';
 import { ECON, SIM, VIEW, WORLD } from '@/game/config';
 import { Rng } from './rng';
@@ -63,29 +66,73 @@ export class BattleSim {
   private nextPid = 1;
   private accumulator = 0;
 
-  constructor(level: LevelDef, seed = 1337) {
+  /** Tier multipliers, applied to the enemy only. */
+  readonly difficulty: DifficultyId;
+  /** Scaled copy of level.enemy, so the AI reads tuned numbers directly. */
+  readonly enemyPlan: LevelDef['enemy'];
+
+  /** Player-only armoury multipliers. The enemy never sees these. */
+  readonly perks: PerkEffects;
+
+  constructor(
+    level: LevelDef,
+    seed = 1337,
+    difficultyId: DifficultyId = 'normal',
+    perks: PerkEffects = NO_PERKS,
+  ) {
     this.level = level;
+    this.perks = perks;
     this.rng = new Rng(seed);
     this.maxAgeIndex = Math.min(level.maxAge, AGE_COUNT - 1);
+    this.difficulty = difficultyId;
+
+    const tier = difficulty(difficultyId);
+    this.enemyPlan = {
+      aggression: Math.min(1, level.enemy.aggression * tier.aggression),
+      economy: level.enemy.economy * tier.economy,
+      warmup: level.enemy.warmup * tier.warmup,
+    };
 
     const wide = level.modifiers.includes('artillery-duel');
     this.laneLength = Math.round(WORLD.laneLength * (wide ? WORLD.wideLaneScale : 1));
 
     const income = ECON.baseIncome + level.income;
-    this.player = this.makeCommander('player', WORLD.baseInset, income, level.startGold);
+    this.player = this.makeCommander(
+      'player',
+      WORLD.baseInset,
+      income + perks.incomeBonus,
+      level.startGold,
+    );
     // The enemy's war chest scales with its economy setting too. Handing an
     // "economy 0.5" commander the same opening gold as the player made the early
     // missions far harder than their difficulty numbers claimed.
     this.enemy = this.makeCommander(
       'enemy',
       this.laneLength - WORLD.baseInset,
-      income * level.enemy.economy,
-      Math.round(level.startGold * level.enemy.economy),
+      income * this.enemyPlan.economy,
+      Math.round(level.startGold * this.enemyPlan.economy),
     );
 
     if (level.modifiers.includes('no-turrets')) {
       this.player.unlockedSlots = 0;
       this.enemy.unlockedSlots = 0;
+    }
+
+    if (perks.baseHpScale !== 1) {
+      this.player.baseMaxHp = Math.round(this.player.baseMaxHp * perks.baseHpScale);
+      this.player.baseHp = this.player.baseMaxHp;
+    }
+
+    // War College. Capped by the mission's own age cap, so it cannot break the
+    // age-locked tutorial missions.
+    for (let i = 0; i < perks.startAge && this.player.ageIndex < this.maxAgeIndex; i++) {
+      this.player.ageIndex += 1;
+      const max = Math.round(
+        this.level.baseHp * AGES[this.player.ageIndex].baseArmour * perks.baseHpScale,
+      );
+      this.player.baseHp += max - this.player.baseMaxHp;
+      this.player.baseMaxHp = max;
+      this.stats.player.peakAge = this.player.ageIndex;
     }
   }
 
@@ -111,6 +158,7 @@ export class BattleSim {
       unlockedSlots: 2,
       specialCd: 0,
       income,
+      buff: 1,
     };
   }
 
@@ -182,7 +230,7 @@ export class BattleSim {
     if (c.gold < def.gold) return 'poor';
 
     c.gold -= def.gold;
-    c.cooldowns[defId] = def.cooldown;
+    c.cooldowns[defId] = def.cooldown * (faction === 'player' ? this.perks.cooldownScale : 1);
     c.queue.push(defId);
     this.stats[faction].goldSpent += def.gold;
     return 'ok';
@@ -205,11 +253,21 @@ export class BattleSim {
     if (slotIndex >= c.unlockedSlots) return 'locked';
     const def = TURRET_BY_ID[turretId];
     if (!def || AGE_INDEX[def.age] > c.ageIndex) return 'locked';
-    if (c.gold < def.gold) return 'poor';
-    c.gold -= def.gold;
+    const cost = Math.round(def.gold * (faction === 'player' ? this.perks.turretCostScale : 1));
+    if (c.gold < cost) return 'poor';
+    c.gold -= cost;
     c.slots[slotIndex] = { def, reload: 1 / def.rate };
-    this.stats[faction].goldSpent += def.gold;
+    this.stats[faction].goldSpent += cost;
     return 'ok';
+  }
+
+  /**
+   * Tops a commander's purse up. Survival's wave director uses this: waves are
+   * authored compositions, not the product of an income curve, so it grants
+   * exactly what the wave costs and then buys it through the normal path.
+   */
+  grantGold(faction: Faction, amount: number): void {
+    this.commander(faction).gold += amount;
   }
 
   /** Refunds half, for swapping a role that is not answering what you face. */
@@ -258,7 +316,7 @@ export class BattleSim {
     const c = this.commander(faction);
     if (c.specialCd > 0) return 'cooldown';
     const def = SPECIALS[AGES[c.ageIndex].id];
-    c.specialCd = def.cooldown;
+    c.specialCd = def.cooldown * (faction === 'player' ? this.perks.specialCdScale : 1);
 
     // Centre the barrage on wherever the fighting actually is.
     const dir = BattleSim.dir(faction);
@@ -329,8 +387,8 @@ export class BattleSim {
       def,
       faction: c.faction,
       x: c.baseX + dir * (WORLD.baseHalfWidth + 16),
-      hp: def.hp,
-      maxHp: def.hp,
+      hp: def.hp * c.buff,
+      maxHp: def.hp * c.buff,
       reload: 1 / def.rate,
       engaging: false,
       phase: this.rng.range(0, Math.PI * 2),
@@ -447,14 +505,15 @@ export class BattleSim {
     u.reload = 1 / u.def.rate;
     const dir = BattleSim.dir(u.faction);
     const heavy = u.def.role === 'heavy' || u.def.role === 'artillery';
+    const power = this.commander(u.faction).buff;
 
     if (u.def.range <= MELEE_REACH) {
       const impactY = VIEW.groundY - prey.def.height * 0.55;
       this.events.push({ t: 'melee', x: prey.x, y: impactY, kind: u.def.damageKind, heavy });
       if (u.def.blast > 0) {
-        this.explode(prey.x, u.def.damage, u.def.blast, u.def.damageKind, u.faction, heavy ? 0.6 : 0.2);
+        this.explode(prey.x, u.def.damage * power, u.def.blast, u.def.damageKind, u.faction, heavy ? 0.6 : 0.2);
       } else {
-        this.hurtUnit(prey, u.def.damage, u.faction, dir, heavy ? 0.8 : 0.15, u.def.damageKind);
+        this.hurtUnit(prey, u.def.damage * power, u.faction, dir, heavy ? 0.8 : 0.15, u.def.damageKind);
         if (heavy) prey.shove += dir * SIM.knockback;
       }
       return;
@@ -465,7 +524,7 @@ export class BattleSim {
       sy: VIEW.groundY - u.def.height * 0.78,
       tx: prey.x,
       ty: VIEW.groundY - prey.def.height * 0.5,
-      damage: u.def.damage,
+      damage: u.def.damage * power,
       blast: u.def.blast,
       kind: u.def.damageKind,
       hostileTo: prey.faction,
@@ -480,7 +539,7 @@ export class BattleSim {
     const dir = BattleSim.dir(u.faction);
 
     if (u.def.range <= MELEE_REACH) {
-      this.hurtBase(foe, u.def.damage, u.faction, gateEdge);
+      this.hurtBase(foe, u.def.damage * this.commander(u.faction).buff, u.faction, gateEdge);
       this.events.push({
         t: 'melee',
         x: gateEdge,
@@ -496,7 +555,7 @@ export class BattleSim {
       sy: VIEW.groundY - u.def.height * 0.78,
       tx: gateEdge,
       ty: VIEW.groundY - WORLD.baseHeight * 0.45,
-      damage: u.def.damage,
+      damage: u.def.damage * this.commander(u.faction).buff,
       blast: u.def.blast,
       kind: u.def.damageKind,
       hostileTo: foe,
@@ -623,18 +682,23 @@ export class BattleSim {
     kind: DamageKind,
   ): void {
     if (target.dead) return;
-    target.hp -= amount;
+
+    // The counter table. Without this, the four damage kinds were decorative and
+    // the four roles were just cost tiers rather than answers to one another.
+    const dealt = amount * armourMultiplier(kind, target.def.armour);
+    target.hp -= dealt;
     if (target.hp > 0) return;
 
     target.dead = true;
     const c = this.commander(attacker);
-    c.xp += target.def.bounty;
-    c.gold += target.def.loot * ECON.lootScale;
+    const mine = attacker === 'player';
+    c.xp += target.def.bounty * (mine ? this.perks.xpScale : 1);
+    c.gold += target.def.loot * ECON.lootScale * (mine ? this.perks.lootScale : 1);
     this.stats[attacker].kills += 1;
     this.stats[target.faction].losses += 1;
 
     // Overkill throws the corpse further. This is the whole point of ragdolls.
-    const lethality = clamp(amount / target.maxHp, 0.3, 2.6);
+    const lethality = clamp(dealt / target.maxHp, 0.3, 2.6);
     const force = lethality * (1 + impulse) * (2.4 / (1.4 + target.def.mass));
 
     this.events.push({

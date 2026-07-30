@@ -53,6 +53,14 @@ export interface HudSnapshot {
   cameraSpan: number;
 
   elapsed: number;
+  /** True in Survival: the clock counts waves, not a mission limit. */
+  survival: boolean;
+  /** Waves released so far. This is the Survival score. */
+  wave: number;
+  /** Seconds until the next wave lands. */
+  waveCountdown: number;
+  /** Enemy hitpoint/damage multiplier in Survival. 1 outside it. */
+  veterancy: number;
   /** Seconds left on the mission clock. */
   timeLeft: number;
   timeLimit: number;

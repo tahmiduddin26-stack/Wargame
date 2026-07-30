@@ -44,6 +44,16 @@ export interface Commander {
   specialCd: number;
   /** Gold per second for this side. */
   income: number;
+  /**
+   * Flat multiplier on this side's unit hitpoints and damage.
+   *
+   * Survival's only escalation axis once the age ladder tops out. The field is
+   * capped at a dozen units a side, so a wave cannot get meaningfully bigger, and
+   * without this the mode plateaus: a steady stream of twelve Future Age units is
+   * something a dug-in commander holds literally forever. Shown in the HUD as
+   * veterancy rather than hidden.
+   */
+  buff: number;
 }
 
 export type ProjectileTarget = { kind: 'unit'; uid: number } | { kind: 'base'; faction: Faction };
