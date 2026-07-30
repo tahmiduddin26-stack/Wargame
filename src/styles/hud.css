@@ -1,0 +1,771 @@
+/*
+ * Battle HUD. Sits over the canvas, sized in `em` against .stage so the whole
+ * thing scales with the letterboxed viewport instead of needing breakpoints.
+ *
+ * The HUD itself does not take pointer events: the middle of the screen has to
+ * stay draggable for the camera. Only the controls opt back in.
+ */
+
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  font-size: 1em;
+}
+
+.hud button,
+.hud .lane,
+.hud .picker {
+  pointer-events: auto;
+}
+
+/* ---------------------------------------------------------------- top bar */
+
+.hud__top {
+  display: flex;
+  align-items: stretch;
+  gap: 0.8em;
+  padding: 0.7em 1em 0;
+}
+
+.hud__spacer {
+  flex: 1;
+}
+
+.hud__pause {
+  appearance: none;
+  width: 3.2em;
+  background: rgba(18, 16, 14, 0.82);
+  border: 1px solid var(--rule-bright);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.hud__pause-bars {
+  display: flex;
+  gap: 0.3em;
+}
+
+.hud__pause-bars i {
+  width: 0.28em;
+  height: 1.3em;
+  background: var(--bone-dim);
+}
+
+.hud__res {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  background: rgba(18, 16, 14, 0.82);
+  border: 1px solid var(--rule-bright);
+  padding: 0.4em 0.9em;
+}
+
+.hud__res-icon {
+  display: inline-flex;
+  color: var(--ochre);
+}
+
+.hud__gold {
+  font-size: 1.7em;
+  color: var(--ochre);
+}
+
+.hud__age,
+.hud__enemy {
+  min-width: 13em;
+  background: rgba(18, 16, 14, 0.82);
+  border: 1px solid var(--rule-bright);
+  padding: 0.35em 0.7em;
+  display: grid;
+  gap: 0.2em;
+  align-content: center;
+}
+
+.hud__age {
+  border-left: 0.25em solid var(--accent);
+}
+
+.hud__enemy {
+  border-left: 0.25em solid var(--oxide);
+}
+
+.hud__age-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+.hud__age-name {
+  color: var(--accent);
+  letter-spacing: 0.14em;
+}
+
+.hud__age-i,
+.hud__xp-text {
+  font-size: 1.05em;
+  color: var(--bone-dim);
+}
+
+.hud__xp-goal {
+  color: var(--bone-faint);
+}
+
+.hud__xp {
+  height: 0.45em;
+}
+
+.hud__field {
+  color: var(--bone-dim);
+  font-size: 1.05em;
+}
+
+.hud__clock {
+  display: grid;
+  align-content: center;
+  justify-items: end;
+  gap: 0.15em;
+  background: rgba(18, 16, 14, 0.82);
+  border: 1px solid var(--rule-bright);
+  padding: 0.35em 0.8em;
+}
+
+.hud__clock .num {
+  font-size: 1.5em;
+}
+
+.hud__clock--urgent {
+  border-color: var(--oxide);
+}
+
+.hud__clock--urgent .num {
+  color: var(--oxide);
+}
+
+.hud__esc {
+  color: var(--ochre);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ lane strip */
+
+.lane {
+  margin: 0.6em 1em 0;
+  padding: 0.35em 0.5em;
+  background: rgba(18, 16, 14, 0.82);
+  border: 1px solid var(--rule);
+  cursor: pointer;
+}
+
+.lane__track {
+  position: relative;
+  height: 1.5em;
+  background: #0c0a08;
+  border: 1px solid var(--rule);
+}
+
+.lane__contest {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(217, 162, 39, 0.1);
+  border-left: 1px solid rgba(217, 162, 39, 0.35);
+  border-right: 1px solid rgba(192, 67, 44, 0.35);
+}
+
+.lane__gate {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0.35em;
+}
+
+.lane__gate--mine {
+  left: 0;
+  background: var(--ochre);
+}
+
+.lane__gate--theirs {
+  right: 0;
+  background: var(--oxide);
+}
+
+/* Blip height encodes role, so a tank push reads differently from a swarm. */
+.lane__blip {
+  position: absolute;
+  bottom: 0.15em;
+  width: 0.22em;
+  transform: translateX(-50%);
+}
+
+.lane__blip--player {
+  background: var(--ochre);
+}
+
+.lane__blip--enemy {
+  background: var(--oxide);
+}
+
+.lane__blip--melee {
+  height: 0.5em;
+}
+
+.lane__blip--ranged {
+  height: 0.7em;
+}
+
+.lane__blip--heavy {
+  height: 1em;
+  width: 0.32em;
+}
+
+.lane__blip--artillery {
+  height: 0.85em;
+  width: 0.3em;
+  opacity: 0.85;
+}
+
+.lane__window {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  border: 1px solid rgba(236, 229, 214, 0.4);
+  background: rgba(236, 229, 214, 0.04);
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------- own structure */
+
+.hud__mine {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  margin: 0.6em 1em 0;
+  width: 22em;
+  background: rgba(18, 16, 14, 0.82);
+  border: 1px solid var(--rule);
+  border-left: 0.25em solid var(--ochre);
+  padding: 0.4em 0.8em;
+}
+
+.hud__mine-meter {
+  flex: 1;
+}
+
+.hud__mine .num {
+  font-size: 1.15em;
+  color: var(--bone-dim);
+  min-width: 4.5em;
+  text-align: right;
+}
+
+/* ------------------------------------------------------------------ dock */
+
+.hud__dock {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: end;
+  gap: 1em;
+  padding: 0 1em 0.9em;
+}
+
+.units {
+  display: flex;
+  gap: 0.5em;
+}
+
+.unit {
+  position: relative;
+  appearance: none;
+  width: 8.6em;
+  min-height: 7.4em;
+  background: rgba(31, 27, 22, 0.94);
+  border: 1px solid var(--rule-bright);
+  border-radius: 0;
+  color: var(--bone-faint);
+  cursor: pointer;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.3em;
+  padding: 0.5em 0.6em;
+  text-align: left;
+  transition: border-color 120ms linear, color 120ms linear;
+}
+
+/* Affordable and off cooldown is the only state that gets the ochre edge. */
+.unit--ready {
+  border-color: var(--ochre);
+  color: var(--bone);
+}
+
+.unit--poor {
+  color: var(--bone-faint);
+}
+
+.unit__cool {
+  position: absolute;
+  inset: 0;
+  transform-origin: top;
+  background: rgba(10, 9, 7, 0.72);
+  pointer-events: none;
+}
+
+.unit__role {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  color: var(--bone-dim);
+}
+
+.unit__role .stamp {
+  font-size: 0.85em;
+  letter-spacing: 0.1em;
+}
+
+.unit__name {
+  font-family: var(--font-display);
+  font-size: 1.35em;
+  line-height: 1.05;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: inherit;
+  align-self: start;
+}
+
+.unit__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.unit__cost {
+  font-size: 1.3em;
+  color: var(--ochre);
+}
+
+.unit--poor .unit__cost {
+  color: var(--oxide);
+}
+
+.unit__queued {
+  font-size: 1em;
+  color: var(--bone-dim);
+}
+
+.hud__mid {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 0.8em;
+}
+
+/* ---------------------------------------------------------------- evolve */
+
+.evolve {
+  appearance: none;
+  min-width: 11em;
+  background: rgba(31, 27, 22, 0.94);
+  border: 1px solid var(--rule-bright);
+  border-bottom: 0.25em solid var(--rule-bright);
+  border-radius: 0;
+  color: var(--bone-faint);
+  cursor: pointer;
+  padding: 0.5em 0.8em;
+  display: grid;
+  gap: 0.15em;
+  text-align: left;
+}
+
+.evolve--ready {
+  border-color: var(--accent);
+  border-bottom-color: var(--accent);
+  color: var(--bone);
+}
+
+.evolve__kicker {
+  font-size: 0.85em;
+}
+
+.evolve__name {
+  font-size: 1.5em;
+  line-height: 1;
+  color: inherit;
+}
+
+.evolve--ready .evolve__name {
+  color: var(--accent);
+}
+
+.evolve__need {
+  font-size: 1.1em;
+  color: var(--bone-dim);
+}
+
+.evolve--ready .evolve__need {
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------ emplacements */
+
+.rack {
+  position: relative;
+  display: flex;
+  gap: 0.4em;
+}
+
+.rack--disabled {
+  align-items: center;
+  padding: 0.6em 1em;
+  border: 1px solid var(--rule);
+  background: rgba(18, 16, 14, 0.7);
+}
+
+.mount {
+  appearance: none;
+  position: relative;
+  width: 4.6em;
+  height: 4.2em;
+  background: rgba(31, 27, 22, 0.94);
+  border: 1px solid var(--rule-bright);
+  border-radius: 0;
+  color: var(--bone-dim);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  gap: 0.15em;
+  overflow: hidden;
+}
+
+.mount--empty {
+  border-style: dashed;
+  color: var(--bone-faint);
+}
+
+.mount--built {
+  color: var(--ochre);
+  border-color: var(--ochre-deep);
+}
+
+.mount__label {
+  font-size: 0.8em;
+  letter-spacing: 0.1em;
+}
+
+.mount--locked {
+  border-color: transparent;
+}
+
+.mount__hazard {
+  position: absolute;
+  inset: 0;
+  background: var(--hazard);
+  opacity: 0.55;
+}
+
+.mount--next .mount__hazard {
+  opacity: 0.8;
+}
+
+.mount__price {
+  position: relative;
+  font-size: 1.1em;
+  color: var(--bone);
+}
+
+.mount--locked:disabled .mount__price {
+  color: var(--bone-faint);
+}
+
+/* Emplacement picker, anchored above the rack. */
+.picker {
+  position: absolute;
+  bottom: calc(100% + 0.6em);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34em;
+  z-index: 5;
+}
+
+.picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5em 0.8em;
+  border-bottom: 1px solid var(--rule);
+}
+
+.picker__close {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--bone-dim);
+  font-size: 1.6em;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.3em;
+}
+
+.picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.picker__opt {
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  color: var(--bone);
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.9em;
+  padding: 0.7em 0.9em;
+  text-align: left;
+  transition: background 120ms linear;
+}
+
+.picker__opt:active {
+  background: var(--steel-600);
+}
+
+.picker__opt--poor {
+  color: var(--bone-faint);
+}
+
+.picker__opt-text b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.25em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.picker__opt-brief {
+  display: block;
+  font-size: 1em;
+  color: var(--bone-faint);
+}
+
+.picker__opt-stats {
+  font-size: 1em;
+  color: var(--bone-dim);
+}
+
+.picker__opt-cost {
+  font-size: 1.25em;
+  color: var(--ochre);
+  min-width: 4em;
+  text-align: right;
+}
+
+.picker__opt--poor .picker__opt-cost {
+  color: var(--oxide);
+}
+
+.picker__scrap {
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0.6em;
+  cursor: pointer;
+}
+
+.picker__scrap .stamp {
+  color: var(--oxide);
+}
+
+/* ----------------------------------------------------------- special dial */
+
+.dial {
+  position: relative;
+  appearance: none;
+  width: 7.4em;
+  height: 7.4em;
+  background: rgba(31, 27, 22, 0.94);
+  border: 1px solid var(--rule-bright);
+  border-radius: 50%;
+  color: var(--bone-faint);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.dial--ready {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.dial__svg {
+  position: absolute;
+  inset: 0.3em;
+  width: calc(100% - 0.6em);
+  height: calc(100% - 0.6em);
+  fill: none;
+}
+
+.dial__track {
+  stroke: var(--steel-500);
+  stroke-width: 3;
+}
+
+.dial__arc {
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: butt;
+  transition: stroke-dashoffset 120ms linear;
+}
+
+.dial__text {
+  position: relative;
+}
+
+.dial__count {
+  font-size: 2.2em;
+  color: var(--bone-dim);
+}
+
+.dial__ready {
+  font-size: 1.3em;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+
+/*
+ * Sits above the countdown, inside the ring. It used to hang off the bottom of
+ * the dial where the screen edge clipped it.
+ */
+.dial__name {
+  position: absolute;
+  top: 1.9em;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.72em;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 1.4em;
+  color: var(--bone-dim);
+}
+
+.dial--ready .dial__name {
+  color: var(--accent);
+}
+
+/* ----------------------------------------------------------------- pause */
+
+.pause {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  background: rgba(9, 8, 6, 0.86);
+  display: grid;
+  place-items: center;
+  padding: 2em;
+}
+
+.pause__sheet {
+  width: 52em;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.pause__head {
+  display: flex;
+  align-items: baseline;
+  gap: 1em;
+  padding: 1em 1.6em 0;
+}
+
+.pause__head .num {
+  color: var(--bone-faint);
+  font-size: 1.2em;
+}
+
+.pause__head .stamp {
+  margin-left: auto;
+}
+
+.pause__title {
+  font-size: 2.6em;
+}
+
+.pause__brief {
+  color: var(--bone-dim);
+  font-size: 1.35em;
+  line-height: 1.45;
+  margin: 0.6em 1.6em 0;
+}
+
+.pause__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--rule);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  margin: 1.4em 0;
+}
+
+.pause__stats > div {
+  background: var(--steel-800);
+  padding: 0.8em 1em;
+}
+
+.pause__stats dd {
+  margin: 0.2em 0 0;
+  font-size: 1.8em;
+}
+
+.pause__mods {
+  list-style: none;
+  margin: 0 1.6em 1.2em;
+  padding: 0;
+  display: grid;
+  gap: 0.6em;
+}
+
+.pause__mods li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8em;
+}
+
+.pause__mod-note {
+  color: var(--bone-dim);
+  font-size: 1.2em;
+}
+
+.pause__speed {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  margin: 0 1.6em 1.4em;
+}
+
+.pause__speed-btn {
+  font-size: 1.2em;
+  padding: 0.35em 0.9em;
+}
+
+.pause__actions {
+  display: flex;
+  gap: 0.8em;
+  padding: 0 1.6em 1.6em;
+}
+
+.pause__actions .btn {
+  font-size: 1.4em;
+}

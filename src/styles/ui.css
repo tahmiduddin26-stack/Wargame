@@ -1,0 +1,997 @@
+/* Menu, briefing, mission select, roster, settings, debrief. */
+
+/* ------------------------------------------------------------------- gate */
+
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--steel-900);
+  display: grid;
+  place-items: center;
+  padding: 6vmin;
+  font-size: calc(min(100vw, 100vh) / 60);
+}
+
+.gate__inner {
+  max-width: 34em;
+  text-align: left;
+}
+
+.gate__stamp {
+  margin: 1.2em 0 0.4em;
+}
+
+.gate__title {
+  font-size: 2.6em;
+  line-height: 1.02;
+  margin-bottom: 0.5em;
+}
+
+.gate__body {
+  color: var(--bone-dim);
+  line-height: 1.5;
+  font-size: 1.05em;
+  margin: 0 0 1.6em;
+}
+
+.gate__diagram {
+  display: flex;
+  align-items: center;
+  gap: 1.2em;
+  margin-bottom: 1.8em;
+}
+
+.gate__phone {
+  width: 12em;
+  height: 6.75em;
+  border: 2px solid var(--rule-bright);
+  padding: 0.6em;
+  display: grid;
+  place-items: center;
+}
+
+.gate__lane {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  background: var(--rule-bright);
+}
+
+.gate__gate {
+  position: absolute;
+  top: -0.55em;
+  width: 0.5em;
+  height: 1.1em;
+}
+
+.gate__gate--mine {
+  left: 0;
+  background: var(--ochre);
+}
+
+.gate__gate--theirs {
+  right: 0;
+  background: var(--oxide);
+}
+
+.gate__front {
+  position: absolute;
+  left: 45%;
+  top: -0.25em;
+  width: 0.35em;
+  height: 0.5em;
+  background: var(--bone-dim);
+}
+
+.gate__note {
+  color: var(--bone-faint);
+  font-size: 0.95em;
+  margin: 0.8em 0 0;
+}
+
+/* ------------------------------------------------------------------- menu */
+
+.menu {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--steel-900);
+}
+
+.menu__grid {
+  flex: 1;
+  display: grid;
+  /* Asymmetric on purpose. Not two equal halves. */
+  grid-template-columns: 1.15fr 1fr;
+  gap: 4em;
+  padding: 3.2em 4em 1.5em;
+  min-height: 0;
+}
+
+.menu__brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.menu__title {
+  font-size: 9em;
+  line-height: 0.86;
+  letter-spacing: 0.01em;
+  margin: 0.3em 0 0;
+}
+
+.menu__underline {
+  width: 6em;
+  height: 0.4em;
+  background: var(--ochre);
+  margin: 0.9em 0 1.4em;
+}
+
+.menu__blurb {
+  color: var(--bone-dim);
+  font-size: 1.5em;
+  line-height: 1.45;
+  max-width: 18em;
+  margin: 0;
+}
+
+.menu__readout {
+  display: flex;
+  gap: 3em;
+  margin: 2.4em 0 0;
+}
+
+.menu__readout dt {
+  margin-bottom: 0.35em;
+}
+
+.menu__readout dd {
+  margin: 0;
+  font-size: 2.4em;
+  color: var(--bone);
+}
+
+.menu__of {
+  color: var(--bone-faint);
+  font-size: 0.6em;
+}
+
+.menu__actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1em;
+}
+
+.menu__deploy {
+  appearance: none;
+  text-align: left;
+  background: var(--steel-700);
+  border: 1px solid var(--rule-bright);
+  /* Ochre spine marks the one action that matters on this screen. */
+  border-left: 0.4em solid var(--ochre);
+  border-radius: 0;
+  padding: 1.6em 1.8em;
+  color: var(--bone);
+  cursor: pointer;
+  display: grid;
+  gap: 0.5em;
+  transition: background 120ms linear;
+}
+
+.menu__deploy:active {
+  background: var(--steel-600);
+}
+
+.menu__deploy-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.menu__deploy-op {
+  color: var(--ochre);
+  font-size: 1.3em;
+}
+
+.menu__deploy-name {
+  font-size: 3.4em;
+  line-height: 1;
+}
+
+.menu__deploy-brief {
+  color: var(--bone-dim);
+  font-size: 1.3em;
+  line-height: 1.4;
+}
+
+.menu__deploy-go {
+  font-size: 1.5em;
+  color: var(--ochre);
+  letter-spacing: 0.16em;
+  margin-top: 0.3em;
+}
+
+.menu__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1em;
+}
+
+.menu__foot {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4em 1.6em;
+}
+
+/* -------------------------------------------------------------- briefing */
+
+.ob {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--steel-900);
+}
+
+.ob__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4em 3em 0;
+}
+
+.ob__skip {
+  font-size: 1.2em;
+  padding: 0.4em 1em;
+}
+
+.ob__body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 3.5em;
+  align-items: center;
+  padding: 1em 3em;
+  min-height: 0;
+}
+
+.ob__step {
+  display: block;
+  font-size: 3.6em;
+  color: var(--ochre-deep);
+  line-height: 1;
+}
+
+.ob__title {
+  font-size: 4.2em;
+  line-height: 1;
+  margin: 0.15em 0 0.4em;
+}
+
+.ob__copy {
+  color: var(--bone-dim);
+  font-size: 1.55em;
+  line-height: 1.5;
+  margin: 0 0 1.2em;
+  max-width: 26em;
+}
+
+.ob__rule {
+  border-left: 0.25em solid var(--ochre);
+  padding: 0.3em 0 0.3em 1em;
+}
+
+.ob__rule p {
+  margin: 0.3em 0 0;
+  font-size: 1.4em;
+  color: var(--bone);
+}
+
+.ob__figure {
+  display: grid;
+  place-items: center;
+}
+
+/* Briefing diagrams, built from the same primitives as the live HUD. */
+
+.ob-dock {
+  position: relative;
+  display: flex;
+  gap: 0.6em;
+}
+
+.ob-card {
+  width: 5.2em;
+  height: 6.4em;
+  background: var(--steel-700);
+  border: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.6em;
+  color: var(--bone-faint);
+  font-size: 1.2em;
+}
+
+.ob-card--hot {
+  border-color: var(--ochre);
+  color: var(--ochre);
+}
+
+.ob-arrow {
+  position: absolute;
+  left: 2.4em;
+  top: -2.4em;
+  width: 1px;
+  height: 2em;
+  background: var(--ochre);
+}
+
+.ob-arrow::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -0.3em;
+  border-left: 0.35em solid transparent;
+  border-right: 0.35em solid transparent;
+  border-top: 0.5em solid var(--ochre);
+}
+
+.ob-split {
+  display: grid;
+  gap: 1em;
+}
+
+.ob-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+  border: 1px solid var(--rule-bright);
+  border-left: 0.3em solid var(--ochre);
+  padding: 1em 1.4em;
+  font-size: 1.3em;
+  color: var(--ochre);
+}
+
+.ob-pill .num {
+  color: var(--bone-dim);
+  margin-left: auto;
+}
+
+.ob-pill--xp {
+  border-left-color: var(--moss);
+  color: var(--moss);
+}
+
+.ob-mounts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7em;
+}
+
+.ob-mount {
+  border: 1px solid var(--rule-bright);
+  padding: 1.1em 1em;
+  display: grid;
+  place-items: center;
+  font-size: 1.1em;
+}
+
+.ob-mount--sealed {
+  background: var(--hazard);
+  border-color: transparent;
+}
+
+/* The label needs a plate behind it or the hazard stripes swallow it. */
+.ob-mount--sealed .stamp {
+  background: var(--steel-900);
+  color: var(--bone-dim);
+  padding: 0.2em 0.6em;
+}
+
+.ob-special {
+  display: grid;
+  place-items: center;
+  gap: 1.2em;
+}
+
+.ob-special__ring {
+  width: 7em;
+  height: 7em;
+  border: 2px solid var(--ochre);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--ochre);
+  font-size: 1.2em;
+}
+
+.ob-special__strikes {
+  display: flex;
+  gap: 0.5em;
+  align-items: flex-end;
+}
+
+.ob-special__strikes span {
+  width: 2px;
+  background: var(--ochre);
+  opacity: 0.7;
+}
+
+.ob-special__strikes span:nth-child(odd) {
+  height: 2.4em;
+}
+
+.ob-special__strikes span:nth-child(even) {
+  height: 3.6em;
+}
+
+.ob__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3em 2em;
+}
+
+.ob__ticks {
+  display: flex;
+  gap: 0.6em;
+}
+
+.ob__tick {
+  width: 3.4em;
+  height: 0.35em;
+  background: var(--steel-500);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.ob__tick--done {
+  background: var(--ochre-deep);
+}
+
+.ob__tick--on {
+  background: var(--ochre);
+}
+
+.ob__nav {
+  display: flex;
+  gap: 1em;
+}
+
+/* -------------------------------------------------- mission select */
+
+.ms,
+.cx,
+.st {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--steel-900);
+}
+
+.ms__head,
+.cx__head,
+.st__head {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  padding: 1.2em 2.4em;
+}
+
+.ms__head .btn,
+.cx__head .btn,
+.st__head .btn {
+  font-size: 1.2em;
+  padding: 0.4em 1em;
+}
+
+.ms__title,
+.cx__title,
+.st__title {
+  font-size: 2.4em;
+}
+
+.ms__credits {
+  margin-left: auto;
+}
+
+.cx__count {
+  margin-left: auto;
+}
+
+.st__head .stamp {
+  margin-left: auto;
+}
+
+.ms__body {
+  flex: 1;
+  padding: 1.6em 2.4em 2.4em;
+  min-height: 0;
+}
+
+.ms__featured {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2.5em;
+  background: var(--steel-800);
+  border: 1px solid var(--rule-bright);
+  border-left: 0.4em solid var(--ochre);
+  padding: 1.8em 2em;
+}
+
+.ms__featured-op {
+  color: var(--ochre);
+  font-size: 1.2em;
+}
+
+.ms__featured-name {
+  font-size: 3.4em;
+  line-height: 1;
+  margin: 0.15em 0 0.35em;
+}
+
+.ms__featured-brief {
+  color: var(--bone-dim);
+  font-size: 1.35em;
+  line-height: 1.45;
+  max-width: 34em;
+  margin: 0 0 1em;
+}
+
+.ms__mods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ms__featured-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 1.4em;
+  min-width: 16em;
+}
+
+.ms__spec {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1em 1.6em;
+  margin: 0;
+}
+
+.ms__spec dt {
+  margin-bottom: 0.2em;
+}
+
+.ms__spec dd {
+  margin: 0;
+  font-size: 1.6em;
+}
+
+.ms__deploy {
+  font-size: 1.6em;
+  width: 100%;
+}
+
+.ms__list-head {
+  display: flex;
+  align-items: center;
+  gap: 1.2em;
+  margin: 2.4em 0 0.8em;
+}
+
+.ms__list-rule {
+  flex: 1;
+}
+
+.ms__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+
+/* A list with columns, not a grid of identical cards. */
+.ms__row {
+  display: grid;
+  grid-template-columns: 3em 1fr auto 5.5em 5.5em 6.5em;
+  align-items: center;
+  gap: 1.2em;
+  padding: 0.9em 1.2em;
+  background: var(--steel-800);
+}
+
+.ms__row--locked {
+  color: var(--bone-faint);
+}
+
+.ms__row--cleared .ms__row-num {
+  color: var(--moss);
+}
+
+.ms__row--open {
+  background: var(--steel-700);
+}
+
+.ms__row-num {
+  font-size: 1.5em;
+  color: var(--bone-faint);
+}
+
+.ms__row-name {
+  font-size: 1.6em;
+  letter-spacing: 0.05em;
+}
+
+.ms__row--locked .ms__row-name {
+  color: var(--bone-faint);
+}
+
+.ms__row-mods {
+  display: flex;
+  gap: 0.4em;
+}
+
+.ms__row-time {
+  color: var(--bone-dim);
+  font-size: 1.2em;
+  text-align: right;
+}
+
+.ms__row-state {
+  text-align: right;
+}
+
+.ms__row-go {
+  font-size: 1.1em;
+  padding: 0.5em 0.9em;
+}
+
+/* -------------------------------------------------------------- roster */
+
+.cx__ages {
+  display: flex;
+  gap: 1px;
+  padding: 0 2.4em;
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+
+.cx__age {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 0.25em solid transparent;
+  color: var(--bone-faint);
+  font-family: var(--font-display);
+  font-size: 1.5em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.6em 1.2em;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+}
+
+.cx__age--on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.cx__age-i {
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+
+.cx__body {
+  flex: 1;
+  padding: 1.6em 2.4em 2.4em;
+  min-height: 0;
+}
+
+.cx__era {
+  border-left: 0.3em solid var(--accent);
+  padding-left: 1.2em;
+  margin-bottom: 1.8em;
+}
+
+.cx__era-name {
+  font-size: 2.8em;
+  color: var(--accent);
+}
+
+.cx__era-tag {
+  color: var(--bone-dim);
+  font-size: 1.4em;
+  margin: 0.2em 0 0.8em;
+}
+
+.cx__era-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.8em;
+}
+
+.cx__era-stats b {
+  color: var(--bone);
+}
+
+.cx__caption {
+  text-align: left;
+  padding: 1.4em 0 0.6em;
+  color: var(--ochre);
+}
+
+.cx__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.2em;
+}
+
+.cx__table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  padding: 0.5em 0.7em;
+  border-bottom: 1px solid var(--rule-bright);
+  white-space: nowrap;
+}
+
+.cx__table td {
+  padding: 0.7em;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+.cx__n {
+  text-align: right;
+}
+
+.cx__role {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--bone-dim);
+}
+
+.cx__name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.15em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cx__brief {
+  display: block;
+  color: var(--bone-faint);
+  font-size: 0.9em;
+  margin-top: 0.15em;
+}
+
+.cx__blast {
+  color: var(--oxide);
+  font-size: 0.8em;
+  margin-left: 0.3em;
+}
+
+/* ------------------------------------------------------------ settings */
+
+.st__body {
+  flex: 1;
+  padding: 1.6em 2.4em 2.4em;
+  min-height: 0;
+  max-width: 54em;
+}
+
+.st__group {
+  border-top: 1px solid var(--rule);
+  padding: 1.5em 0;
+}
+
+.st__group--danger {
+  border-top-color: var(--oxide-deep);
+}
+
+.st__label {
+  font-family: var(--font-display);
+  font-size: 1.7em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.st__note {
+  color: var(--bone-dim);
+  font-size: 1.2em;
+  line-height: 1.45;
+  margin: 0.4em 0 1em;
+  max-width: 34em;
+}
+
+.st__choices {
+  display: flex;
+  gap: 0.8em;
+}
+
+.st__choice {
+  appearance: none;
+  background: var(--steel-700);
+  border: 1px solid var(--rule-bright);
+  color: var(--bone-dim);
+  font-size: 1.5em;
+  padding: 0.5em 1.4em;
+  cursor: pointer;
+}
+
+.st__choice--on {
+  background: var(--ochre);
+  border-color: #f0bd44;
+  color: #171208;
+}
+
+.st__toggle {
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2em;
+}
+
+.st__toggle-text {
+  display: block;
+}
+
+.st__toggle .st__note {
+  margin-bottom: 0;
+}
+
+.st__switch {
+  margin-left: auto;
+  flex: none;
+  width: 6em;
+  padding: 0.55em 0;
+  text-align: center;
+  border: 1px solid var(--rule-bright);
+  color: var(--bone-faint);
+}
+
+.st__switch--on {
+  background: var(--ochre);
+  border-color: #f0bd44;
+}
+
+.st__switch--on .stamp {
+  color: #171208;
+}
+
+.st__confirm {
+  display: flex;
+  gap: 1em;
+}
+
+/* ------------------------------------------------------------- debrief */
+
+.db {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--steel-900);
+}
+
+.db__inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2em 4em;
+  max-width: 60em;
+}
+
+.db__op {
+  color: var(--bone-faint);
+  font-size: 1.3em;
+}
+
+.db__verdict {
+  font-size: 6em;
+  line-height: 1;
+  margin: 0.1em 0 0.3em;
+}
+
+.db--win .db__verdict {
+  color: var(--ochre);
+}
+
+.db--loss .db__verdict {
+  color: var(--oxide);
+}
+
+.db__sub {
+  color: var(--bone-dim);
+  font-size: 1.5em;
+  margin: 0;
+  max-width: 30em;
+}
+
+.db__stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  margin: 2.4em 0;
+}
+
+.db__stats > div {
+  background: var(--steel-800);
+  padding: 1em 1.1em;
+}
+
+.db__stats dt {
+  margin-bottom: 0.4em;
+}
+
+.db__stats dd {
+  margin: 0;
+  font-size: 2.1em;
+}
+
+.db__stat--reward dd {
+  color: var(--ochre);
+}
+
+.db__of {
+  color: var(--bone-faint);
+  font-size: 0.6em;
+}
+
+.db__actions {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+}
+
+.db__actions .btn {
+  font-size: 1.5em;
+}
+
+/* --------------------------------------------------------------- boot */
+
+.battle-boot {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--steel-900);
+}
+
+.battle-boot .stamp {
+  font-size: 1.4em;
+}

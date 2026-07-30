@@ -1,0 +1,307 @@
+/*
+ * FIELD COMMAND terminal.
+ *
+ * Direction: military-surplus control panel. Stamped metal plates, hairline
+ * rules instead of shadows, stencil-condensed headings, every figure in mono
+ * tabular so numbers line up in columns the way a readout does. One flourish
+ * only: the ochre hazard stripe, used for locked and dangerous things.
+ *
+ * Sizing: the whole UI is measured in `em` against `.stage`, whose font-size is
+ * 1% of the stage width. One HUD, any screen, no breakpoints.
+ */
+
+:root {
+  /* Surfaces: warm near-black, not navy, not slate. */
+  --steel-900: #12100e;
+  --steel-800: #191612;
+  --steel-700: #1f1b16;
+  --steel-600: #26211a;
+  --steel-500: #322b22;
+
+  /* Hairlines. */
+  --rule: #3a3125;
+  --rule-bright: #544733;
+
+  /* Ink. */
+  --bone: #ece5d6;
+  --bone-dim: #a79a86;
+  --bone-faint: #6f6555;
+
+  /* Functional accents. Ochre = go/affordable, oxide = threat/denied. */
+  --ochre: #d9a227;
+  --ochre-deep: #8f6a12;
+  --oxide: #c0432c;
+  --oxide-deep: #7a2a1a;
+  --moss: #7d9a5c;
+
+  --font-display: 'Oswald', 'Archivo Narrow', 'Roboto Condensed', 'Arial Narrow',
+    'Helvetica Neue Condensed', system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /* The one flourish. */
+  --hazard: repeating-linear-gradient(
+    -45deg,
+    var(--ochre-deep) 0 6px,
+    #17130d 6px 12px
+  );
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--steel-900);
+  color: var(--bone);
+  font-family: var(--font-body);
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#root {
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+/* Numbers are data. They always get mono tabular figures. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.02em;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-stretch: 87.5%;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ stage */
+
+/*
+ * Matches Phaser's FIT letterbox exactly, so the DOM HUD and the canvas share
+ * one coordinate space. 1em == 1% of stage width, everywhere below.
+ */
+.stage {
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  font-size: calc(min(100vw, 100vh * 16 / 9) / 100);
+  background: var(--steel-900);
+  overflow: hidden;
+}
+
+.stage__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.stage__canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ------------------------------------------------------------- primitives */
+
+.panel {
+  background: var(--steel-800);
+  border: 1px solid var(--rule);
+  /* Sharp. The timid 8-16px middle is the tell. */
+  border-radius: 0;
+}
+
+.panel--raised {
+  background: var(--steel-700);
+  border-color: var(--rule-bright);
+}
+
+.rule {
+  height: 1px;
+  background: var(--rule);
+  border: 0;
+  margin: 0;
+}
+
+.hazard-rule {
+  height: 0.5em;
+  background: var(--hazard);
+  opacity: 0.85;
+}
+
+.btn {
+  appearance: none;
+  font-family: var(--font-display);
+  font-size: 1.5em;
+  font-weight: 600;
+  font-stretch: 87.5%;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--bone);
+  background: var(--steel-600);
+  border: 1px solid var(--rule-bright);
+  border-radius: 0;
+  padding: 0.75em 1.4em;
+  cursor: pointer;
+  transition: background 120ms linear, border-color 120ms linear, color 120ms linear;
+}
+
+.btn:active {
+  background: var(--steel-500);
+}
+
+.btn:disabled {
+  color: var(--bone-faint);
+  border-color: var(--rule);
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--ochre);
+  border-color: #f0bd44;
+  color: #171208;
+}
+
+.btn--primary:active {
+  background: #c08e1c;
+}
+
+.btn--danger {
+  border-color: var(--oxide);
+  color: #e9a091;
+}
+
+.btn--ghost {
+  background: transparent;
+}
+
+/* Stamped label, e.g. OP. 04 or AGE 2/5. */
+.stamp {
+  font-family: var(--font-mono);
+  font-size: 1.05em;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bone-dim);
+  border: 1px solid var(--rule);
+  padding: 0.15em 0.5em;
+  /* Not a pill. */
+  border-radius: 0;
+  white-space: nowrap;
+}
+
+.tag--warn {
+  color: #e0a893;
+  border-color: var(--oxide-deep);
+}
+
+.meter {
+  position: relative;
+  height: 0.7em;
+  background: #0d0b09;
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+
+.meter__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--ochre);
+  transition: width 90ms linear;
+}
+
+.meter__fill--enemy {
+  background: var(--oxide);
+}
+
+.meter__fill--xp {
+  background: var(--moss);
+}
+
+/* ------------------------------------------------------------------ scroll */
+
+.scroll-y {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-bright) transparent;
+}
+
+.scroll-y::-webkit-scrollbar {
+  width: 0.5em;
+}
+
+.scroll-y::-webkit-scrollbar-thumb {
+  background: var(--rule-bright);
+}
+
+.scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Motion is for state changes only. 120ms, no entrance animations. */
+@keyframes deny {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-0.35em);
+  }
+  75% {
+    transform: translateX(0.35em);
+  }
+}
+
+.deny {
+  animation: deny 160ms linear;
+}
+
+@keyframes blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0.25;
+  }
+}
+
+.blink {
+  animation: blink 900ms steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deny,
+  .blink {
+    animation: none;
+  }
+}
