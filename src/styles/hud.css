@@ -76,6 +76,7 @@
 
 .hud__age,
 .hud__enemy {
+  position: relative;
   min-width: 13em;
   background: rgba(18, 16, 14, 0.82);
   border: 1px solid var(--rule-bright);
@@ -170,13 +171,40 @@
   border: 1px solid var(--rule);
 }
 
+/*
+ * Contested span. Scaled rather than resized: transitioning `width` is layout
+ * work on every sample, which is the one thing the lane strip must not do. The
+ * band carries no border for the same reason, since scaleX would distort it; the
+ * two front lines are drawn as separate markers below.
+ */
 .lane__contest {
   position: absolute;
   top: 0;
   bottom: 0;
+  left: 0;
+  width: 100%;
+  transform-origin: left center;
   background: rgba(217, 162, 39, 0.1);
-  border-left: 1px solid rgba(217, 162, 39, 0.35);
-  border-right: 1px solid rgba(192, 67, 44, 0.35);
+  transition: transform var(--t-sample) linear;
+  will-change: transform;
+}
+
+.lane__front {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  transition: transform var(--t-sample) linear;
+  will-change: transform;
+}
+
+.lane__front--mine {
+  background: rgba(217, 162, 39, 0.55);
+}
+
+.lane__front--theirs {
+  background: rgba(192, 67, 44, 0.55);
 }
 
 .lane__gate {
@@ -200,8 +228,11 @@
 .lane__blip {
   position: absolute;
   bottom: 0.15em;
+  left: 0;
   width: 0.22em;
-  transform: translateX(-50%);
+  margin-left: -0.11em;
+  transition: transform var(--t-sample) linear, opacity var(--t-sample) linear;
+  will-change: transform;
 }
 
 .lane__blip--player {
@@ -235,9 +266,14 @@
   position: absolute;
   top: -1px;
   bottom: -1px;
+  left: 0;
   border: 1px solid rgba(236, 229, 214, 0.4);
   background: rgba(236, 229, 214, 0.04);
   pointer-events: none;
+  /* Width is fixed for the whole match (the camera never zooms), so only the
+     position needs interpolating. */
+  transition: transform var(--t-sample) linear;
+  will-change: transform;
 }
 
 /* --------------------------------------------------------- own structure */
@@ -258,6 +294,22 @@
   flex: 1;
 }
 
+/*
+ * Damage ghost. A second fill sits behind the real one and catches up half a
+ * second later, so the width of the gap is how much that hit took. A bar that
+ * only ever snaps to its new value tells you the level but never the blow.
+ */
+.meter__ghost {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left center;
+  background: var(--oxide);
+  opacity: 0.55;
+  transition: transform 620ms var(--ease-out) 160ms;
+  will-change: transform;
+}
+
 .hud__mine .num {
   font-size: 1.15em;
   color: var(--bone-dim);
@@ -268,6 +320,7 @@
 /* ------------------------------------------------------------------ dock */
 
 .hud__dock {
+  position: relative;
   margin-top: auto;
   display: grid;
   grid-template-columns: auto 1fr auto;

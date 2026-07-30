@@ -1,5 +1,6 @@
 import { PERKS } from '@/data/perks';
 import { useGame } from '@/state/store';
+import { useChangeFlash, useTweenedNumber } from '@/ui/useMotion';
 
 /**
  * The credits sink. A list, not a grid of cards, and every row states its effect
@@ -12,6 +13,9 @@ export function Armoury() {
   const owned = useGame((s) => s.perks);
   const buyPerk = useGame((s) => s.buyPerk);
 
+  const shownCredits = useTweenedNumber(credits);
+  const creditsDir = useChangeFlash(credits);
+
   const spent = PERKS.filter((p) => owned.includes(p.id)).reduce((n, p) => n + p.cost, 0);
   const total = PERKS.reduce((n, p) => n + p.cost, 0);
 
@@ -23,7 +27,10 @@ export function Armoury() {
         </button>
         <h2 className="st__title">Armoury</h2>
         <span className="label">
-          Credits <span className="num">{credits.toLocaleString('en-GB')}</span>
+          Credits{' '}
+          <span className={`num${creditsDir ? ` tick--${creditsDir}` : ''}`}>
+            {Math.round(shownCredits).toLocaleString('en-GB')}
+          </span>
         </span>
       </header>
       <div className="hazard-rule" />

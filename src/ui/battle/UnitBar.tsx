@@ -8,11 +8,18 @@ import { UnitGlyph } from '@/ui/components/Glyph';
  * heavy, artillery) so muscle memory survives an evolve: the card you tap for
  * a Clubman is the card you tap for an Exo Trooper.
  */
-export function UnitBar({ snapshot }: { snapshot: HudSnapshot }) {
+export function UnitBar({
+  snapshot,
+  eraChanged = false,
+}: {
+  snapshot: HudSnapshot;
+  /** True for a moment after an evolve, so the new roster arrives as a list. */
+  eraChanged?: boolean;
+}) {
   const roster = unitsForAge(AGES[snapshot.ageIndex].id);
 
   return (
-    <div className="units">
+    <div className={`units${eraChanged ? ' units--changed' : ''}`}>
       {roster.map((def) => {
         const cooling = snapshot.cooldowns[def.id] ?? 0;
         const queued = snapshot.queue.filter((id) => id === def.id).length;

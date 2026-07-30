@@ -1,6 +1,7 @@
 import { AGES } from '@/data/ages';
 import { SPECIALS } from '@/data/specials';
 import { bridge, type HudSnapshot } from '@/game/bridge';
+import { useJustChanged } from '@/ui/useMotion';
 
 const R = 26;
 const CIRC = 2 * Math.PI * R;
@@ -15,11 +16,14 @@ export function SpecialDial({ snapshot }: { snapshot: HudSnapshot }) {
   const def = SPECIALS[age.id];
   const remaining = snapshot.specialCd;
   const ready = remaining <= 0;
+  // One bloom on the transition into ready, not a loop: the dial is in the
+  // corner of the eye during a push and a permanent pulse would nag.
+  const justReady = useJustChanged(ready, 640) && ready;
   const progress = ready ? 1 : 1 - remaining / snapshot.specialMax;
 
   return (
     <button
-      className={`dial${ready ? ' dial--ready' : ''}`}
+      className={`dial${ready ? ' dial--ready' : ''}${justReady ? ' bloom' : ''}`}
       style={{ '--accent': age.accent } as React.CSSProperties}
       onClick={() => bridge.send({ t: 'special' })}
       aria-label={ready ? `Call ${def.name}` : `${def.name} recharging`}

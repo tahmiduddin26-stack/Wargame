@@ -5,6 +5,7 @@ import { audio } from '@/game/audio/Audio';
 import { bridge, type HudSnapshot } from '@/game/bridge';
 import { useGame } from '@/state/store';
 import { GoldGlyph, XpGlyph } from '@/ui/components/Glyph';
+import { useChangeFlash, useJustChanged, useTweenedNumber } from '@/ui/useMotion';
 import { BattleCoach } from './BattleCoach';
 import { LaneStrip } from './LaneStrip';
 import { PauseSheet } from './PauseSheet';
@@ -48,6 +49,15 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
     [],
   );
 
+  // Gold arrives in lumps from loot and leaves in lumps on purchase, so the
+  // figure eases rather than snapping and tints for a moment in the direction
+  // it moved.
+  const gold = useTweenedNumber(snapshot.gold);
+  const goldDir = useChangeFlash(snapshot.gold);
+
+  // The focal moment. Every piece of the evolve sequence hangs off this.
+  const eraChanged = useJustChanged(snapshot.ageIndex, 700);
+
   const age = AGES[snapshot.ageIndex];
   const nextAge = AGES[snapshot.ageIndex + 1];
   const capped = snapshot.ageIndex >= level.maxAge;
@@ -75,10 +85,15 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
           <span className="hud__res-icon">
             <GoldGlyph size={14} />
           </span>
-          <span className="num hud__gold">{snapshot.gold.toLocaleString('en-GB')}</span>
+          <span className={`num hud__gold${goldDir ? ` tick--${goldDir}` : ''}`}>
+            {Math.round(gold).toLocaleString('en-GB')}
+          </span>
         </div>
 
-        <div className="hud__age" style={{ '--accent': age.accent } as React.CSSProperties}>
+        <div
+          className={`hud__age${eraChanged ? ' hud__age--changed' : ''}`}
+          style={{ '--accent': age.accent } as React.CSSProperties}
+        >
           <div className="hud__age-line">
             <span className="label hud__age-name">{age.name.replace(' Age', '')}</span>
             <span className="num hud__age-i">
@@ -116,6 +131,12 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
             </span>
           </div>
           <div className="meter">
+            <div
+              className="meter__ghost"
+              style={
+                { '--fill': snapshot.enemyBaseHp / snapshot.enemyBaseMaxHp } as React.CSSProperties
+              }
+            />
             <div
               className="meter__fill meter__fill--enemy"
               style={
@@ -176,6 +197,10 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
         <span className="label">Your gate</span>
         <div className="meter hud__mine-meter">
           <div
+            className="meter__ghost"
+            style={{ '--fill': snapshot.baseHp / snapshot.baseMaxHp } as React.CSSProperties}
+          />
+          <div
             className="meter__fill"
             style={{ '--fill': snapshot.baseHp / snapshot.baseMaxHp } as React.CSSProperties}
           />
@@ -184,7 +209,15 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
       </div>
 
       <div className={`hud__dock${denied ? ' deny' : ''}`}>
-        <UnitBar snapshot={snapshot} />
+        {/* Focal: a light sweep crosses the dock as the era turns over. */}
+        {eraChanged && (
+          <span
+            className="era-sweep"
+            style={{ '--accent': age.accent } as React.CSSProperties}
+            aria-hidden="true"
+          />
+        )}
+        <UnitBar snapshot={snapshot} eraChanged={eraChanged} />
 
         <div className="hud__mid">
           <button

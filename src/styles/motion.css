@@ -1,0 +1,396 @@
+/*
+ * Motion system.
+ *
+ * Thesis: this is an Operate surface with one earned focal moment. Motion here
+ * explains state, acknowledges input, and carries continuity. The one sequence
+ * that gets real authorship is the EVOLVE, because the whole game is a race to
+ * it and everything else on screen is a readout that should stay calm.
+ *
+ * Rules the rest of the file holds to:
+ *
+ *   - Compositor properties only. A 60fps canvas is already running underneath
+ *     the HUD, so nothing here animates width, height, top, left or margin.
+ *   - Feedback is 100-150ms, state changes 150-300ms, overlays 300-400ms, and
+ *     the focal sequence up to 700ms. Exits run faster than entrances.
+ *   - Deceleration, not bounce. Elastic easing on a military readout would be
+ *     a costume.
+ *   - Nothing loops that is not communicating a live state.
+ */
+
+:root {
+  /* Confident arrival. The default for anything appearing or settling. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Symmetric, for things that move between two known positions. */
+  --ease-move: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Leaving. Quicker and flatter than arriving. */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  --t-tap: 90ms;
+  --t-feedback: 140ms;
+  --t-state: 220ms;
+  --t-overlay: 320ms;
+  --t-focal: 640ms;
+
+  /*
+   * The HUD snapshot arrives about every 80ms. Anything driven by it is
+   * interpolated over exactly that window so values glide between samples
+   * instead of stepping.
+   */
+  --t-sample: 90ms;
+}
+
+/* ------------------------------------------------------------- micro-input */
+
+/*
+ * Every button acknowledges the press itself rather than waiting for the state
+ * change to come back from the sim, which on a queued purchase can be a frame
+ * or two later.
+ */
+.btn,
+.unit,
+.mount,
+.evolve,
+.dial,
+.ms__tier-btn,
+.menu__deploy,
+.am__buy,
+.cx__age,
+.st__choice {
+  transition:
+    background-color var(--t-feedback) linear,
+    border-color var(--t-feedback) linear,
+    color var(--t-feedback) linear,
+    transform var(--t-tap) var(--ease-out);
+}
+
+.btn:active:not(:disabled),
+.unit:active,
+.mount:active,
+.evolve:active:not(:disabled),
+.ms__tier-btn:active,
+.menu__deploy:active,
+.am__buy:active:not(:disabled),
+.st__choice:active {
+  transform: scale(0.975);
+}
+
+.dial:active {
+  transform: scale(0.955);
+}
+
+/* --------------------------------------------------------------- attention */
+
+/*
+ * A control that has just become usable pulls the eye once, then stops. These
+ * are state announcements, not idle loops: each is keyed to the transition into
+ * the ready state and plays a fixed number of times.
+ */
+@keyframes ready-bloom {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent, var(--ochre));
+    opacity: 0.55;
+  }
+  100% {
+    box-shadow: 0 0 0 1.1em transparent;
+    opacity: 0;
+  }
+}
+
+.bloom::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: ready-bloom 620ms var(--ease-out) 1 both;
+}
+
+/*
+ * Evolve is the one control allowed to keep asking. It is the single most
+ * consequential decision in a match and it is easy to miss while fighting, so
+ * the edge breathes for as long as the option is live.
+ */
+@keyframes edge-breathe {
+  0%,
+  100% {
+    border-color: var(--accent);
+  }
+  50% {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--rule-bright));
+  }
+}
+
+.evolve--ready {
+  animation: edge-breathe 2.4s var(--ease-move) infinite;
+}
+
+/* Urgency: the survival wave clock and the last thirty seconds of a mission. */
+@keyframes urgent-tick {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.hud__clock--urgent .num {
+  animation: urgent-tick 900ms var(--ease-move) infinite;
+}
+
+/* ------------------------------------------------------------------ values */
+
+/*
+ * A figure that just changed gets a brief tint rather than a size change, so
+ * columns of tabular numbers never reflow.
+ */
+@keyframes value-gain {
+  0% {
+    color: var(--ochre);
+  }
+  100% {
+    color: inherit;
+  }
+}
+
+@keyframes value-loss {
+  0% {
+    color: var(--oxide);
+  }
+  100% {
+    color: inherit;
+  }
+}
+
+.tick--up {
+  animation: value-gain 420ms var(--ease-out) 1;
+}
+
+.tick--down {
+  animation: value-loss 420ms var(--ease-out) 1;
+}
+
+/* ------------------------------------------------------------ focal: evolve */
+
+/*
+ * The age change. A light sweep crosses the dock left to right, the age plate
+ * wipes to the new era's accent, and the roster cards arrive behind it.
+ *
+ * This is the only sequence in the game longer than a third of a second, and it
+ * fires at most four times a match.
+ */
+@keyframes era-sweep {
+  0% {
+    transform: translateX(-110%) skewX(-12deg);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(110%) skewX(-12deg);
+    opacity: 0;
+  }
+}
+
+.era-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.era-sweep::before {
+  content: '';
+  position: absolute;
+  inset: -20% -30%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 60%, transparent),
+    transparent
+  );
+  animation: era-sweep var(--t-focal) var(--ease-move) 1 both;
+}
+
+/* The age plate itself re-reads as new. */
+@keyframes era-plate {
+  0% {
+    box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 100em var(--accent);
+    color: var(--steel-900);
+  }
+  100% {
+    box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 0 transparent;
+  }
+}
+
+.hud__age--changed {
+  animation: era-plate 520ms var(--ease-out) 1;
+}
+
+/*
+ * The roster genuinely becomes a different list on evolve, which is the one
+ * place a sibling stagger is honest. Capped at four cards and 120ms total.
+ */
+@keyframes card-arrive {
+  0% {
+    transform: translateY(0.7em);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.units--changed .unit {
+  animation: card-arrive 320ms var(--ease-out) both;
+}
+
+.units--changed .unit:nth-child(1) {
+  animation-delay: 0ms;
+}
+.units--changed .unit:nth-child(2) {
+  animation-delay: 40ms;
+}
+.units--changed .unit:nth-child(3) {
+  animation-delay: 80ms;
+}
+.units--changed .unit:nth-child(4) {
+  animation-delay: 120ms;
+}
+
+/* ------------------------------------------------------------- continuity */
+
+/*
+ * Screen changes. Short, and a rise rather than a slide, so the direction does
+ * not imply a spatial relationship the app does not actually have.
+ */
+@keyframes screen-in {
+  0% {
+    transform: translateY(0.6em);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.screen-enter {
+  animation: screen-in var(--t-overlay) var(--ease-out) both;
+}
+
+/* Overlays sit on top of a live battle, so they arrive faster still. */
+@keyframes sheet-in {
+  0% {
+    transform: translateY(1.2em) scale(0.985);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.pause__sheet {
+  animation: sheet-in 260ms var(--ease-out) both;
+}
+
+@keyframes veil-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pause {
+  animation: veil-in 180ms linear both;
+}
+
+/* Coaching prompts arrive from under the dock and leave straight up. */
+@keyframes coach-in {
+  0% {
+    transform: translate(-50%, 1em);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.coach {
+  animation: coach-in 260ms var(--ease-out) both;
+}
+
+/* --------------------------------------------------------------- reduced */
+
+/*
+ * Everything above is either feedback or decoration on top of a state that is
+ * already legible without it, so the reduced-motion path simply removes it all
+ * rather than substituting cross-fades.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .unit,
+  .mount,
+  .evolve,
+  .dial,
+  .ms__tier-btn,
+  .menu__deploy,
+  .am__buy,
+  .cx__age,
+  .st__choice {
+    transition: background-color var(--t-feedback) linear,
+      border-color var(--t-feedback) linear, color var(--t-feedback) linear;
+  }
+
+  .btn:active,
+  .unit:active,
+  .mount:active,
+  .evolve:active,
+  .dial:active,
+  .ms__tier-btn:active,
+  .menu__deploy:active,
+  .am__buy:active,
+  .st__choice:active {
+    transform: none;
+  }
+
+  .bloom::after,
+  .evolve--ready,
+  .hud__clock--urgent .num,
+  .tick--up,
+  .tick--down,
+  .era-sweep::before,
+  .hud__age--changed,
+  .units--changed .unit,
+  .screen-enter,
+  .pause__sheet,
+  .pause,
+  .coach {
+    animation: none;
+  }
+
+  .lane__blip,
+  .lane__window,
+  .lane__contest {
+    transition: none;
+  }
+}
+
+/*
+ * The screen wrapper has to be a full-size positioning context: every screen
+ * inside it is absolutely positioned against the stage, and an `animation` on
+ * an ancestor establishes a containing block for them.
+ */
+.stage > .screen-enter,
+.stage > div {
+  position: absolute;
+  inset: 0;
+}

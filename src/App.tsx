@@ -50,17 +50,26 @@ export function App() {
     if (screen === 'battle' && !landscape) bridge.send({ t: 'pause', on: true });
   }, [screen, landscape]);
 
+  /*
+   * Screens arrive with a short rise. The battle is excluded on purpose: it owns
+   * a Phaser canvas that must not be remounted or transformed, and it has its own
+   * deploy beat in the boot line.
+   */
+  const animated = screen !== 'battle';
+
   return (
     <>
       <div className="stage">
-        {screen === 'menu' && <MainMenu />}
-        {screen === 'onboarding' && <Onboarding />}
-        {screen === 'missions' && <MissionSelect />}
-        {screen === 'battle' && <BattleView />}
-        {screen === 'debrief' && <Debrief />}
-        {screen === 'codex' && <Codex />}
-        {screen === 'armoury' && <Armoury />}
-        {screen === 'settings' && <Settings />}
+        <div className={animated ? 'screen-enter' : undefined} key={screen}>
+          {screen === 'menu' && <MainMenu />}
+          {screen === 'onboarding' && <Onboarding />}
+          {screen === 'missions' && <MissionSelect />}
+          {screen === 'battle' && <BattleView />}
+          {screen === 'debrief' && <Debrief />}
+          {screen === 'codex' && <Codex />}
+          {screen === 'armoury' && <Armoury />}
+          {screen === 'settings' && <Settings />}
+        </div>
       </div>
       {!landscape && <OrientationGate />}
     </>
