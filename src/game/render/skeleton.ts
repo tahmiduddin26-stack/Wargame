@@ -101,5 +101,8 @@ export function palette(faction: Faction, accent: number): Record<TintRole, numb
   if (faction === 'player') {
     return { skin: 0xd8bb96, cloth: 0x8d7f6a, trim: accent, metal: 0x9aa0a6, dark: 0x4a4238 };
   }
-  return { skin: 0xa9866a, cloth: 0x5c4a4a, trim: 0xb04a3a, metal: 0x7d7370, dark: 0x332a2a };
+  // Cool trim against the player's warm accent. Amber against steel blue stays
+  // separable under every common colour-vision deficiency; the old oxide red
+  // did not, and telling your line from theirs is the whole read of the game.
+  return { skin: 0xa9866a, cloth: 0x4a5560, trim: 0x46a6c8, metal: 0x7d8790, dark: 0x2a3138 };
 }

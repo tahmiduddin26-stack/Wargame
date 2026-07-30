@@ -53,6 +53,14 @@
   --bone-dim: #b3a692;
   --bone-faint: #928471;
 
+  /*
+   * Faction identity. Separate tokens from the semantic accents below, because
+   * "this is mine" and "this is affordable" are different questions and had been
+   * sharing one colour.
+   */
+  --player: #e0aa2e;
+  --enemy: #46a6c8;
+
   /* Functional accents. Ochre = go/affordable, oxide = threat/denied. */
   --ochre: #e0aa2e;
   --ochre-deep: #8f6a12;
@@ -311,7 +319,7 @@ h3,
 }
 
 .meter__fill--enemy {
-  background: var(--oxide);
+  background: var(--enemy);
 }
 
 .meter__fill--xp {

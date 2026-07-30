@@ -93,7 +93,7 @@
 }
 
 .hud__enemy {
-  box-shadow: inset 0 2px 0 var(--oxide);
+  box-shadow: inset 0 2px 0 var(--enemy);
 }
 
 .hud__age-line {
@@ -204,7 +204,7 @@
 }
 
 .lane__front--theirs {
-  background: rgba(192, 67, 44, 0.55);
+  background: rgba(70, 166, 200, 0.55);
 }
 
 .lane__gate {
@@ -216,18 +216,24 @@
 
 .lane__gate--mine {
   left: 0;
-  background: var(--ochre);
+  background: var(--player);
 }
 
 .lane__gate--theirs {
   right: 0;
-  background: var(--oxide);
+  background: var(--enemy);
 }
 
-/* Blip height encodes role, so a tank push reads differently from a swarm. */
+/*
+ * Blip height encodes role, so a tank push reads differently from a swarm.
+ *
+ * Faction is encoded twice: colour, and which half of the track the blip hangs
+ * from. Yours grow up from the floor, theirs hang down from the ceiling. Colour
+ * alone on a two-pixel mark is a thin channel even with a colourblind-safe pair,
+ * and position costs nothing.
+ */
 .lane__blip {
   position: absolute;
-  bottom: 0.15em;
   left: 0;
   width: 0.22em;
   margin-left: -0.11em;
@@ -236,11 +242,13 @@
 }
 
 .lane__blip--player {
-  background: var(--ochre);
+  bottom: 0.1em;
+  background: var(--player);
 }
 
 .lane__blip--enemy {
-  background: var(--oxide);
+  top: 0.1em;
+  background: var(--enemy);
 }
 
 .lane__blip--melee {

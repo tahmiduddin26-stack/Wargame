@@ -42,7 +42,7 @@ export class BaseView {
       .setStrokeStyle(1, 0x000000, 0.6)
       .setDepth(20);
     this.hpFill = scene.add
-      .rectangle(x - barW / 2, barY, barW, 9, faction === 'player' ? 0xd9a227 : 0xb04a3a)
+      .rectangle(x - barW / 2, barY, barW, 9, faction === 'player' ? 0xe0aa2e : 0x46a6c8)
       .setOrigin(0, 0.5)
       .setDepth(21);
     this.hpText = scene.add
@@ -149,7 +149,10 @@ export class BaseView {
     const ratio = Phaser.Math.Clamp(c.baseHp / c.baseMaxHp, 0, 1);
     this.hpFill.width = this.hpBack.width * ratio;
     this.hpText.setText(`${Math.ceil(Math.max(0, c.baseHp))}`);
-    this.hpFill.setFillStyle(ratio < 0.25 ? 0xd0452f : this.faction === 'player' ? 0xd9a227 : 0xb04a3a);
+    // Critical structure goes red on both sides: that is danger, not identity.
+    this.hpFill.setFillStyle(
+      ratio < 0.25 ? 0xd0452f : this.faction === 'player' ? 0xe0aa2e : 0x46a6c8,
+    );
   }
 
   private drawMounts(c: Commander, age: AgeDef): void {

@@ -68,7 +68,7 @@
 
 .gate__gate--theirs {
   right: 0;
-  background: var(--oxide);
+  background: var(--enemy);
 }
 
 .gate__front {
@@ -1065,12 +1065,19 @@
 }
 
 /* Only the decisive numbers get colour; the middling ones stay quiet. */
+/*
+ * Strong and weak multipliers, keyed on brightness rather than green-vs-red.
+ * That pair measured 18.2 dE under protanopia, which is below the point where
+ * two colours read as different at all: the single most common colour-vision
+ * failure, in the one table whose whole job is scanning for good and bad.
+ */
 .cx__mult--good {
-  color: var(--moss);
+  color: var(--ochre);
+  font-weight: 600;
 }
 
 .cx__mult--bad {
-  color: var(--oxide);
+  color: var(--bone-faint);
 }
 
 /* ------------------------------------------------------- difficulty ladder */

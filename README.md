@@ -59,6 +59,40 @@ Rules that are easy to erode, so they are stated in `src/styles/global.css`:
 - **Meters animate a transform, not width**, because they update about twelve
   times a second during a battle and animating width forces layout every frame.
 
+## Colour and colour vision
+
+Friend and foe identification is the entire read of a lane war: which blips are
+yours, whose gate meter is whose, which units in the melee to count. That made
+the faction palette a correctness problem rather than a taste one.
+
+`scripts/colour-check.mjs` simulates protanopia, deuteranopia and tritanopia
+(Vienot 1999 LMS method) and reports CIE76 dE for every pair the game asks a
+player to tell apart:
+
+```bash
+node scripts/colour-check.mjs
+```
+
+Its first run found the palette was worse than it looked, but not where I
+expected:
+
+- **The real failure was the counter table.** Strong multipliers were green and
+  weak ones red, which measured **18.2 dE under protanopia** and is the single
+  most common colour-vision failure there is, in the one table whose whole job is
+  scanning for good and bad. It now keys on brightness and weight instead: strong
+  values are bright amber and bold, weak ones dim. That is also a better readout
+  aesthetic than traffic lights.
+- **The faction pair passed the threshold and was still wrong.** Ochre against
+  oxide measured 24.8 dE under deuteranopia, above the fail line, but the
+  simulated colours were `#bebe24` and `#93932e`: they separated on *lightness*,
+  not hue, which is fragile on a two-pixel lane blip. The enemy is now a steel
+  cyan, and the same pair measures **105.2**.
+
+Colour is also never the only channel. On the lane strip your blips grow up from
+the floor and theirs hang down from the ceiling, so faction survives even if the
+colours do not. Red is now reserved strictly for danger (unaffordable cost,
+critical structure, the last thirty seconds) rather than doubling as the enemy.
+
 ## Motion
 
 The thesis, stated in `src/styles/motion.css`: this is an Operate surface with one
@@ -159,6 +193,7 @@ scripts/
   smoke.mjs        Playwright smoke test: menu, briefing, a real mission
   modes.mjs        Survival, Armoury, difficulty ladder and the roster
   motion-probe.mjs asserts the UI motion interpolates and stays off layout
+  colour-check.mjs simulates colour blindness over the critical colour pairs
 ```
 
 `PLAN.md` records what the build-out set out to do and why, including what the

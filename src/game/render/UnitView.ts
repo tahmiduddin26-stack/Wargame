@@ -60,7 +60,7 @@ export class UnitView {
       .setStrokeStyle(1, 0x000000, 0.5)
       .setVisible(false);
     this.hpFill = scene.add
-      .rectangle(-barW / 2, -H - 12, barW, 4, faction === 'player' ? 0xd9a227 : 0xb04a3a)
+      .rectangle(-barW / 2, -H - 12, barW, 4, faction === 'player' ? 0xe0aa2e : 0x46a6c8)
       .setOrigin(0, 0.5)
       .setVisible(false);
     this.container.add([this.hpBack, this.hpFill]);
