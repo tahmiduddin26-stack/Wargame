@@ -4,6 +4,12 @@ import type { DifficultyId } from '@/data/difficulty';
 import { LEVELS } from '@/data/levels';
 import { PERKS, type PerkId } from '@/data/perks';
 
+/**
+ * Panel finish. 'auto' follows the device, which is the only one of the three
+ * that can change without the player touching anything.
+ */
+export type ThemePref = 'auto' | 'dark' | 'light';
+
 export type Screen =
   | 'menu'
   | 'onboarding'
@@ -61,6 +67,12 @@ interface GameState {
   settings: {
     /** Battle speed preference, restored on deploy. */
     speed: 1 | 1.5 | 2;
+    /**
+     * Dark is the authored default, not a fallback: the art direction is a lit
+     * panel in a dark room. 'auto' is opt-in so an existing player's HUD never
+     * changes finish because their phone hit sunset.
+     */
+    theme: ThemePref;
     haptics: boolean;
     /** Halves the corpse cap on weaker devices. */
     reducedCorpses: boolean;
@@ -113,6 +125,7 @@ export const useGame = create<GameState>()(
       perks: [],
       settings: {
         speed: 1,
+        theme: 'dark',
         haptics: true,
         reducedCorpses: false,
         showLaneStrip: true,
@@ -195,6 +208,20 @@ export const useGame = create<GameState>()(
     }),
     {
       name: 'aow.progress.v1',
+      /*
+       * Settings is one persisted key, so the default `merge` would swap the
+       * whole object out and a save written before a new setting existed would
+       * land it as undefined. Merging the group by hand means adding a setting
+       * stays a one-line change instead of a storage migration.
+       */
+      merge: (persisted, current) => {
+        const saved = persisted as Partial<GameState> | undefined;
+        return {
+          ...current,
+          ...saved,
+          settings: { ...current.settings, ...(saved?.settings ?? {}) },
+        };
+      },
       partialize: (state) => ({
         onboardingDone: state.onboardingDone,
         records: state.records,

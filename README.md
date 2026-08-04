@@ -31,7 +31,7 @@ The look is a field commander's control panel: warm near-black steel, hairline
 rules instead of shadows, condensed stencil-adjacent headings, and every figure
 in tabular mono so numbers line up the way a readout does. Sharp corners
 throughout, with one flourish (an ochre hazard stripe) reserved for locked and
-dangerous things.
+dangerous things. It ships in two finishes &mdash; see *Two finishes* below.
 
 Two typefaces are self-hosted in `src/assets/fonts` (latin subsets, variable
 weight, 52 KB combined). They are bundled rather than loaded from a CDN because
@@ -87,6 +87,37 @@ So:
   is legend data, plus the evolve sweep, where it earns its place by being a
   520ms event rather than a persistent tint.
 
+## Two finishes: night and day
+
+Settings &rarr; **Panel finish** switches between NIGHT (the authored look) and
+DAY, with AUTO following the device. Night is the default rather than the
+fallback: the art direction is a lit panel in a dark room, and auto is opt-in so
+nobody's HUD changes finish because their phone hit sunset.
+
+Day is not night with the lightness flipped. An inverted dark theme reads as a
+photographic negative &mdash; all the warm ink goes cold &mdash; so day is its
+own palette: a field manual printed on bleached board, printer's ink, stamped
+amber.
+
+One stylesheet serves both, because the tokens are contracts rather than
+descriptions:
+
+- `--steel-900 .. -500` is a surface **ramp**, not a lightness scale. 900 is the
+  page and 500 is the most raised chip. In day the hex values descend instead of
+  ascending, exactly the way a card laid on a page is darker than the page. Every
+  consumer of "raised" keeps working without knowing which finish it is in.
+- `--ochre` and `--oxide` are **fills**. Something sits on top of them, and that
+  something is `--on-accent`.
+- `--ochre-ink`, `--oxide-ink`, `--moss-ink` are the same accents as **ink**:
+  text, hairlines, strokes. In night they alias the fills; in day they are
+  separate values, because amber on board measures 1.8:1.
+- `--glass`, `--scrim` and `--veil` are chrome floating over the Phaser canvas,
+  so they carry their own alpha rather than deriving from a surface.
+
+The battlefield does not change. Era colour is *world* colour, and repainting the
+sky because someone wants a readable HUD in sunlight would be repainting the
+game. In day the HUD reads as paper plates laid over the field.
+
 ## Colour and colour vision
 
 Friend and foe identification is the entire read of a lane war: which blips are
@@ -120,6 +151,30 @@ Colour is also never the only channel. On the lane strip your blips grow up from
 the floor and theirs hang down from the ceiling, so faction survives even if the
 colours do not. Red is now reserved strictly for danger (unaffordable cost,
 critical structure, the last thirty seconds) rather than doubling as the enemy.
+
+The check runs over **both finishes**, and the day palette is where it earned its
+keep. Every ink on a light page is squeezed under 4.5:1 into a narrow band of
+lightness, and colour blindness takes away hue, so accents that plainly differ on
+board arrive as the same mark for one man in twelve. Two of day's colours are
+picked by the check rather than by eye:
+
+- **Danger is crimson, not rust.** The obvious choice &mdash; a darkened version
+  of night's oxide &mdash; failed at **12.7 dE under protanopia**. Protanopia
+  dims the red channel and keeps the blue one, so a rust red darkens straight
+  into the gold beside it, and an unaffordable cost stops being distinguishable
+  from an affordable one. The blue in a crimson holds the pair apart at 28.
+- **The counter table's strong mark is black ink, not gold.** It needs 20 dE from
+  `--bone-faint` on the only axis tritanopia leaves standing, which is lightness.
+  Reaching that as an amber meant a bronze so deep it stopped reading as gold
+  everywhere else in the UI, so the table got its own token (`--mult-strong`):
+  bright amber on steel, plain black ink on board. Both are the same statement
+  &mdash; strong is the brighter of the pair &mdash; expressed in the material at
+  hand. Night gets this for free and never had to solve it.
+
+The script also checks contrast, which is the failure mode a light palette
+actually has: every ink token against its own page at 4.5:1, every accent drawn
+as a bare mark (gate bars, meter fills, tier pips) at 3:1, and `--on-accent`
+against the fill it sits on.
 
 ## Motion
 
@@ -214,14 +269,16 @@ src/
     scenes/        BattleScene: owns the Matter world, translates sim events
                    into ragdolls and effects
     bridge.ts      the only seam between Phaser and React
-  ui/              React screens and the battle HUD
+  ui/              React screens and the battle HUD. useTheme.ts owns the
+                   data-theme attribute on <html>
   state/           zustand store, persisted to localStorage
 scripts/
   sim-harness.ts   headless balance harness (see below)
   smoke.mjs        Playwright smoke test: menu, briefing, a real mission
   modes.mjs        Survival, Armoury, difficulty ladder and the roster
   motion-probe.mjs asserts the UI motion interpolates and stays off layout
-  colour-check.mjs simulates colour blindness over the critical colour pairs
+  colour-check.mjs simulates colour blindness and checks contrast, over both
+                   panel finishes
 ```
 
 `PLAN.md` records what the build-out set out to do and why, including what the

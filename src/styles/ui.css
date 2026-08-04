@@ -202,7 +202,7 @@
   flex: none;
   font-size: 0.44em;
   font-weight: 500;
-  color: var(--ochre);
+  color: var(--ochre-ink);
   letter-spacing: 0.04em;
 }
 
@@ -217,7 +217,7 @@
 .menu__deploy-arrow {
   width: 1.6em;
   height: 2px;
-  background: var(--ochre);
+  background: var(--ochre-ink);
   position: relative;
 }
 
@@ -228,8 +228,8 @@
   top: -0.25em;
   width: 0.55em;
   height: 0.55em;
-  border-top: 2px solid var(--ochre);
-  border-right: 2px solid var(--ochre);
+  border-top: 2px solid var(--ochre-ink);
+  border-right: 2px solid var(--ochre-ink);
   transform: rotate(45deg);
   transform-origin: top right;
 }
@@ -242,7 +242,7 @@
 
 .menu__deploy-go {
   font-size: 1.5em;
-  color: var(--ochre);
+  color: var(--ochre-ink);
   margin-top: 0.4em;
 }
 
@@ -355,8 +355,8 @@
 }
 
 .ob-card--hot {
-  border-color: var(--ochre);
-  color: var(--ochre);
+  border-color: var(--ochre-ink);
+  color: var(--ochre-ink);
 }
 
 .ob-arrow {
@@ -365,7 +365,7 @@
   top: -2.4em;
   width: 1px;
   height: 2em;
-  background: var(--ochre);
+  background: var(--ochre-ink);
 }
 
 .ob-arrow::after {
@@ -375,7 +375,7 @@
   left: -0.3em;
   border-left: 0.35em solid transparent;
   border-right: 0.35em solid transparent;
-  border-top: 0.5em solid var(--ochre);
+  border-top: 0.5em solid var(--ochre-ink);
 }
 
 .ob-split {
@@ -388,10 +388,10 @@
   align-items: center;
   gap: 0.8em;
   border: 1px solid var(--rule-bright);
-  box-shadow: inset 0 2px 0 var(--ochre);
+  box-shadow: inset 0 2px 0 var(--ochre-ink);
   padding: 1em 1.4em;
   font-size: 1.3em;
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 .ob-pill .num {
@@ -400,8 +400,8 @@
 }
 
 .ob-pill--xp {
-  box-shadow: inset 0 2px 0 var(--moss);
-  color: var(--moss);
+  box-shadow: inset 0 2px 0 var(--moss-ink);
+  color: var(--moss-ink);
 }
 
 .ob-mounts {
@@ -441,11 +441,11 @@
 .ob-special__ring {
   width: 7em;
   height: 7em;
-  border: 2px solid var(--ochre);
+  border: 2px solid var(--ochre-ink);
   border-radius: 50%;
   display: grid;
   place-items: center;
-  color: var(--ochre);
+  color: var(--ochre-ink);
   font-size: 1.2em;
 }
 
@@ -457,7 +457,7 @@
 
 .ob-special__strikes span {
   width: 2px;
-  background: var(--ochre);
+  background: var(--ochre-ink);
   opacity: 0.7;
 }
 
@@ -656,7 +656,7 @@
 }
 
 .ms__row--cleared .ms__row-num {
-  color: var(--moss);
+  color: var(--moss-ink);
 }
 
 .ms__row--open {
@@ -767,7 +767,7 @@
 
 .rail__stop--on .rail__detent {
   transform: translateX(-50%) scaleY(1);
-  background: var(--ochre);
+  background: var(--ochre-ink);
 }
 
 .rail__index {
@@ -783,8 +783,8 @@
 /* Engaged position inverts, which reads as lit rather than merely coloured. */
 .rail__stop--on .rail__index {
   background: var(--ochre);
-  border-color: var(--ochre);
-  color: #171208;
+  border-color: var(--ochre-ink);
+  color: var(--on-accent);
 }
 
 .rail__name {
@@ -799,7 +799,7 @@
 }
 
 .rail__stop:focus-visible {
-  outline: 2px solid var(--ochre);
+  outline: 2px solid var(--ochre-ink);
   outline-offset: -2px;
 }
 
@@ -830,7 +830,7 @@
 }
 
 .rail__stop--on .rail__note {
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 /* Era swatch: colour as legend data, next to the era it describes. */
@@ -879,7 +879,7 @@
 .cx__caption {
   text-align: left;
   padding: 1.4em 0 0.6em;
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 .cx__table {
@@ -934,7 +934,7 @@
 }
 
 .cx__blast {
-  color: var(--oxide);
+  color: var(--oxide-ink);
   font-size: 0.8em;
   margin-left: 0.3em;
 }
@@ -988,10 +988,18 @@
   cursor: pointer;
 }
 
+/* Word choices, not figures: display face, matching every other named option. */
+.st__choice-word {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .st__choice--on {
   background: var(--ochre);
-  border-color: #f0bd44;
-  color: #171208;
+  border-color: var(--ochre-lit);
+  color: var(--on-accent);
 }
 
 .st__toggle {
@@ -1008,7 +1016,18 @@
   gap: 2em;
 }
 
+/*
+ * The heading and its note are spans here, not the h3/p the other groups use,
+ * because the whole row is one button and a button may not contain a heading.
+ * They still have to stack: inline spans ran the two together as
+ * "SOUND EFFECTSImpacts, gunfire...".
+ */
 .st__toggle-text {
+  display: block;
+}
+
+.st__toggle-text .st__label,
+.st__toggle-text .st__note {
   display: block;
 }
 
@@ -1028,11 +1047,11 @@
 
 .st__switch--on {
   background: var(--ochre);
-  border-color: #f0bd44;
+  border-color: var(--ochre-lit);
 }
 
 .st__switch--on .label {
-  color: #171208;
+  color: var(--on-accent);
 }
 
 .st__confirm {
@@ -1069,11 +1088,11 @@
 }
 
 .db--win .db__verdict {
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 .db--loss .db__verdict {
-  color: var(--oxide);
+  color: var(--oxide-ink);
 }
 
 .db__sub {
@@ -1107,7 +1126,7 @@
 }
 
 .db__stat--reward dd {
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 .db__of {
@@ -1182,7 +1201,7 @@
  * failure, in the one table whose whole job is scanning for good and bad.
  */
 .cx__mult--good {
-  color: var(--ochre);
+  color: var(--mult-strong);
   font-weight: 600;
 }
 
@@ -1263,7 +1282,7 @@
 
 .ms__survival-score .num {
   font-size: 2em;
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 .ms__survival-unit {
@@ -1333,12 +1352,12 @@
 
 .am__effect {
   font-size: 1.2em;
-  color: var(--ochre);
+  color: var(--ochre-ink);
   white-space: nowrap;
 }
 
 .am__row--owned .am__effect {
-  color: var(--moss);
+  color: var(--moss-ink);
 }
 
 .am__buy {
@@ -1349,7 +1368,7 @@
 
 .am__fitted {
   text-align: right;
-  color: var(--moss);
+  color: var(--moss-ink);
 }
 
 /* ------------------------------------------------------------------ coach */
@@ -1365,8 +1384,8 @@
   transform: translateX(-50%);
   pointer-events: auto;
   max-width: 40em;
-  background: rgba(18, 16, 14, 0.95);
-  border: 1px solid var(--ochre);
+  background: var(--glass-solid);
+  border: 1px solid var(--ochre-ink);
   padding: 0.9em 1.2em;
   display: flex;
   align-items: center;
@@ -1379,7 +1398,7 @@
 }
 
 .coach__text b {
-  color: var(--ochre);
+  color: var(--ochre-ink);
   font-weight: 600;
 }
 

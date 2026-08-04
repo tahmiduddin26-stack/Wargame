@@ -10,6 +10,11 @@
  * Simulates protanopia, deuteranopia and tritanopia (Viénot, Brettel & Mollon
  * 1999 LMS method) and reports CIE76 dE between each pair under each condition.
  *
+ * Both panel finishes are checked. A light palette is not the dark one with the
+ * lightness flipped — its accents are hand-darkened to survive on board — so it
+ * is a second set of hues that has to clear the same bar, and the contrast pass
+ * at the end is where a light theme actually tends to fail.
+ *
  *   node scripts/colour-check.mjs
  */
 import { readFileSync } from 'node:fs';
@@ -96,10 +101,45 @@ const asHex = (lin) =>
 // ------------------------------------------------------------------- the pairs
 
 const css = readFileSync('src/styles/global.css', 'utf8');
-function token(name) {
-  const m = new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,6})`).exec(css);
-  if (!m) throw new Error(`token --${name} not found in global.css`);
-  return m[1];
+
+/** Pulls one declaration block out by its selector. */
+function block(selector) {
+  const at = css.indexOf(selector + ' {');
+  if (at < 0) throw new Error(`selector ${selector} not found in global.css`);
+  const open = css.indexOf('{', at);
+  return css.slice(open + 1, css.indexOf('}', open));
+}
+
+/**
+ * Hex declarations plus one level of aliasing, because the dark palette defines
+ * its ink accents as `var(--ochre)` rather than repeating the hex — the alias is
+ * the statement that they are the same colour there, and resolving it here keeps
+ * that from having to be undone for the sake of a script.
+ */
+function tokens(selector) {
+  const body = block(selector);
+  const map = new Map();
+  for (const m of body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{3,6})/g)) map.set(m[1], m[2]);
+  for (const m of body.matchAll(/--([\w-]+):\s*var\(--([\w-]+)\)/g)) {
+    const target = map.get(m[2]);
+    if (target) map.set(m[1], target);
+  }
+  return map;
+}
+
+const dark = tokens(':root');
+// Light only restates what it changes, so anything absent is inherited.
+const light = new Map([...dark, ...tokens(":root[data-theme='light']")]);
+
+const THEMES = [
+  { name: 'night', tokens: dark },
+  { name: 'day', tokens: light },
+];
+
+function token(theme, name) {
+  const hex = theme.tokens.get(name);
+  if (!hex) throw new Error(`token --${name} not found for ${theme.name}`);
+  return hex;
 }
 
 const PAIRS = [
@@ -122,7 +162,7 @@ const PAIRS = [
     critical: false,
   },
   {
-    a: 'ochre',
+    a: 'mult-strong',
     b: 'bone-faint',
     why: 'counter table: strong multiplier vs weak',
     critical: true,
@@ -132,30 +172,104 @@ const PAIRS = [
 
 const KINDS = ['normal', 'protanopia', 'deuteranopia', 'tritanopia'];
 
-console.log('Colour separation, CIE76 dE (fail under ' + MIN_DE + ')\n');
-const header = ['pair'.padEnd(18), ...KINDS.map((k) => k.slice(0, 6).padStart(8))].join(' ');
-console.log(header);
-console.log('-'.repeat(header.length));
+/*
+ * Contrast. Ink has to clear 4.5:1 on its own page, and an accent drawn as a
+ * bare mark — a gate bar, a meter fill, a cleared-tier pip — has to clear 3:1,
+ * because nothing else distinguishes it from the surface it sits on.
+ */
+const ON_PAGE = [
+  { token: 'bone', min: 4.5, what: 'body ink' },
+  { token: 'bone-dim', min: 4.5, what: 'secondary ink' },
+  { token: 'bone-faint', min: 4.5, what: 'labels and readout captions' },
+  { token: 'ochre-ink', min: 4.5, what: 'gold figures, ready edges' },
+  { token: 'mult-strong', min: 4.5, what: 'counter table strong multiplier' },
+  { token: 'oxide-ink', min: 4.5, what: 'denied costs, loss verdict' },
+  { token: 'moss-ink', min: 4.5, what: 'cleared and fitted marks' },
+  { token: 'player', min: 3, what: 'your gate bar and blips' },
+  { token: 'enemy', min: 3, what: 'enemy gate bar and blips' },
+  { token: 'ochre', min: 3, what: 'meter fills, primary button plate' },
+  { token: 'moss', min: 3, what: 'tier pips' },
+];
 
-const failures = [];
-for (const pair of PAIRS) {
-  const hexA = token(pair.a);
-  const hexB = token(pair.b);
-  const cells = KINDS.map((kind) => {
-    const d = deltaE(hexA, hexB, kind);
-    if (pair.critical && d < MIN_DE) {
-      failures.push(`${pair.a}/${pair.b} under ${kind}: dE ${d.toFixed(1)} (${pair.why})`);
-    }
-    return (d < MIN_DE ? '!' : ' ') + d.toFixed(1).padStart(7);
-  });
-  console.log([`${pair.a}/${pair.b}`.padEnd(18), ...cells].join(' '));
+/** What sits on top of an --ochre fill, which is the other half of the button. */
+const ON_ACCENT = [{ ink: 'on-accent', fill: 'ochre', min: 4.5, what: 'primary button label' }];
+
+const luminance = (hex) => {
+  const [r, g, b] = hexToRgb(hex).map(srgbToLinear);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+function contrast(hexA, hexB) {
+  const a = luminance(hexA);
+  const b = luminance(hexB);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
-console.log('\nHow the faction pair actually looks to each type:');
-for (const name of ['player', 'enemy']) {
-  const hex = token(name);
-  const seen = KINDS.map((k) => `${k.slice(0, 5)} ${asHex(simulate(hex, k))}`).join('   ');
-  console.log(`  ${name.padEnd(7)} ${hex}   ${seen}`);
+const failures = [];
+
+for (const theme of THEMES) {
+  console.log(`\n== ${theme.name.toUpperCase()} ==`);
+  console.log('\nColour separation, CIE76 dE (fail under ' + MIN_DE + ')\n');
+  const header = ['pair'.padEnd(18), ...KINDS.map((k) => k.slice(0, 6).padStart(8))].join(' ');
+  console.log(header);
+  console.log('-'.repeat(header.length));
+
+  for (const pair of PAIRS) {
+    const hexA = token(theme, pair.a);
+    const hexB = token(theme, pair.b);
+    const cells = KINDS.map((kind) => {
+      const d = deltaE(hexA, hexB, kind);
+      if (pair.critical && d < MIN_DE) {
+        failures.push(
+          `[${theme.name}] ${pair.a}/${pair.b} under ${kind}: dE ${d.toFixed(1)} (${pair.why})`,
+        );
+      }
+      return (d < MIN_DE ? '!' : ' ') + d.toFixed(1).padStart(7);
+    });
+    console.log([`${pair.a}/${pair.b}`.padEnd(18), ...cells].join(' '));
+  }
+
+  const page = token(theme, 'steel-900');
+  console.log(`\nContrast on the page (${page})\n`);
+  for (const check of [...ON_PAGE]) {
+    const hex = token(theme, check.token);
+    const ratio = contrast(hex, page);
+    const bad = ratio < check.min;
+    if (bad) {
+      failures.push(
+        `[${theme.name}] --${check.token} on --steel-900: ${ratio.toFixed(2)}:1, ` +
+          `needs ${check.min}:1 (${check.what})`,
+      );
+    }
+    console.log(
+      `  ${bad ? '!' : ' '} ${check.token.padEnd(12)} ${hex}  ` +
+        `${ratio.toFixed(2).padStart(6)}:1  min ${check.min}   ${check.what}`,
+    );
+  }
+
+  for (const check of ON_ACCENT) {
+    const ink = token(theme, check.ink);
+    const fill = token(theme, check.fill);
+    const ratio = contrast(ink, fill);
+    const bad = ratio < check.min;
+    if (bad) {
+      failures.push(
+        `[${theme.name}] --${check.ink} on --${check.fill}: ${ratio.toFixed(2)}:1, ` +
+          `needs ${check.min}:1 (${check.what})`,
+      );
+    }
+    console.log(
+      `  ${bad ? '!' : ' '} ${check.ink.padEnd(12)} ${ink}  ` +
+        `${ratio.toFixed(2).padStart(6)}:1  min ${check.min}   ${check.what} (on --${check.fill})`,
+    );
+  }
+
+  console.log('\nHow the faction pair actually looks to each type:');
+  for (const name of ['player', 'enemy']) {
+    const hex = token(theme, name);
+    const seen = KINDS.map((k) => `${k.slice(0, 5)} ${asHex(simulate(hex, k))}`).join('   ');
+    console.log(`  ${name.padEnd(7)} ${hex}   ${seen}`);
+  }
 }
 
 if (failures.length) {
@@ -163,4 +277,4 @@ if (failures.length) {
   for (const f of failures) console.log('  ' + f);
   process.exit(1);
 }
-console.log('\nPASS: every critical pair stays separable under all three conditions.');
+console.log('\nPASS: both finishes stay separable and legible under all three conditions.');

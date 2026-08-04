@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { useGame } from '@/state/store';
+import { useGame, type ThemePref } from '@/state/store';
+
+const THEMES: { id: ThemePref; name: string }[] = [
+  { id: 'auto', name: 'Auto' },
+  { id: 'dark', name: 'Night' },
+  { id: 'light', name: 'Day' },
+];
 
 export function Settings() {
   const go = useGame((s) => s.go);
@@ -31,6 +37,27 @@ export function Settings() {
                 onClick={() => setSetting('speed', factor)}
               >
                 <span className="num">{factor}&times;</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="st__group">
+          <h3 className="st__label">Panel finish</h3>
+          <p className="st__note">
+            Night is the authored look. Day is the same panel printed on bleached board, for
+            playing in sunlight. Auto follows your device. The battlefield keeps its own light
+            either way &mdash; the era colours are the world, not the chrome.
+          </p>
+          <div className="st__choices">
+            {THEMES.map((theme) => (
+              <button
+                key={theme.id}
+                className={`st__choice${settings.theme === theme.id ? ' st__choice--on' : ''}`}
+                aria-pressed={settings.theme === theme.id}
+                onClick={() => setSetting('theme', theme.id)}
+              >
+                <span className="st__choice-word">{theme.name}</span>
               </button>
             ))}
           </div>

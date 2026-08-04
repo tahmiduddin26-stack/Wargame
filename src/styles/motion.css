@@ -87,7 +87,7 @@
  */
 @keyframes ready-bloom {
   0% {
-    box-shadow: 0 0 0 0 var(--ochre);
+    box-shadow: 0 0 0 0 var(--ochre-ink);
     opacity: 0.55;
   }
   100% {
@@ -113,10 +113,10 @@
 @keyframes edge-breathe {
   0%,
   100% {
-    border-color: var(--ochre);
+    border-color: var(--ochre-ink);
   }
   50% {
-    border-color: color-mix(in srgb, var(--ochre) 45%, var(--rule-bright));
+    border-color: color-mix(in srgb, var(--ochre-ink) 45%, var(--rule-bright));
   }
 }
 
@@ -147,7 +147,7 @@
  */
 @keyframes value-gain {
   0% {
-    color: var(--ochre);
+    color: var(--ochre-ink);
   }
   100% {
     color: inherit;
@@ -156,7 +156,7 @@
 
 @keyframes value-loss {
   0% {
-    color: var(--oxide);
+    color: var(--oxide-ink);
   }
   100% {
     color: inherit;

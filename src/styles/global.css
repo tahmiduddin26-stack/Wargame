@@ -33,6 +33,32 @@
   font-display: block;
 }
 
+/*
+ * ---------------------------------------------------------------- palette
+ *
+ * Two finishes of the same panel: NIGHT (stamped steel under a red lamp) and
+ * DAY (a field manual printed on bleached board). Neither is the other with the
+ * lightness flipped — a light theme built by inverting a dark one reads as a
+ * photographic negative, all the warm ink going cold.
+ *
+ * The token contract, which is what makes one stylesheet serve both:
+ *   --steel-900 .. -500  A surface RAMP, not a lightness scale. 900 is the page,
+ *                        500 is the most raised chip. In DAY the hex values
+ *                        descend instead of ascending; "raised" still means
+ *                        "further from the page", so every consumer holds.
+ *   --ochre / --oxide    FILL. Something sits on top of it, and that something
+ *                        is --on-accent. Never use for text.
+ *   --*-ink              The same accent as INK: text, hairlines, strokes. In
+ *                        NIGHT it equals the fill; in DAY it is several stops
+ *                        darker, because amber on board is 1.8:1.
+ *   --glass*, --scrim    Chrome that floats over the Phaser canvas. The
+ *                        battlefield does not change with the theme, so these
+ *                        carry their own alpha rather than deriving from a
+ *                        surface.
+ *
+ * Every ink token clears 4.5:1 on its own --steel-900, and every accent used as
+ * a bare graphic (gate bars, meter fills, pips) clears 3:1.
+ */
 :root {
   /* Surfaces: warm near-black, not navy, not slate. */
   --steel-900: #12100e;
@@ -64,16 +90,121 @@
   /* Functional accents. Ochre = go/affordable, oxide = threat/denied. */
   --ochre: #e0aa2e;
   --ochre-deep: #8f6a12;
+  --ochre-lit: #f5c451;
+  --ochre-pressed: #c08e1c;
   --oxide: #d9563b;
   --oxide-deep: #7a2a1a;
   --moss: #8fae6a;
+
+  /*
+   * The counter table's strong multiplier. Its own token because that table is
+   * the one place two figures are scanned against each other in a grid, so the
+   * pair has to be keyed on brightness — and what reads as "brighter than the
+   * muted one" is gold on steel but plain black ink on board. Everywhere else
+   * an accent figure is read against a label, not against another figure.
+   */
+  --mult-strong: var(--ochre);
+
+  /* Accents as ink. Identical to the fills here; DAY pulls them down. */
+  --ochre-ink: var(--ochre);
+  --oxide-ink: var(--oxide);
+  --moss-ink: var(--moss);
+  /* Oxide softened for long runs of text on a dark plate. */
+  --oxide-soft: #efb1a2;
+
+  /* What sits on top of an --ochre or --oxide fill. */
+  --on-accent: #171208;
+
+  /* Recessed track: meters, the lane strip. Below the page, not above it. */
+  --well: #0d0b09;
+
+  /*
+   * Chrome over the canvas. Alpha is deliberate: the battlefield reads through
+   * it, which is how the HUD stays anchored to the world.
+   */
+  --glass: rgba(18, 16, 14, 0.82);
+  --glass-raised: rgba(31, 27, 22, 0.94);
+  --glass-solid: rgba(18, 16, 14, 0.95);
+  /* Cooldown wash over a dock card. */
+  --veil: rgba(10, 9, 7, 0.72);
+  /* Full-screen pause blackout. */
+  --scrim: rgba(9, 8, 6, 0.86);
 
   --font-display: 'Oswald', system-ui, sans-serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   /* The one flourish. */
-  --hazard: repeating-linear-gradient(-45deg, var(--ochre-deep) 0 6px, #17130d 6px 12px);
+  --hazard-gap: #17130d;
+  --hazard: repeating-linear-gradient(-45deg, var(--ochre-deep) 0 6px, var(--hazard-gap) 6px 12px);
+}
+
+/*
+ * DAY. Bleached board, printer's ink, stamped amber.
+ *
+ * The surface ramp descends: the page is the lightest thing on screen and every
+ * raised plate steps down towards the ink, which is how printed matter works —
+ * a card laid on a page is darker than the page, not brighter.
+ */
+:root[data-theme='light'] {
+  --steel-900: #e8e2d4;
+  --steel-800: #ded7c6;
+  --steel-700: #d4ccb8;
+  --steel-600: #c9c0a9;
+  --steel-500: #b7ac91;
+
+  --rule: #b0a48a;
+  --rule-bright: #877a60;
+
+  --bone: #1c1810;
+  --bone-dim: #4a4234;
+  --bone-faint: #6b6150;
+
+  --player: #7d5505;
+  --enemy: #16607f;
+
+  /* Fill amber is stamped, not highlighter: light ink sits on it at 5.1:1. */
+  --ochre: #8f6209;
+  --ochre-deep: #6d4a05;
+  --ochre-lit: #a97810;
+  --ochre-pressed: #6d4a05;
+  --oxide: #ab2d4e;
+  --oxide-deep: #7d1c36;
+  --moss: #4d6b2a;
+
+  /*
+   * Black ink is the strong mark on board. Gold cannot be it: every ink on a
+   * light page is squeezed under 4.5:1 into a narrow band of lightness, and the
+   * table needs 20 dE of separation from --bone-faint on the one axis that
+   * survives tritanopia, which is lightness. Reaching that as an amber would
+   * mean a bronze so deep it stops reading as gold anywhere else in the UI.
+   */
+  --mult-strong: var(--bone);
+
+  /*
+   * Danger is crimson rather than rust, and that is not a style choice.
+   * Protanopia dims the red channel and keeps the blue one, so a rust red
+   * darkens straight into the gold beside it — an unaffordable cost and an
+   * affordable one become the same mark, measured at dE 12.7. The blue in a
+   * crimson holds the pair apart at 28. Night gets the same separation for free
+   * from bright gold over deep oxide, and so never had to solve this.
+   */
+  --ochre-ink: #7d5505;
+  --oxide-ink: #ab2d4e;
+  --moss-ink: #46621f;
+  --oxide-soft: #8f2340;
+
+  --on-accent: #fdf8ec;
+
+  --well: #c5bca5;
+
+  --glass: rgba(238, 233, 221, 0.88);
+  --glass-raised: rgba(228, 222, 207, 0.95);
+  --glass-solid: rgba(240, 236, 226, 0.97);
+  --veil: rgba(232, 227, 213, 0.74);
+  --scrim: rgba(224, 218, 203, 0.9);
+
+  --hazard-gap: #ddd3bb;
 }
 
 * {
@@ -210,7 +341,7 @@ h3,
   position: absolute;
   width: 1.1em;
   height: 1.1em;
-  border-color: var(--ochre);
+  border-color: var(--ochre-ink);
   border-style: solid;
   pointer-events: none;
 }
@@ -247,7 +378,7 @@ h3,
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--ochre);
+  outline: 2px solid var(--ochre-ink);
   outline-offset: 2px;
 }
 
@@ -259,17 +390,17 @@ h3,
 
 .btn--primary {
   background: var(--ochre);
-  border-color: #f5c451;
-  color: #171208;
+  border-color: var(--ochre-lit);
+  color: var(--on-accent);
 }
 
 .btn--primary:active {
-  background: #c08e1c;
+  background: var(--ochre-pressed);
 }
 
 .btn--danger {
-  border-color: var(--oxide);
-  color: #efb1a2;
+  border-color: var(--oxide-ink);
+  color: var(--oxide-soft);
 }
 
 .btn--ghost {
@@ -291,7 +422,7 @@ h3,
 }
 
 .tag--warn {
-  color: #efb1a2;
+  color: var(--oxide-soft);
   border-color: var(--oxide-deep);
 }
 
@@ -303,7 +434,7 @@ h3,
 .meter {
   position: relative;
   height: 0.7em;
-  background: #0d0b09;
+  background: var(--well);
   border: 1px solid var(--rule);
   overflow: hidden;
 }

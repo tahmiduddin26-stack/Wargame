@@ -37,7 +37,7 @@
 .hud__pause {
   appearance: none;
   width: 3.2em;
-  background: rgba(18, 16, 14, 0.82);
+  background: var(--glass);
   border: 1px solid var(--rule-bright);
   cursor: pointer;
   display: grid;
@@ -59,26 +59,26 @@
   display: flex;
   align-items: center;
   gap: 0.5em;
-  background: rgba(18, 16, 14, 0.82);
+  background: var(--glass);
   border: 1px solid var(--rule-bright);
   padding: 0.4em 0.9em;
 }
 
 .hud__res-icon {
   display: inline-flex;
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 .hud__gold {
   font-size: 1.7em;
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 .hud__age,
 .hud__enemy {
   position: relative;
   min-width: 13em;
-  background: rgba(18, 16, 14, 0.82);
+  background: var(--glass);
   border: 1px solid var(--rule-bright);
   padding: 0.35em 0.7em;
   display: grid;
@@ -93,7 +93,7 @@
    * gain: the age name, the index and the entire battlefield already say which
    * era it is. Era colour now appears only in the evolve sweep, as an event.
    */
-  box-shadow: inset 0 2px 0 var(--ochre);
+  box-shadow: inset 0 2px 0 var(--ochre-ink);
 }
 
 .hud__enemy {
@@ -136,7 +136,7 @@
   align-content: center;
   justify-items: end;
   gap: 0.15em;
-  background: rgba(18, 16, 14, 0.82);
+  background: var(--glass);
   border: 1px solid var(--rule-bright);
   padding: 0.35em 0.8em;
 }
@@ -146,15 +146,15 @@
 }
 
 .hud__clock--urgent {
-  border-color: var(--oxide);
+  border-color: var(--oxide-ink);
 }
 
 .hud__clock--urgent .num {
-  color: var(--oxide);
+  color: var(--oxide-ink);
 }
 
 .hud__esc {
-  color: var(--ochre);
+  color: var(--ochre-ink);
   white-space: nowrap;
 }
 
@@ -163,7 +163,7 @@
 .lane {
   margin: 0.6em 1em 0;
   padding: 0.35em 0.5em;
-  background: rgba(18, 16, 14, 0.82);
+  background: var(--glass);
   border: 1px solid var(--rule);
   cursor: pointer;
 }
@@ -171,7 +171,7 @@
 .lane__track {
   position: relative;
   height: 1.5em;
-  background: #0c0a08;
+  background: var(--well);
   border: 1px solid var(--rule);
 }
 
@@ -188,7 +188,7 @@
   left: 0;
   width: 100%;
   transform-origin: left center;
-  background: rgba(217, 162, 39, 0.1);
+  background: color-mix(in srgb, var(--player) 12%, transparent);
   transition: transform var(--t-sample) linear;
   will-change: transform;
 }
@@ -204,11 +204,11 @@
 }
 
 .lane__front--mine {
-  background: rgba(217, 162, 39, 0.55);
+  background: color-mix(in srgb, var(--player) 55%, transparent);
 }
 
 .lane__front--theirs {
-  background: rgba(70, 166, 200, 0.55);
+  background: color-mix(in srgb, var(--enemy) 55%, transparent);
 }
 
 .lane__gate {
@@ -279,8 +279,8 @@
   top: -1px;
   bottom: -1px;
   left: 0;
-  border: 1px solid rgba(236, 229, 214, 0.4);
-  background: rgba(236, 229, 214, 0.04);
+  border: 1px solid color-mix(in srgb, var(--bone) 40%, transparent);
+  background: color-mix(in srgb, var(--bone) 5%, transparent);
   pointer-events: none;
   /* Width is fixed for the whole match (the camera never zooms), so only the
      position needs interpolating. */
@@ -296,9 +296,9 @@
   gap: 0.7em;
   margin: 0.6em 1em 0;
   width: 22em;
-  background: rgba(18, 16, 14, 0.82);
+  background: var(--glass);
   border: 1px solid var(--rule);
-  box-shadow: inset 0 2px 0 var(--ochre);
+  box-shadow: inset 0 2px 0 var(--ochre-ink);
   padding: 0.4em 0.8em;
 }
 
@@ -351,7 +351,7 @@
   appearance: none;
   width: 8.6em;
   min-height: 7.4em;
-  background: rgba(31, 27, 22, 0.94);
+  background: var(--glass-raised);
   border: 1px solid var(--rule-bright);
   border-radius: 0;
   color: var(--bone-faint);
@@ -367,7 +367,7 @@
 
 /* Affordable and off cooldown is the only state that gets the ochre edge. */
 .unit--ready {
-  border-color: var(--ochre);
+  border-color: var(--ochre-ink);
   color: var(--bone);
 }
 
@@ -379,7 +379,7 @@
   position: absolute;
   inset: 0;
   transform-origin: top;
-  background: rgba(10, 9, 7, 0.72);
+  background: var(--veil);
   pointer-events: none;
 }
 
@@ -413,11 +413,11 @@
 
 .unit__cost {
   font-size: 1.3em;
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 .unit--poor .unit__cost {
-  color: var(--oxide);
+  color: var(--oxide-ink);
 }
 
 .unit__queued {
@@ -437,7 +437,7 @@
 .evolve {
   appearance: none;
   min-width: 11em;
-  background: rgba(31, 27, 22, 0.94);
+  background: var(--glass-raised);
   border: 1px solid var(--rule-bright);
   border-bottom: 0.25em solid var(--rule-bright);
   border-radius: 0;
@@ -450,8 +450,8 @@
 }
 
 .evolve--ready {
-  border-color: var(--ochre);
-  border-bottom-color: var(--ochre);
+  border-color: var(--ochre-ink);
+  border-bottom-color: var(--ochre-ink);
   color: var(--bone);
 }
 
@@ -466,7 +466,7 @@
 }
 
 .evolve--ready .evolve__name {
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 .evolve__need {
@@ -475,7 +475,7 @@
 }
 
 .evolve--ready .evolve__need {
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 /* ------------------------------------------------------------ emplacements */
@@ -490,7 +490,7 @@
   align-items: center;
   padding: 0.6em 1em;
   border: 1px solid var(--rule);
-  background: rgba(18, 16, 14, 0.7);
+  background: var(--glass);
 }
 
 .mount {
@@ -498,7 +498,7 @@
   position: relative;
   width: 4.6em;
   height: 4.2em;
-  background: rgba(31, 27, 22, 0.94);
+  background: var(--glass-raised);
   border: 1px solid var(--rule-bright);
   border-radius: 0;
   color: var(--bone-dim);
@@ -515,7 +515,7 @@
 }
 
 .mount--built {
-  color: var(--ochre);
+  color: var(--ochre-ink);
   border-color: var(--ochre-deep);
 }
 
@@ -630,13 +630,13 @@
 
 .picker__opt-cost {
   font-size: 1.25em;
-  color: var(--ochre);
+  color: var(--ochre-ink);
   min-width: 4em;
   text-align: right;
 }
 
 .picker__opt--poor .picker__opt-cost {
-  color: var(--oxide);
+  color: var(--oxide-ink);
 }
 
 .picker__scrap {
@@ -649,7 +649,7 @@
 }
 
 .picker__scrap .label {
-  color: var(--oxide);
+  color: var(--oxide-ink);
 }
 
 /* ----------------------------------------------------------- special dial */
@@ -659,7 +659,7 @@
   appearance: none;
   width: 7.4em;
   height: 7.4em;
-  background: rgba(31, 27, 22, 0.94);
+  background: var(--glass-raised);
   border: 1px solid var(--rule-bright);
   border-radius: 50%;
   color: var(--bone-faint);
@@ -669,8 +669,8 @@
 }
 
 .dial--ready {
-  border-color: var(--ochre);
-  color: var(--ochre);
+  border-color: var(--ochre-ink);
+  color: var(--ochre-ink);
 }
 
 .dial__svg {
@@ -687,7 +687,7 @@
 }
 
 .dial__arc {
-  stroke: var(--ochre);
+  stroke: var(--ochre-ink);
   stroke-width: 3;
   stroke-linecap: butt;
   transition: stroke-dashoffset 120ms linear;
@@ -705,7 +705,7 @@
 .dial__ready {
   font-size: 1.3em;
   letter-spacing: 0.18em;
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 /*
@@ -728,7 +728,7 @@
 }
 
 .dial--ready .dial__name {
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 
 /* ----------------------------------------------------------------- pause */
@@ -737,7 +737,7 @@
   position: absolute;
   inset: 0;
   pointer-events: auto;
-  background: rgba(9, 8, 6, 0.86);
+  background: var(--scrim);
   display: grid;
   place-items: center;
   padding: 2em;

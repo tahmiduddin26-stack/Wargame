@@ -4,6 +4,7 @@ import { bridge } from '@/game/bridge';
 import { useGame } from '@/state/store';
 import { OrientationGate } from '@/ui/OrientationGate';
 import { useIsLandscape } from '@/ui/useOrientation';
+import { useTheme } from '@/ui/useTheme';
 import { BattleView } from '@/ui/battle/BattleView';
 import { Armoury } from '@/ui/screens/Armoury';
 import { Codex } from '@/ui/screens/Codex';
@@ -15,6 +16,8 @@ import { Settings } from '@/ui/screens/Settings';
 
 export function App() {
   const landscape = useIsLandscape();
+  // Owns the `data-theme` attribute on <html>; nothing below reads its return.
+  useTheme();
   const screen = useGame((s) => s.screen);
   const sfxOn = useGame((s) => s.settings.sfx);
   const musicOn = useGame((s) => s.settings.music);
