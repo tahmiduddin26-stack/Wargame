@@ -76,25 +76,33 @@ export function Codex() {
         </span>
       </header>
 
-      <nav className="cx__ages" role="tablist" aria-label="Ages">
+      {/* A detented rail, not a tab bar: the ages are an ordered ladder, and
+          the underline-tab is the pattern everything else already uses. */}
+      <nav className="rail" role="tablist" aria-label="Ages">
+        <span className="rail__track" aria-hidden="true" />
         {AGES.map((a, i) => (
           <button
             key={a.id}
             role="tab"
             aria-selected={i === ageIndex}
-            className={`cx__age${i === ageIndex ? ' cx__age--on' : ''}`}
-            style={{ '--accent': a.accent } as React.CSSProperties}
+            className={`rail__stop${i === ageIndex ? ' rail__stop--on' : ''}`}
             onClick={() => setAgeIndex(i)}
           >
-            <span className="num cx__age-i">{i + 1}</span>
-            <span className="cx__age-name">{a.name.replace(' Age', '')}</span>
+            <span className="rail__detent" aria-hidden="true" />
+            <span className="num rail__index">{i + 1}</span>
+            <span className="rail__name">{a.name.replace(' Age', '')}</span>
           </button>
         ))}
       </nav>
 
       <div className="cx__body scroll-y">
         <div className="cx__era" style={{ '--accent': age.accent } as React.CSSProperties}>
-          <h3 className="cx__era-name">{age.name}</h3>
+          <h3 className="cx__era-name">
+            {/* Colour as legend, beside the era it describes, rather than as
+                chrome tint on the heading itself. */}
+            <span className="cx__swatch" aria-hidden="true" />
+            {age.name}
+          </h3>
           <p className="cx__era-tag">{age.tagline}</p>
           <div className="cx__era-stats">
             <span className="label">

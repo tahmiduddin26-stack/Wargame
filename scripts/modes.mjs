@@ -56,9 +56,10 @@ await page.waitForTimeout(250);
 await page.getByRole('button', { name: 'Missions' }).click();
 await page.waitForTimeout(350);
 await page.screenshot({ path: `${OUT}/32-missions-tiers.png` });
-await page.getByRole('radio', { name: 'Hard' }).click().catch(() => {});
+// The rail's accessible name carries the index and payout too, so match loosely.
+await page.getByRole('radio', { name: /Hard/ }).click().catch(() => {});
 await page.waitForTimeout(200);
-const tierOn = await page.locator('.ms__tier-btn--on .ms__tier-name').textContent();
+const tierOn = await page.locator('.ms__tier-row .rail__stop--on .rail__name').textContent();
 console.log('tier selected:', tierOn);
 
 // Survival.

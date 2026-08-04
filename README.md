@@ -59,6 +59,34 @@ Rules that are easy to erode, so they are stated in `src/styles/global.css`:
 - **Meters animate a transform, not width**, because they update about twelve
   times a second during a battle and animating width forces layout every frame.
 
+## Selection: a rail, not tabs
+
+The age selector was an underlined tab bar whose active tab was tinted with that
+era's accent, so the strip changed hue on every click: orange, blue-grey, gold,
+green, cyan. Two problems, and the second is the real one.
+
+The underline tab and the iOS segmented pill are the two stock patterns for this
+job. Worth knowing: impeccable's detector **deliberately exempts** selected-tab
+underlines (`opts.tabContext`, keyed on `role="tablist"` plus `aria-selected`),
+so a clean scan will never tell you that you reached for one.
+
+The deeper problem was colour. Era accents were designed as *world* colour: the
+battlefield sky, ground and unit trim change with the age, which is diegetic and
+is the payoff of an evolve. Piping them into UI chrome as well meant colour
+stopped meaning anything and became decoration that changed at random. Counting
+the five era accents, the chrome was carrying nine hues.
+
+So:
+
+- **Selection is a detented rail.** Positions along a track with one engaged, the
+  way a field panel switches between banks. It also suits an ordered ladder,
+  which the ages are and which a tab bar cannot express. The difficulty tiers use
+  the same idiom, so the app has one selection language.
+- **Chrome is amber, cyan, red and neutrals.** Nothing else.
+- **Era colour stays on the battlefield**, plus one swatch in the roster where it
+  is legend data, plus the evolve sweep, where it earns its place by being a
+  520ms event rather than a persistent tint.
+
 ## Colour and colour vision
 
 Friend and foe identification is the entire read of a lane war: which blips are

@@ -87,9 +87,13 @@
 }
 
 .hud__age {
-  /* Inset top rule rather than a coloured left edge: the side-tab callout is
-     the stock AI shape, and a capping rule is what instrument plates do. */
-  box-shadow: inset 0 2px 0 var(--accent);
+  /*
+   * Amber, not the era accent. Tinting persistent chrome with the era turned the
+   * HUD into a palette that changed hue four times a match for no informational
+   * gain: the age name, the index and the entire battlefield already say which
+   * era it is. Era colour now appears only in the evolve sweep, as an event.
+   */
+  box-shadow: inset 0 2px 0 var(--ochre);
 }
 
 .hud__enemy {
@@ -104,7 +108,7 @@
 }
 
 .hud__age-name {
-  color: var(--accent);
+  color: var(--bone-dim);
   letter-spacing: 0.14em;
 }
 
@@ -446,8 +450,8 @@
 }
 
 .evolve--ready {
-  border-color: var(--accent);
-  border-bottom-color: var(--accent);
+  border-color: var(--ochre);
+  border-bottom-color: var(--ochre);
   color: var(--bone);
 }
 
@@ -462,7 +466,7 @@
 }
 
 .evolve--ready .evolve__name {
-  color: var(--accent);
+  color: var(--ochre);
 }
 
 .evolve__need {
@@ -471,7 +475,7 @@
 }
 
 .evolve--ready .evolve__need {
-  color: var(--accent);
+  color: var(--ochre);
 }
 
 /* ------------------------------------------------------------ emplacements */
@@ -665,8 +669,8 @@
 }
 
 .dial--ready {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--ochre);
+  color: var(--ochre);
 }
 
 .dial__svg {
@@ -683,7 +687,7 @@
 }
 
 .dial__arc {
-  stroke: var(--accent);
+  stroke: var(--ochre);
   stroke-width: 3;
   stroke-linecap: butt;
   transition: stroke-dashoffset 120ms linear;
@@ -701,7 +705,7 @@
 .dial__ready {
   font-size: 1.3em;
   letter-spacing: 0.18em;
-  color: var(--accent);
+  color: var(--ochre);
 }
 
 /*
@@ -724,7 +728,7 @@
 }
 
 .dial--ready .dial__name {
-  color: var(--accent);
+  color: var(--ochre);
 }
 
 /* ----------------------------------------------------------------- pause */

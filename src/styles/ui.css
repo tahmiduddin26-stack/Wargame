@@ -699,38 +699,148 @@
 
 /* -------------------------------------------------------------- roster */
 
-.cx__ages {
+/*
+ * Selector rail.
+ *
+ * Not an underlined tab bar and not an iOS segmented pill: both are the stock
+ * patterns, and the underline variant is specifically exempted by the design
+ * detector, so a clean scan will never tell you that you reached for it.
+ *
+ * A field-command panel selects between banks with a detented switch: positions
+ * along a rail with one engaged. That suits an ordered ladder like the ages far
+ * better than tabs do, because a rail shows the sequence and a tab bar does not.
+ *
+ * Colour: amber only. The era accents used to tint the active tab, which turned
+ * this strip into a rainbow that changed hue on every click. Era colour belongs
+ * on the battlefield, where it is the world, not on chrome.
+ */
+.rail {
+  position: relative;
   display: flex;
-  gap: 1px;
-  padding: 0 2.4em;
-  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+  align-items: stretch;
+  gap: 0;
+  padding: 1.1em 2.4em 0;
 }
 
-.cx__age {
+/* The rail the detents hang from. */
+.rail__track {
+  position: absolute;
+  top: 1.1em;
+  left: 2.4em;
+  right: 2.4em;
+  height: 1px;
+  background: var(--rule-bright);
+}
+
+.rail__stop {
   appearance: none;
+  position: relative;
   background: transparent;
   border: 0;
-  border-bottom: 0.25em solid transparent;
-  color: var(--bone-faint);
-  font-family: var(--font-display);
-  font-size: 1.5em;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.6em 1.2em;
+  padding: 1.1em 1.4em 0.9em;
   cursor: pointer;
-  display: flex;
-  align-items: baseline;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
   gap: 0.5em;
+  color: var(--bone-faint);
 }
 
-.cx__age--on {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+/*
+ * The stem: short when idle, dropped and lit when the switch is engaged.
+ *
+ * Scaled rather than resized. Animating height is layout work, and it is the
+ * same mistake the lane bands made: the design detector caught both.
+ */
+.rail__detent {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 1.1em;
+  background: var(--rule-bright);
+  transform: translateX(-50%) scaleY(0.45);
+  transform-origin: top center;
+  transition: transform var(--t-state, 220ms) var(--ease-out, ease),
+    background-color var(--t-feedback, 140ms) linear;
 }
 
-.cx__age-i {
-  font-size: 0.75em;
-  opacity: 0.7;
+.rail__stop--on .rail__detent {
+  transform: translateX(-50%) scaleY(1);
+  background: var(--ochre);
+}
+
+.rail__index {
+  font-size: 1.15em;
+  line-height: 1;
+  padding: 0.25em 0.4em;
+  border: 1px solid var(--rule-bright);
+  color: var(--bone-faint);
+  transition: background-color var(--t-feedback, 140ms) linear,
+    color var(--t-feedback, 140ms) linear, border-color var(--t-feedback, 140ms) linear;
+}
+
+/* Engaged position inverts, which reads as lit rather than merely coloured. */
+.rail__stop--on .rail__index {
+  background: var(--ochre);
+  border-color: var(--ochre);
+  color: #171208;
+}
+
+.rail__name {
+  font-family: var(--font-display);
+  font-size: 1.45em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rail__stop--on .rail__name {
+  color: var(--bone);
+}
+
+.rail__stop:focus-visible {
+  outline: 2px solid var(--ochre);
+  outline-offset: -2px;
+}
+
+/* Compact variant: the difficulty ladder, which also carries a payout figure. */
+.rail--tight {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.rail--tight .rail__track {
+  left: 0;
+  right: 0;
+}
+
+.rail--tight .rail__stop {
+  padding: 1em 1.1em 0.7em;
+}
+
+.rail--tight .rail__name {
+  font-size: 1.3em;
+}
+
+.rail__note {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  color: var(--bone-faint);
+  letter-spacing: -0.02em;
+}
+
+.rail__stop--on .rail__note {
+  color: var(--ochre);
+}
+
+/* Era swatch: colour as legend data, next to the era it describes. */
+.cx__swatch {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  background: var(--accent);
+  vertical-align: baseline;
+  margin-right: 0.5em;
 }
 
 .cx__body {
@@ -740,14 +850,14 @@
 }
 
 .cx__era {
-  border-top: 2px solid var(--accent);
+  border-top: 1px solid var(--rule-bright);
   padding-top: 1em;
   margin-bottom: 1.8em;
 }
 
 .cx__era-name {
   font-size: 2.8em;
-  color: var(--accent);
+  color: var(--bone);
 }
 
 .cx__era-tag {
@@ -1101,46 +1211,7 @@
 }
 
 .ms__tier-row {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.8em;
-  max-width: 46em;
-}
-
-.ms__tier-btn {
-  appearance: none;
-  background: var(--steel-800);
-  border: 1px solid var(--rule-bright);
-  border-radius: 0;
-  color: var(--bone-dim);
-  cursor: pointer;
-  padding: 0.7em 0.9em;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.6em;
-  transition: border-color 120ms linear, color 120ms linear;
-}
-
-.ms__tier-btn--on {
-  border-color: var(--ochre);
-  color: var(--bone);
-  background: var(--steel-700);
-}
-
-.ms__tier-name {
-  font-family: var(--font-display);
-  font-size: 1.4em;
-  letter-spacing: 0.04em;
-}
-
-.ms__tier-mult {
-  font-size: 1.1em;
-  color: var(--bone-faint);
-}
-
-.ms__tier-btn--on .ms__tier-mult {
-  color: var(--ochre);
+  max-width: 52em;
 }
 
 /* Tiers cleared, as a four-pip ladder on each mission row. */

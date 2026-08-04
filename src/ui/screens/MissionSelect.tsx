@@ -88,17 +88,24 @@ export function MissionSelect() {
             <span className="label">Difficulty</span>
             <span className="ms__tier-blurb">{activeTier.blurb}</span>
           </div>
-          <div className="ms__tier-row" role="radiogroup" aria-label="Difficulty">
-            {DIFFICULTIES.map((d) => (
+          <div
+            className="rail rail--tight ms__tier-row"
+            role="radiogroup"
+            aria-label="Difficulty"
+          >
+            <span className="rail__track" aria-hidden="true" />
+            {DIFFICULTIES.map((d, i) => (
               <button
                 key={d.id}
                 role="radio"
                 aria-checked={d.id === tier}
-                className={`ms__tier-btn${d.id === tier ? ' ms__tier-btn--on' : ''}`}
+                className={`rail__stop${d.id === tier ? ' rail__stop--on' : ''}`}
                 onClick={() => setDifficulty(d.id)}
               >
-                <span className="ms__tier-name">{d.name}</span>
-                <span className="num ms__tier-mult">&times;{d.reward}</span>
+                <span className="rail__detent" aria-hidden="true" />
+                <span className="num rail__index">{i + 1}</span>
+                <span className="rail__name">{d.name}</span>
+                <span className="num rail__note">&times;{d.reward}</span>
               </button>
             ))}
           </div>
