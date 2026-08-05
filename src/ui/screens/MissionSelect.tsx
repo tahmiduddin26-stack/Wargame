@@ -146,7 +146,9 @@ export function MissionSelect() {
                 <span className="num ms__row-num">{String(level.id).padStart(2, '0')}</span>
                 <span className="ms__row-name display">{level.name}</span>
                 <span className="ms__row-mods">
-                  {level.modifiers.slice(0, 2).map((m) => (
+                  {/* Three, not two: OP 23 carries three and the one that was
+                      being dropped was the one that decides how you open. */}
+                  {level.modifiers.slice(0, 3).map((m) => (
                     <span className="tag" key={m}>
                       {MODIFIER_LABEL[m]}
                     </span>

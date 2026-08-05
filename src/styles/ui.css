@@ -641,10 +641,21 @@
   border: 1px solid var(--rule);
 }
 
-/* A list with columns, not a grid of identical cards. */
+/*
+ * A list with columns, not a grid of identical cards.
+ *
+ * Seven columns for seven cells. It was six, and the row has always had seven
+ * children, so the deploy button spilled onto an implicit second row and every
+ * entry rendered at double height. Invisible at twelve missions; not at
+ * twenty-four.
+ *
+ * The name column is minmax(0, 1fr) rather than 1fr so it can actually shrink:
+ * a plain 1fr floors at the width of its own text, which pushes the whole row
+ * wide the moment a mission carries two long modifier tags.
+ */
 .ms__row {
   display: grid;
-  grid-template-columns: 3em 1fr auto 5.5em 5.5em 6.5em;
+  grid-template-columns: 3em minmax(0, 1fr) auto 5.5em 5.5em 6em 6.5em;
   align-items: center;
   gap: 1.2em;
   padding: 0.9em 1.2em;
@@ -671,6 +682,9 @@
 .ms__row-name {
   font-size: 1.6em;
   letter-spacing: 0.05em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ms__row--locked .ms__row-name {
@@ -680,6 +694,7 @@
 .ms__row-mods {
   display: flex;
   gap: 0.4em;
+  justify-content: flex-end;
 }
 
 .ms__row-time {

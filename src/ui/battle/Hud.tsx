@@ -243,7 +243,7 @@ export function Hud({ snapshot, level }: { snapshot: HudSnapshot; level: LevelDe
             </span>
           </button>
 
-          <TurretRack snapshot={snapshot} noTurrets={level.modifiers.includes('no-turrets')} />
+          <TurretRack snapshot={snapshot} />
         </div>
 
         <SpecialDial snapshot={snapshot} />

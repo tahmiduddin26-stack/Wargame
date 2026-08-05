@@ -40,6 +40,14 @@ export interface HudSnapshot {
   cooldowns: Record<string, number>;
   slots: (string | null)[];
   unlockedSlots: number;
+  /**
+   * Mounts this mission allows at all. Zero on 'no-turrets', one on
+   * 'single-mount'. The rack needs it to tell a mount you have not bought yet
+   * from one this mission will never sell you.
+   */
+  slotBudget: number;
+  /** False on a 'no-specials' mission. */
+  specialsAllowed: boolean;
 
   fieldCount: number;
   enemyFieldCount: number;

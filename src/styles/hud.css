@@ -535,6 +535,16 @@
   opacity: 0.55;
 }
 
+/*
+ * A mount this mission will never sell. Quieter than a locked one and not a
+ * button: there is no price and nothing to press.
+ */
+.mount--sealed {
+  border-color: var(--rule);
+  cursor: default;
+  opacity: 0.5;
+}
+
 .mount--next .mount__hazard {
   opacity: 0.8;
 }
@@ -671,6 +681,14 @@
 .dial--ready {
   border-color: var(--ochre-ink);
   color: var(--ochre-ink);
+}
+
+/* Sealed for the mission: the ring stays, the arc and the countdown do not. */
+.dial--sealed {
+  border-style: dashed;
+  border-color: var(--rule);
+  color: var(--bone-faint);
+  cursor: default;
 }
 
 .dial__svg {

@@ -1,10 +1,23 @@
 import type { LevelDef, LevelModifier } from './types';
 
 /**
- * Twelve missions. The first four are the onboarding proper: each one unlocks
- * exactly one system and caps the age so the player cannot outrun the lesson.
- * From mission 5 the cap comes off and it becomes the original's open race
- * between economy and evolution.
+ * Twenty-four missions, in two acts.
+ *
+ * Act one, 1-12, is the valley. The first four are the onboarding proper: each
+ * unlocks exactly one system and caps the age so the player cannot outrun the
+ * lesson. From mission 5 the cap comes off and it becomes the original's open
+ * race between economy and evolution.
+ *
+ * Act two, 13-24, is the campaign out of it, and it is built on a different
+ * lever. Enemy aggression is clamped at 1.0 in BattleSim and mission 12 already
+ * sits there, so nothing past it can be made harder by making the commander
+ * think faster. Difficulty from here comes from the shape of the fight instead:
+ * each mission takes away something the player has learned to lean on, and the
+ * enemy's funding climbs behind it. That is also why act two is the more
+ * interesting half to play rather than merely the longer one.
+ *
+ * One mission, one idea, until the last four where they start to stack. A
+ * mission whose modifiers cancel each other out has no character at all.
  */
 export const LEVELS: LevelDef[] = [
   {
@@ -163,6 +176,165 @@ export const LEVELS: LevelDef[] = [
     modifiers: ['rich-enemy', 'fast-enemy'],
     reward: 750,
   },
+
+  // ------------------------------------------------------------------- act two
+
+  {
+    id: 13,
+    name: 'IRON HARVEST',
+    briefing: 'The supply road is cut, both ways. Everything you spend from here you take off a corpse.',
+    baseHp: 1800,
+    startGold: 900,
+    income: 12,
+    maxAge: 4,
+    timeLimit: 270,
+    enemy: { aggression: 1.0, economy: 1.4, warmup: 4 },
+    modifiers: ['lean-purse'],
+    reward: 850,
+  },
+  {
+    id: 14,
+    name: 'THE NARROWS',
+    briefing: 'A gorge, not a valley. Nothing either of you owns reaches further than a thrown rock.',
+    baseHp: 1900,
+    startGold: 1000,
+    income: 12,
+    maxAge: 4,
+    timeLimit: 270,
+    enemy: { aggression: 1.0, economy: 1.35, warmup: 4 },
+    modifiers: ['close-quarters'],
+    reward: 900,
+  },
+  {
+    id: 15,
+    name: 'SILENT GUNS',
+    briefing: 'Command has nothing left to give you. No barrage is coming, for either side.',
+    baseHp: 2000,
+    startGold: 1000,
+    income: 13,
+    maxAge: 4,
+    timeLimit: 300,
+    enemy: { aggression: 1.0, economy: 1.35, warmup: 4 },
+    modifiers: ['no-specials'],
+    reward: 950,
+  },
+  {
+    id: 16,
+    name: 'OLD BLOOD',
+    briefing: 'He held this ground a generation before you and he is already in steel. The pass will not let either of you past powder.',
+    baseHp: 1700,
+    startGold: 950,
+    income: 12,
+    maxAge: 2,
+    timeLimit: 270,
+    enemy: { aggression: 1.0, economy: 1.35, warmup: 5 },
+    modifiers: ['veteran-enemy', 'age-locked'],
+    reward: 1000,
+  },
+  {
+    id: 17,
+    name: 'ONE MOUNT',
+    briefing: 'The gate carries a single emplacement and no more. Pick the one you will still want in an hour.',
+    baseHp: 2000,
+    startGold: 1100,
+    income: 13,
+    maxAge: 4,
+    timeLimit: 300,
+    enemy: { aggression: 1.0, economy: 1.4, warmup: 4 },
+    modifiers: ['single-mount'],
+    reward: 1100,
+  },
+  {
+    id: 18,
+    name: 'PYRRHIC',
+    briefing: 'No barrage and no supply. Win every trade or do not come back at all.',
+    baseHp: 2100,
+    startGold: 1000,
+    income: 13,
+    maxAge: 4,
+    timeLimit: 300,
+    enemy: { aggression: 1.0, economy: 1.42, warmup: 4 },
+    modifiers: ['lean-purse', 'no-specials'],
+    reward: 1200,
+  },
+  {
+    id: 19,
+    name: 'HOLLOW CROWN',
+    briefing: 'He has bought the far ridge and everything standing on it. Outrange him or starve in the open.',
+    baseHp: 2200,
+    startGold: 1200,
+    income: 14,
+    maxAge: 4,
+    timeLimit: 330,
+    enemy: { aggression: 1.0, economy: 1.65, warmup: 4 },
+    modifiers: ['artillery-duel', 'rich-enemy'],
+    reward: 1300,
+  },
+  {
+    id: 20,
+    name: 'ASHFALL',
+    briefing: 'Your gate mounts are slag and he is a full age ahead. The army is the only wall left.',
+    baseHp: 2200,
+    startGold: 1300,
+    income: 14,
+    maxAge: 4,
+    timeLimit: 300,
+    enemy: { aggression: 1.0, economy: 1.35, warmup: 4 },
+    modifiers: ['no-turrets', 'veteran-enemy'],
+    reward: 1400,
+  },
+  {
+    id: 21,
+    name: 'THE GRINDER',
+    briefing: 'Six minutes of open field against a commander who never stops buying. Nobody is coming to relieve you.',
+    baseHp: 2600,
+    startGold: 1200,
+    income: 15,
+    maxAge: 4,
+    timeLimit: 360,
+    enemy: { aggression: 1.0, economy: 1.75, warmup: 2 },
+    modifiers: ['rich-enemy', 'fast-enemy'],
+    reward: 1500,
+  },
+  {
+    id: 22,
+    name: 'GLASS AND STEEL',
+    briefing: 'Both gates are shells and there is no barrage to save either of you. One push decides the war.',
+    baseHp: 1000,
+    startGold: 1400,
+    income: 15,
+    maxAge: 4,
+    timeLimit: 270,
+    enemy: { aggression: 1.0, economy: 1.6, warmup: 3 },
+    modifiers: ['sudden-death', 'no-specials'],
+    reward: 1600,
+  },
+  {
+    id: 23,
+    name: 'THE LAST MOUNT',
+    briefing: 'One emplacement, no supply, and he deploys an age above you. Everything the valley taught you, at once.',
+    baseHp: 2300,
+    startGold: 1200,
+    income: 14,
+    maxAge: 4,
+    timeLimit: 330,
+    enemy: { aggression: 1.0, economy: 1.7, warmup: 3 },
+    modifiers: ['single-mount', 'lean-purse', 'veteran-enemy'],
+    reward: 1800,
+  },
+  {
+    id: 24,
+    name: 'END OF AGES',
+    briefing: 'No tricks and no terrain, just the best-funded commander in the field and a clock. Be standing on his gate when it stops.',
+    baseHp: 3000,
+    startGold: 1500,
+    income: 16,
+    maxAge: 4,
+    timeLimit: 390,
+    enemy: { aggression: 1.0, economy: 1.95, warmup: 2 },
+    modifiers: ['rich-enemy', 'fast-enemy'],
+    reward: 2500,
+  },
 ];
 
 export const MODIFIER_LABEL: Record<LevelModifier, string> = {
@@ -172,6 +344,11 @@ export const MODIFIER_LABEL: Record<LevelModifier, string> = {
   'rich-enemy': 'ENEMY FUNDED',
   'fast-enemy': 'ENEMY AGGRESSIVE',
   'artillery-duel': 'WIDE FIELD',
+  'close-quarters': 'CLOSE GROUND',
+  'no-specials': 'NO SUPPORT',
+  'veteran-enemy': 'ENEMY VETERAN',
+  'lean-purse': 'NO SUPPLY',
+  'single-mount': 'ONE MOUNT',
 };
 
 export const MODIFIER_NOTE: Record<LevelModifier, string> = {
@@ -181,6 +358,11 @@ export const MODIFIER_NOTE: Record<LevelModifier, string> = {
   'rich-enemy': 'Enemy income is significantly higher.',
   'fast-enemy': 'Enemy commander reacts faster and pushes harder.',
   'artillery-duel': 'The lane is longer. Reach matters more than mass.',
+  'close-quarters': 'The lane is short. Reach is worth little; bodies are worth more.',
+  'no-specials': 'Neither commander may call support fire.',
+  'veteran-enemy': 'The enemy deploys one age ahead of you.',
+  'lean-purse': 'Passive income is cut hard. Kills are almost the only gold.',
+  'single-mount': 'Only one emplacement may be unlocked.',
 };
 
 export function levelById(id: number): LevelDef {

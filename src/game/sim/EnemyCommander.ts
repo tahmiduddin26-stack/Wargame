@@ -93,6 +93,7 @@ export class EnemyCommander {
 
   private considerSpecial(threat: { units: number; nearest: number }): boolean {
     const c = this.sim.enemy;
+    if (!this.sim.specialsAllowed) return false;
     if (c.specialCd > 0) return false;
     // Worth spending on three or more bodies, or anything at the gate.
     const worthIt = threat.units >= 3 || (threat.units >= 1 && threat.nearest < 240);
@@ -118,7 +119,7 @@ export class EnemyCommander {
   }): boolean {
     const sim = this.sim;
     const c = sim.enemy;
-    if (sim.level.modifiers.includes('no-turrets')) return false;
+    if (sim.slotBudget === 0) return false;
 
     const empty = c.slots.findIndex((s, i) => i < c.unlockedSlots && s === null);
     const age = AGES[c.ageIndex].id;
@@ -146,7 +147,7 @@ export class EnemyCommander {
     }
 
     // All open slots filled. Buy another slot when gold is comfortable.
-    if (c.unlockedSlots < c.slots.length) {
+    if (c.unlockedSlots < sim.slotBudget) {
       const cost = SLOT_UNLOCK_COST[c.unlockedSlots];
       if (c.gold > cost * 2.5) {
         sim.unlockSlot('enemy', c.unlockedSlots);

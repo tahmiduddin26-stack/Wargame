@@ -7,12 +7,17 @@ import { CloseGlyph, TurretGlyph } from '@/ui/components/Glyph';
 /**
  * Four mounts on the gate. Anything built here upgrades itself on evolve, so
  * filling the mounts before you age up is strictly better than after.
+ *
+ * A mission can seal some or all of them. The rack draws three states, not two,
+ * because "you have not bought this yet" and "this mission will never sell you
+ * this" have to look different: an offered mount carries a price, a sealed one
+ * carries nothing and is not a button at all.
  */
-export function TurretRack({ snapshot, noTurrets }: { snapshot: HudSnapshot; noTurrets: boolean }) {
+export function TurretRack({ snapshot }: { snapshot: HudSnapshot }) {
   const [picking, setPicking] = useState<number | null>(null);
   const options = turretsForAge(AGES[snapshot.ageIndex].id);
 
-  if (noTurrets) {
+  if (snapshot.slotBudget === 0) {
     return (
       <div className="rack rack--disabled">
         <span className="label">Emplacements sealed</span>
@@ -23,10 +28,19 @@ export function TurretRack({ snapshot, noTurrets }: { snapshot: HudSnapshot; noT
   return (
     <div className="rack">
       {snapshot.slots.map((turretId, index) => {
+        const sealed = index >= snapshot.slotBudget;
         const locked = index >= snapshot.unlockedSlots;
         const def = turretId ? TURRET_BY_ID[turretId] : null;
         const unlockCost = SLOT_UNLOCK_COST[index];
         const nextToUnlock = index === snapshot.unlockedSlots;
+
+        if (sealed) {
+          return (
+            <div key={index} className="mount mount--locked mount--sealed" aria-hidden="true">
+              <span className="mount__hazard" />
+            </div>
+          );
+        }
 
         if (locked) {
           return (

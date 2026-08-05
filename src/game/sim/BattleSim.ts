@@ -93,10 +93,16 @@ export class BattleSim {
       warmup: level.enemy.warmup * tier.warmup,
     };
 
-    const wide = level.modifiers.includes('artillery-duel');
-    this.laneLength = Math.round(WORLD.laneLength * (wide ? WORLD.wideLaneScale : 1));
+    // Mutually exclusive by construction; if a mission sets both, wide wins.
+    const laneScale = level.modifiers.includes('artillery-duel')
+      ? WORLD.wideLaneScale
+      : level.modifiers.includes('close-quarters')
+        ? WORLD.closeLaneScale
+        : 1;
+    this.laneLength = Math.round(WORLD.laneLength * laneScale);
 
-    const income = ECON.baseIncome + level.income;
+    this.lean = level.modifiers.includes('lean-purse');
+    const income = (ECON.baseIncome + level.income) * (this.lean ? ECON.leanIncomeScale : 1);
     this.player = this.makeCommander(
       'player',
       WORLD.baseInset,
@@ -113,14 +119,33 @@ export class BattleSim {
       Math.round(level.startGold * this.enemyPlan.economy),
     );
 
-    if (level.modifiers.includes('no-turrets')) {
-      this.player.unlockedSlots = 0;
-      this.enemy.unlockedSlots = 0;
-    }
+    // Covers both 'no-turrets' (nothing) and 'single-mount' (one), so the two
+    // never need to be reconciled at the call sites.
+    this.player.unlockedSlots = Math.min(this.player.unlockedSlots, this.slotBudget);
+    this.enemy.unlockedSlots = Math.min(this.enemy.unlockedSlots, this.slotBudget);
 
     if (perks.baseHpScale !== 1) {
       this.player.baseMaxHp = Math.round(this.player.baseMaxHp * perks.baseHpScale);
       this.player.baseHp = this.player.baseMaxHp;
+    }
+
+    /*
+     * Veteran enemy: he deploys one age ahead of you.
+     *
+     * Given as a starting age rather than as more gold because those are
+     * different problems. More gold is answered by spending faster; a tech lead
+     * is answered by surviving long enough to catch up, and it makes the
+     * opening minute genuinely frightening instead of merely expensive.
+     *
+     * Bounded by the mission's own cap, so pairing it with a low `maxAge` reads
+     * as "you are both stuck in this era, he got here first".
+     */
+    if (level.modifiers.includes('veteran-enemy') && this.enemy.ageIndex < this.maxAgeIndex) {
+      this.enemy.ageIndex += 1;
+      const max = Math.round(this.level.baseHp * AGES[this.enemy.ageIndex].baseArmour);
+      this.enemy.baseHp += max - this.enemy.baseMaxHp;
+      this.enemy.baseMaxHp = max;
+      this.stats.enemy.peakAge = this.enemy.ageIndex;
     }
 
     // War College. Capped by the mission's own age cap, so it cannot break the
@@ -134,6 +159,16 @@ export class BattleSim {
       this.player.baseMaxHp = max;
       this.stats.player.peakAge = this.player.ageIndex;
     }
+  }
+
+  /** Cached: read on every kill, and `includes` on a string array is not free. */
+  private lean: boolean;
+
+  /** Mounts this mission allows either side to unlock. */
+  get slotBudget(): number {
+    if (this.level.modifiers.includes('no-turrets')) return 0;
+    if (this.level.modifiers.includes('single-mount')) return 1;
+    return TURRET_SLOTS;
   }
 
   private makeCommander(
@@ -238,8 +273,7 @@ export class BattleSim {
 
   unlockSlot(faction: Faction, slotIndex: number): PurchaseResult {
     const c = this.commander(faction);
-    if (this.level.modifiers.includes('no-turrets')) return 'locked';
-    if (slotIndex !== c.unlockedSlots || slotIndex >= TURRET_SLOTS) return 'locked';
+    if (slotIndex !== c.unlockedSlots || slotIndex >= this.slotBudget) return 'locked';
     const cost = SLOT_UNLOCK_COST[slotIndex];
     if (c.gold < cost) return 'poor';
     c.gold -= cost;
@@ -312,8 +346,14 @@ export class BattleSim {
     return 'ok';
   }
 
+  /** False on a 'no-specials' mission, for both sides and for the HUD. */
+  get specialsAllowed(): boolean {
+    return !this.level.modifiers.includes('no-specials');
+  }
+
   fireSpecial(faction: Faction): PurchaseResult {
     const c = this.commander(faction);
+    if (!this.specialsAllowed) return 'locked';
     if (c.specialCd > 0) return 'cooldown';
     const def = SPECIALS[AGES[c.ageIndex].id];
     c.specialCd = def.cooldown * (faction === 'player' ? this.perks.specialCdScale : 1);

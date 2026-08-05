@@ -466,6 +466,8 @@ export class BattleScene extends Phaser.Scene {
       cooldowns: { ...p.cooldowns },
       slots: p.slots.map((s) => s?.def.id ?? null),
       unlockedSlots: p.unlockedSlots,
+      slotBudget: sim.slotBudget,
+      specialsAllowed: sim.specialsAllowed,
 
       fieldCount: sim.fieldCount('player'),
       enemyFieldCount: sim.fieldCount('enemy'),

@@ -59,7 +59,7 @@ function playerTurn(sim: BattleSim, strategy: Strategy, tick: number): void {
   const age = AGES[c.ageIndex].id;
   const roster = unitsForAge(age);
 
-  if (!sim.level.modifiers.includes('no-turrets')) {
+  if (sim.slotBudget > 0) {
     const empty = c.slots.findIndex((s, i) => i < c.unlockedSlots && s === null);
     if (empty >= 0) {
       const options = [...turretsForAge(age)].sort((a, b) => b.gold - a.gold);
@@ -75,7 +75,7 @@ function playerTurn(sim: BattleSim, strategy: Strategy, tick: number): void {
   for (const u of sim.units) {
     if (u.faction === 'enemy' && u.x - c.baseX < 620) near++;
   }
-  if (near >= 3 && c.specialCd <= 0) {
+  if (near >= 3 && c.specialCd <= 0 && sim.specialsAllowed) {
     sim.fireSpecial('player');
     return;
   }

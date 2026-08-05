@@ -21,6 +21,15 @@ export const WORLD = {
   laneLength: 1250,
   /** The 'artillery-duel' modifier stretches the lane by this factor. */
   wideLaneScale: 1.15,
+  /**
+   * The 'close-quarters' modifier shrinks it by this one.
+   *
+   * Deliberately a smaller move than the wide scale. The lane is already short
+   * (see above) and taking much more out of it puts both gates inside every
+   * turret's reach at once, which is not a knife fight, it is a stalemate with
+   * no walking.
+   */
+  closeLaneScale: 0.86,
   /** Gate inset from each end of the world. */
   baseInset: 150,
   baseHalfWidth: 62,
@@ -85,6 +94,21 @@ export const ECON = {
   escalationStart: 55,
   escalationFull: 235,
   escalationMax: 2.5,
+
+  /**
+   * The 'lean-purse' modifier: passive income is cut hard, so the front line is
+   * the only place gold comes from.
+   *
+   * This started out also paying double loot, on the theory that the modifier
+   * should move the economy from the clock to the front rather than just shrink
+   * it. The harness killed that immediately. Kills are already the dominant
+   * income (see baseIncome above), so doubling them swamped the cut and the
+   * "lean" missions ran the richest in the game: mean idle gold went from ~120
+   * on a standard mission to 1,087 on OP 13 and 11,590 on OP 23. Cutting the
+   * trickle alone gets the intended shape, because it raises what fraction of
+   * your income has to be fought for without adding any.
+   */
+  leanIncomeScale: 0.35,
 } as const;
 
 /**

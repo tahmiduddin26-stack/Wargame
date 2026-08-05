@@ -259,7 +259,7 @@ than losing it.
 ```
 src/
   data/            pure data, no imports outside data/. 20 units, 15 emplacements,
-                   5 ages, 5 specials, 12 missions
+                   5 ages, 5 specials, 24 missions
   game/
     config.ts      every designer-facing tunable, with the reasoning
     sim/           BattleSim: headless, fixed-timestep, deterministic (seeded RNG).
@@ -318,7 +318,7 @@ the oldest corpse on overflow.
 players, because the interesting failures are invisible in a screenshot:
 
 ```bash
-npx tsx scripts/sim-harness.ts        # all 12 missions x 3 strategies
+npx tsx scripts/sim-harness.ts        # all 24 missions x 3 strategies
 npx tsx scripts/sim-harness.ts 6      # one mission, verbose timeline
 TIER=insane npx tsx scripts/sim-harness.ts   # the same, at a difficulty tier
 ```
@@ -355,12 +355,29 @@ minute mark with both gates untouched.** Diagnosing that drove most of the desig
   matching the original, which is why its strategy guides say to fill your mounts
   *before* you age up.
 
-Current state: every mission resolves in 2.5 to 5.5 minutes with no draws, and
-depending on strategy the scripted players win 5 to 9 of 12. Mission 1 is a
-decisive win in about 40 seconds. The scripted players are crude proxies and a real
-person adapts far better, so treat those win rates as a floor, not a target. The
-numbers live in `src/data/` and `src/game/config.ts`; `scripts/retune-units.mjs`
-documents the last bulk pass.
+Act two was tuned the same way, and the harness caught two things a playtest
+would have taken a long time to notice:
+
+- **`lean-purse` made the player richer, not poorer.** The modifier was meant to
+  move the economy onto the front line, so it cut passive income *and* doubled
+  kill loot. But kills were already the dominant income, so doubling them swamped
+  the cut and the "no supply" missions ran the wealthiest in the game: mean idle
+  gold went from ~120 on a standard mission to 1,087 on OP 13 and **11,590** on
+  OP 23. Cutting the trickle alone gets the intended shape, because it raises the
+  fraction of your income that has to be fought for without adding any.
+- **Five of the twelve new missions were unwinnable by any scripted plan.** The
+  first funding curve for act two ran to 2.4x enemy economy, which reads
+  reasonable next to act one's 1.5x and is not. It now tops out at 1.95x, and the
+  difficulty that was coming out of the funding comes out of the modifiers
+  instead — which is the better version anyway, since a mission you lose to a
+  sealed dial is a mission you learn something from.
+
+Current state: every mission resolves in 2.5 to 6.5 minutes with no draws, every
+one is won by at least one scripted plan, and none past OP 13 is won by all three.
+Mission 1 is a decisive win in about 40 seconds. The scripted players are crude
+proxies and a real person adapts far better, so treat those win rates as a floor,
+not a target. The numbers live in `src/data/` and `src/game/config.ts`;
+`scripts/retune-units.mjs` documents the last bulk pass.
 
 ## Verifying it in a browser
 
@@ -377,12 +394,34 @@ canvas and are invisible to the DOM, so `BattleScene` exposes read-only counters
 
 ## Modes and systems
 
-**Campaign.** Twelve missions across four difficulty tiers (Easy / Normal / Hard
-/ Insane), as both Age of War games shipped. Tiers multiply the mission's own
-enemy numbers rather than replacing them, and never touch the player's side, so a
-mission keeps its character at every tier. Clears are recorded per tier, shown as
-a four-pip ladder on each row. Measured with the harness: a competent scripted
-plan takes 11/12 on Easy, 9/12 on Normal and 5/12 on Insane.
+**Campaign.** Twenty-four missions in two acts, across four difficulty tiers
+(Easy / Normal / Hard / Insane), as both Age of War games shipped. Tiers multiply
+the mission's own enemy numbers rather than replacing them, and never touch the
+player's side, so a mission keeps its character at every tier. Clears are recorded
+per tier, shown as a four-pip ladder on each row.
+
+Act one, 1-12, is the valley, and it teaches the game. Act two, 13-24, is built on
+a different lever, because the obvious one runs out: enemy aggression is clamped
+at 1.0 in `BattleSim` and mission 12 already sits there, so nothing past it can be
+made harder by making the commander think faster. Instead each act-two mission
+takes away something you have learned to lean on — support fire, three of the four
+mounts, the passive income, the reach of the lane — and the enemy's funding climbs
+behind it. That makes the back half the more interesting one to play rather than
+merely the longer one.
+
+Measured with the harness on Normal, per act, out of twelve:
+
+| plan | act one | act two |
+|---|---|---|
+| greedy | 9 | 7 |
+| swarm | 6 | 5 |
+| mixed | 9 | 5 |
+
+The number that matters is not the total but the spread. Every mission is won by
+at least one plan and none by all three past OP 13, and *which* plan wins moves
+around: OP 14 and 21 go to mixed, 15 and 22 to swarm, 17/18/20/23 to greedy. A
+mission every plan wins has no teeth; a mission the same plan always wins means
+the roster has a dominant answer and the other three roles are decoration.
 
 **Survival: The Long Watch.** Endless authored waves on one field, no clock. The
 enemy has no economy here; a wave is a written composition granted in full and
@@ -473,10 +512,18 @@ evolve: the card you tap for a Clubman is the card you tap for an Exo Trooper.
 **Four emplacement mounts** on the gate, two free and two bought, in rapid /
 marksman / mortar flavours. They upgrade themselves on evolve.
 
-**Twelve missions.** The first four are the onboarding proper: each unlocks one
-system and caps the age so you cannot outrun the lesson. From mission 5 the cap
-comes off. Six modifiers (sealed emplacements, age cap, glass gates, funded enemy,
-aggressive enemy, wide field) recombine across the campaign.
+**Twenty-four missions.** The first four are the onboarding proper: each unlocks
+one system and caps the age so you cannot outrun the lesson. From mission 5 the cap
+comes off; from 13 the campaign starts taking things away instead of adding them.
+
+Eleven modifiers recombine across it, and they are of two kinds. Seven change the
+sim: sealed emplacements, a single mount, no support fire, a veteran enemy who
+deploys an age ahead, a cut purse, a wide field and a close one. Four are labels
+for numbers stated elsewhere in the mission — age cap, glass gates, funded enemy,
+aggressive enemy — so the select screen can say out loud what those numbers do.
+Which is which is written down in `LevelModifier`, because a modifier that looks
+mechanical and is not is the kind of thing that gets set on a mission and
+silently does nothing.
 
 **Modernisations** over the 2007 original: a mission campaign with modifiers and a
 debrief instead of one endless match; a lane overview strip, because a phone cannot

@@ -15,6 +15,21 @@ export function SpecialDial({ snapshot }: { snapshot: HudSnapshot }) {
   const age = AGES[snapshot.ageIndex];
   const def = SPECIALS[age.id];
   const remaining = snapshot.specialCd;
+
+  /*
+   * Sealed for the mission. Drawn as a dead ring rather than hidden, because the
+   * dock is muscle memory by the time a player meets this modifier and a control
+   * that vanishes reads as a bug. An empty ring where the dial lives reads as
+   * "you know what goes here, and it is not coming".
+   */
+  if (!snapshot.specialsAllowed) {
+    return (
+      <div className="dial dial--sealed" role="img" aria-label="Support fire unavailable">
+        <span className="label dial__name">No support</span>
+      </div>
+    );
+  }
+
   const ready = remaining <= 0;
   // One bloom on the transition into ready, not a loop: the dial is in the
   // corner of the eye during a push and a permanent pulse would nag.

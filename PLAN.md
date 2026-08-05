@@ -85,6 +85,28 @@ controls the first time they matter. Sequenced prompts, dismissible, shown once.
 Armour changes every trade in the game, so the harness gets extended with
 per-tier runs and the whole curve is re-tuned afterwards.
 
+### 8. Act two: missions 13-24
+
+Twelve more missions, and a second modifier vocabulary to give them character.
+
+The constraint that shaped the whole act: `BattleSim` clamps enemy aggression at
+1.0 and mission 12 already sits there, so "harder" cannot mean "the commander
+thinks faster" past that point. Difficulty comes from taking things away instead.
+Five new modifiers, each one small in the sim and large in play:
+
+| modifier | what it does |
+|---|---|
+| `no-specials` | neither side may call support fire |
+| `veteran-enemy` | the enemy deploys one age ahead, inside the mission's cap |
+| `close-quarters` | shortens the lane; reach becomes worthless |
+| `lean-purse` | cuts passive income hard, so gold comes off the front line |
+| `single-mount` | one emplacement, not four |
+
+One mission, one idea, until the last four where they stack. Funding climbs from
+1.4x to 1.95x behind them, which is a gentler curve than it first looked like it
+should be: the first pass ran to 2.4x and left five missions unwinnable by any
+scripted plan.
+
 ## Deliberately not in scope
 
 - **Real art.** Still procedural placeholder rigs, as agreed at the start. The

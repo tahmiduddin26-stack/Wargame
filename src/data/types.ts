@@ -96,13 +96,34 @@ export interface SpecialDef {
   impulse: number;
 }
 
+/*
+ * Mission modifiers.
+ *
+ * Two kinds live in this list and it is worth knowing which is which.
+ *
+ * Some change the sim: 'no-turrets', 'artillery-duel', 'close-quarters',
+ * 'no-specials', 'veteran-enemy', 'lean-purse' and 'single-mount' are all read
+ * by BattleSim and alter how the match is played.
+ *
+ * The rest are labels for numbers already stated elsewhere in the LevelDef:
+ * 'age-locked' describes a low `maxAge`, 'sudden-death' a low `baseHp`,
+ * 'rich-enemy' a high `enemy.economy`, 'fast-enemy' a short `enemy.warmup`.
+ * They exist so the mission select and pause sheet can say out loud what the
+ * numbers are doing. Setting one without setting the matching number does
+ * nothing, which is why each is noted here rather than left to be discovered.
+ */
 export type LevelModifier =
   | 'no-turrets'
   | 'age-locked'
   | 'sudden-death'
   | 'rich-enemy'
   | 'fast-enemy'
-  | 'artillery-duel';
+  | 'artillery-duel'
+  | 'close-quarters'
+  | 'no-specials'
+  | 'veteran-enemy'
+  | 'lean-purse'
+  | 'single-mount';
 
 export interface LevelDef {
   id: number;
