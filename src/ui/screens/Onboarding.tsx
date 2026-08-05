@@ -105,7 +105,7 @@ export function Onboarding() {
   };
 
   return (
-    <div className="ob">
+    <div className="ob field">
       <div className="hazard-rule" />
       <header className="ob__head">
         <span className="label">

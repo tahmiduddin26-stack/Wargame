@@ -1,9 +1,28 @@
 /*
- * FIELD COMMAND terminal.
+ * FIELD COMMAND.
  *
- * Direction: military-surplus control panel. Stamped metal plates, hairline
- * rules instead of shadows, condensed stencil-adjacent headings, every figure in
- * tabular mono so numbers line up in columns the way a readout does.
+ * Direction, in one sentence: every screen is the same surveyed valley. One
+ * lane, measured in metres, marked up by hand.
+ *
+ * That sentence is a correction. The direction used to be "military-surplus
+ * control panel", which sounds specific and is not: dark warm-black, an amber
+ * accent, condensed caps, mono readouts, hazard stripes and targeting brackets
+ * are a commodity look sold as stock packs, and it is the first thing anyone
+ * reaches for when asked to make a war game feel technical. Worse, underneath
+ * it every screen was the same instrument — bordered rectangle, hairline rule,
+ * label left, value right, stacked — so a campaign of twenty-four missions came
+ * out as a sortable table and the main menu as six identical buttons in a grid.
+ * Uniformity of that kind reads as generated no matter how disciplined the
+ * hairlines are.
+ *
+ * The survey is not a costume either: Backdrop already draws a tick every 20m
+ * along the lane and a numbered marker every 200m, because reach is the whole
+ * game. The menus standing on that same graticule is the game's own instrument
+ * rather than a texture picked to look serious.
+ *
+ * What survived the correction, because it was right: stamped plates, hairline
+ * rules instead of shadows, sharp corners, and every figure in tabular mono so
+ * numbers line up in columns the way a readout does.
  *
  * Sizing: the whole UI is measured in `em` against `.stage`, whose font-size is
  * 1% of the stage width. One HUD, any screen, no breakpoints.
@@ -273,6 +292,50 @@ h3,
   letter-spacing: 0.05em;
 }
 
+/* --------------------------------------------------------------- material */
+
+/*
+ * The graticule.
+ *
+ * Screens are drawn on a survey sheet rather than on a flat fill. This is the
+ * one material in the app and it is not decoration: the battlefield itself is
+ * already a surveyed strip (Backdrop draws a tick every 20m and a numbered
+ * marker every 200m, because reach is the whole game), so the menus standing on
+ * the same graticule is the game's own instrument rather than a texture chosen
+ * to look technical.
+ *
+ * Faint on purpose. It should be the thing you notice second, after the words.
+ */
+.field {
+  background-color: var(--steel-900);
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, var(--rule) 42%, transparent) 0 1px,
+      transparent 1px 7em
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--rule) 42%, transparent) 0 1px,
+      transparent 1px 7em
+    );
+  /* Anchored bottom-left, the way a sheet is laid against its origin. */
+  background-position: bottom left;
+}
+
+/*
+ * Chainage. A distance along the route, set in mono and always carrying its
+ * unit, because an unlabelled figure is the thing that makes a readout look
+ * like a mock-up.
+ */
+.chain {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95em;
+  letter-spacing: -0.02em;
+  color: var(--bone-faint);
+}
+
 /* ------------------------------------------------------------------ stage */
 
 /*
@@ -396,6 +459,17 @@ h3,
 
 .btn--primary:active {
   background: var(--ochre-pressed);
+}
+
+/*
+ * A filled primary keeps its fill when disabled unless this says otherwise, and
+ * an amber plate reading "Not surveyed" is a button that looks pressable and
+ * is not.
+ */
+.btn--primary:disabled {
+  background: transparent;
+  border-color: var(--rule);
+  color: var(--bone-faint);
 }
 
 .btn--danger {

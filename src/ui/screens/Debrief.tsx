@@ -42,7 +42,7 @@ export function Debrief() {
   const nextOpen = nextLevel ? isUnlocked(nextLevel.id, records) : false;
 
   return (
-    <div className={`db db--${debrief.won ? 'win' : 'loss'}`}>
+    <div className={`db field db--${debrief.won ? 'win' : 'loss'}`}>
       <div className="hazard-rule" />
       <div className="db__inner">
         <header className="db__head">

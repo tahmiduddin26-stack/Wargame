@@ -20,7 +20,7 @@ export function Armoury() {
   const total = PERKS.reduce((n, p) => n + p.cost, 0);
 
   return (
-    <div className="st">
+    <div className="st field">
       <header className="st__head">
         <button className="btn btn--ghost" onClick={() => go('menu')}>
           Back
@@ -49,6 +49,13 @@ export function Armoury() {
         <ul className="am__list">
           {PERKS.map((perk) => {
             const have = owned.includes(perk.id);
+            /*
+             * Cost is a figure, not a filled plate. Every affordable perk used to
+             * carry a solid amber CTA, so seven of them marched down the column
+             * and "you can afford this" stopped being information. Affordability
+             * rides on the ink instead, which is what the battle dock already
+             * does with unit costs.
+             */
             const affordable = credits >= perk.cost;
             return (
               <li key={perk.id} className={`am__row${have ? ' am__row--owned' : ''}`}>
@@ -61,7 +68,7 @@ export function Armoury() {
                   <span className="label am__fitted">Fitted</span>
                 ) : (
                   <button
-                    className={`btn am__buy${affordable ? ' btn--primary' : ''}`}
+                    className={`btn am__buy${affordable ? '' : ' am__buy--poor'}`}
                     disabled={!affordable}
                     onClick={() => buyPerk(perk.id)}
                   >

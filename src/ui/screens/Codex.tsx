@@ -64,7 +64,7 @@ export function Codex() {
   const special = SPECIALS[age.id];
 
   return (
-    <div className="cx">
+    <div className="cx field">
       <header className="cx__head">
         <button className="btn btn--ghost" onClick={() => go('menu')}>
           Back

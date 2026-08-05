@@ -15,7 +15,7 @@ export function Settings() {
   const [confirmWipe, setConfirmWipe] = useState(false);
 
   return (
-    <div className="st">
+    <div className="st field">
       <header className="st__head">
         <button className="btn btn--ghost" onClick={() => go('menu')}>
           Back
@@ -47,7 +47,7 @@ export function Settings() {
           <p className="st__note">
             Night is the authored look. Day is the same panel printed on bleached board, for
             playing in sunlight. Auto follows your device. The battlefield keeps its own light
-            either way &mdash; the era colours are the world, not the chrome.
+            either way: the era colours are the world, not the chrome.
           </p>
           <div className="st__choices">
             {THEMES.map((theme) => (

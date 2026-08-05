@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AGES } from '@/data/ages';
 import { DIFFICULTIES } from '@/data/difficulty';
 import { LEVELS, MODIFIER_LABEL, MODIFIER_NOTE } from '@/data/levels';
@@ -9,6 +10,20 @@ function mmss(seconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+/**
+ * The campaign is a route up a valley, so it is drawn as one.
+ *
+ * It used to be a sortable table: a column of numbers, a column of names, a
+ * column of tags, a deploy button on the right. That is the correct shape for a
+ * dataset and the wrong one for a journey, and at twenty-four rows it was a
+ * screen of scrolling admin. Nothing about it said the missions are *places*,
+ * one after another, or that the campaign leaves the valley halfway through.
+ *
+ * Now the two acts are two legs of a survey line, missions are stations along
+ * it, and picking one plates it above. Everything the table carried is still
+ * here (best time, tiers cleared, modifiers) but it is attached to the station
+ * you are looking at rather than tiled across every row at once.
+ */
 export function MissionSelect() {
   const { go, startMission, startSurvival } = useGame();
   const records = useGame((s) => s.records);
@@ -18,11 +33,19 @@ export function MissionSelect() {
   const survivalBest = useGame((s) => s.survivalBest);
   const activeTier = DIFFICULTIES.find((d) => d.id === tier)!;
 
-  const featuredId = nextMission(records);
-  const featured = LEVELS.find((l) => l.id === featuredId)!;
+  // Opens on the next unplayed mission, which is where the player left off.
+  const [selectedId, setSelectedId] = useState(() => nextMission(records));
+  const selected = LEVELS.find((l) => l.id === selectedId) ?? LEVELS[0];
+  const selectedRecord = records[selected.id];
+  const selectedOpen = isUnlocked(selected.id, records);
+
+  const legs = [
+    { name: 'The valley', from: 0, to: 12 },
+    { name: 'The road out', from: 12, to: 24 },
+  ];
 
   return (
-    <div className="ms">
+    <div className="ms field">
       <header className="ms__head">
         <button className="btn btn--ghost ms__back" onClick={() => go('menu')}>
           Back
@@ -35,64 +58,126 @@ export function MissionSelect() {
       <div className="hazard-rule" />
 
       <div className="ms__body scroll-y">
-        {/* Featured op. One full-width row, not a card in a grid. */}
-        <section className="ms__featured bracket">
-          <div className="ms__featured-left">
-            <h3 className="ms__featured-name">
-              <span className="num ms__featured-op">
-                {String(featured.id).padStart(2, '0')}
+        {/* The plated station. Not a card in a grid: there is only ever one. */}
+        <section className="ms__station bracket">
+          <div className="ms__station-left">
+            <h3 className="ms__station-name">
+              <span className="num ms__station-op">
+                {String(selected.id).padStart(2, '0')}
               </span>
-              {featured.name}
+              {selected.name}
             </h3>
-            <p className="ms__featured-brief">{featured.briefing}</p>
+            <p className="ms__station-brief">{selected.briefing}</p>
             <ul className="ms__mods">
-              {featured.modifiers.length === 0 && (
-                <li className="tag">STANDARD RULES</li>
-              )}
-              {featured.modifiers.map((m) => (
+              {selected.modifiers.length === 0 && <li className="tag">STANDARD RULES</li>}
+              {selected.modifiers.map((m) => (
                 <li className="tag tag--warn" key={m} title={MODIFIER_NOTE[m]}>
                   {MODIFIER_LABEL[m]}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="ms__featured-right">
+
+          <div className="ms__station-right">
             <dl className="ms__spec">
               <div>
                 <dt className="label">Structure</dt>
-                <dd className="num">{featured.baseHp.toLocaleString('en-GB')}</dd>
+                <dd className="num">{selected.baseHp.toLocaleString('en-GB')}</dd>
               </div>
               <div>
                 <dt className="label">War chest</dt>
-                <dd className="num">{featured.startGold}</dd>
+                <dd className="num">{selected.startGold}</dd>
               </div>
               <div>
                 <dt className="label">Income</dt>
-                <dd className="num">{featured.income}/s</dd>
+                <dd className="num">{selected.income}/s</dd>
               </div>
               <div>
                 <dt className="label">Age cap</dt>
-                <dd className="num">{AGES[Math.min(featured.maxAge, 4)].name.split(' ')[0]}</dd>
+                <dd className="num">{AGES[Math.min(selected.maxAge, 4)].name.split(' ')[0]}</dd>
               </div>
             </dl>
-            <button className="btn btn--primary ms__deploy" onClick={() => startMission(featured.id)}>
-              Deploy
+
+            {/* The record for this station, where the table used to keep it. */}
+            <div className="ms__record">
+              <span className="label">Best</span>
+              <span className="num ms__record-time">
+                {selectedRecord?.bestTime != null ? mmss(selectedRecord.bestTime) : '--:--'}
+              </span>
+              <span className="ms__record-tiers" aria-label="Tiers cleared">
+                {DIFFICULTIES.map((d) => (
+                  <span
+                    key={d.id}
+                    title={d.name}
+                    className={`ms__pip${
+                      selectedRecord?.clearedTiers?.includes(d.id) ? ' ms__pip--on' : ''
+                    }`}
+                  />
+                ))}
+              </span>
+            </div>
+
+            <button
+              className="btn btn--primary ms__deploy"
+              disabled={!selectedOpen}
+              onClick={() => startMission(selected.id)}
+            >
+              {selectedOpen ? (selectedRecord?.cleared ? 'Redeploy' : 'Deploy') : 'Not surveyed'}
             </button>
           </div>
         </section>
 
-        {/* Tier applies to every deploy from this screen, so it sits above the
-            list rather than inside the featured card. */}
+        {/* The route. Two legs, twelve stations each. */}
+        <section className="route" aria-label="Campaign route">
+          {legs.map((leg, legIndex) => (
+            <div className="route__leg" key={leg.name}>
+              <div className="route__leg-head">
+                <span className="label">
+                  Leg {legIndex === 0 ? 'one' : 'two'} &middot; {leg.name}
+                </span>
+                <span className="route__leg-rule" />
+                <span className="chain">
+                  OP {String(leg.from + 1).padStart(2, '0')}&ndash;
+                  {String(leg.to).padStart(2, '0')}
+                </span>
+              </div>
+
+              <ol className="route__line">
+                <span className="route__rail" aria-hidden="true" />
+                {LEVELS.slice(leg.from, leg.to).map((level) => {
+                  const record = records[level.id];
+                  const unlocked = isUnlocked(level.id, records);
+                  const state = record?.cleared ? 'cleared' : unlocked ? 'open' : 'locked';
+                  const here = level.id === selected.id;
+                  return (
+                    <li key={level.id} className="route__stop-cell">
+                      <button
+                        className={`route__stop route__stop--${state}${here ? ' is-here' : ''}`}
+                        aria-current={here ? 'true' : undefined}
+                        aria-label={`${level.name}, operation ${level.id}, ${state}`}
+                        onClick={() => setSelectedId(level.id)}
+                      >
+                        <span className="route__mark" aria-hidden="true" />
+                        <span className="num route__num">
+                          {String(level.id).padStart(2, '0')}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          ))}
+        </section>
+
+        {/* Tier applies to every deploy from this screen, so it sits with the
+            route rather than inside the plated station. */}
         <section className="ms__tier">
           <div className="ms__tier-head">
             <span className="label">Difficulty</span>
             <span className="ms__tier-blurb">{activeTier.blurb}</span>
           </div>
-          <div
-            className="rail rail--tight ms__tier-row"
-            role="radiogroup"
-            aria-label="Difficulty"
-          >
+          <div className="rail rail--tight ms__tier-row" role="radiogroup" aria-label="Difficulty">
             <span className="rail__track" aria-hidden="true" />
             {DIFFICULTIES.map((d, i) => (
               <button
@@ -111,6 +196,7 @@ export function MissionSelect() {
           </div>
         </section>
 
+        {/* Off the route: a standing position, not a station on the road. */}
         <section className="ms__survival">
           <div className="ms__survival-text">
             <h3 className="ms__survival-name">The Long Watch</h3>
@@ -130,56 +216,6 @@ export function MissionSelect() {
             Stand watch
           </button>
         </section>
-
-        <div className="ms__list-head">
-          <span className="label">All operations</span>
-          <div className="rule ms__list-rule" />
-        </div>
-
-        <ol className="ms__list">
-          {LEVELS.map((level) => {
-            const record = records[level.id];
-            const unlocked = isUnlocked(level.id, records);
-            const state = record?.cleared ? 'cleared' : unlocked ? 'open' : 'locked';
-            return (
-              <li key={level.id} className={`ms__row ms__row--${state}`}>
-                <span className="num ms__row-num">{String(level.id).padStart(2, '0')}</span>
-                <span className="ms__row-name display">{level.name}</span>
-                <span className="ms__row-mods">
-                  {/* Three, not two: OP 23 carries three and the one that was
-                      being dropped was the one that decides how you open. */}
-                  {level.modifiers.slice(0, 3).map((m) => (
-                    <span className="tag" key={m}>
-                      {MODIFIER_LABEL[m]}
-                    </span>
-                  ))}
-                </span>
-                <span className="num ms__row-time">
-                  {record?.bestTime != null ? mmss(record.bestTime) : '--:--'}
-                </span>
-                <span className="ms__row-tiers" aria-label="Tiers cleared">
-                  {DIFFICULTIES.map((d) => (
-                    <span
-                      key={d.id}
-                      title={d.name}
-                      className={`ms__pip${record?.clearedTiers?.includes(d.id) ? ' ms__pip--on' : ''}`}
-                    />
-                  ))}
-                </span>
-                <span className="label ms__row-state">
-                  {state === 'cleared' ? 'Cleared' : state === 'open' ? 'Open' : 'Locked'}
-                </span>
-                <button
-                  className="btn ms__row-go"
-                  disabled={!unlocked}
-                  onClick={() => startMission(level.id)}
-                >
-                  {record?.cleared ? 'Replay' : 'Start'}
-                </button>
-              </li>
-            );
-          })}
-        </ol>
       </div>
     </div>
   );

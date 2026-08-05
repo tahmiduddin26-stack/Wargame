@@ -21,8 +21,26 @@ export function MainMenu() {
     else startMission(nextId);
   };
 
+  /*
+   * Destinations as a numbered index, not a grid of buttons.
+   *
+   * Six identical bordered rectangles in a 2x3 grid is the single most
+   * generated-looking arrangement in interface design, and it was also a lie
+   * about the content: these six are not peers. The campaign is the game and
+   * the rest are places you visit between missions, so the index is ranked and
+   * the plate above it carries the only thing you are likely to want.
+   */
+  const index = [
+    { n: 1, name: 'Missions', note: 'Pick the op', go: () => go('missions') },
+    { n: 2, name: 'Roster', note: 'Units, counters, armour', go: () => go('codex') },
+    { n: 3, name: 'Armoury', note: 'Spend the credits', go: () => go('armoury') },
+    { n: 4, name: 'Survival', note: 'The Long Watch', go: startSurvival },
+    { n: 5, name: 'Briefing', note: 'How the valley works', go: () => go('onboarding') },
+    { n: 6, name: 'Settings', note: 'Speed, sound, finish', go: () => go('settings') },
+  ];
+
   return (
-    <div className="menu">
+    <div className="menu field">
       <div className="hazard-rule" />
 
       <div className="menu__grid">
@@ -64,11 +82,11 @@ export function MainMenu() {
         </header>
 
         <nav className="menu__actions">
-          {/* Featured row. Deliberately not one of three equal cards. */}
+          {/* The only thing most sessions need, plated and bracketed. */}
           <button className="menu__deploy bracket" onClick={deploy}>
             {/* The op number rides inline with the name it identifies. */}
             <span className="menu__deploy-name display">
-              <span className="num menu__deploy-op">
+              <span className="num menu__index-op">
                 {String(next.id).padStart(2, '0')}
               </span>
               {next.name}
@@ -80,30 +98,17 @@ export function MainMenu() {
             </span>
           </button>
 
-          <div className="menu__row">
-            <button className="btn btn--ghost" onClick={() => go('missions')}>
-              Missions
-            </button>
-            <button className="btn btn--ghost" onClick={() => go('codex')}>
-              Roster
-            </button>
-          </div>
-          <div className="menu__row">
-            <button className="btn btn--ghost" onClick={() => go('armoury')}>
-              Armoury
-            </button>
-            <button className="btn btn--ghost" onClick={startSurvival}>
-              Survival
-            </button>
-          </div>
-          <div className="menu__row">
-            <button className="btn btn--ghost" onClick={() => go('settings')}>
-              Settings
-            </button>
-            <button className="btn btn--ghost" onClick={() => go('onboarding')}>
-              Briefing
-            </button>
-          </div>
+          <ol className="menu__index">
+            {index.map((item) => (
+              <li key={item.name}>
+                <button className="menu__index-row" onClick={item.go}>
+                  <span className="num menu__index-n">{String(item.n).padStart(2, '0')}</span>
+                  <span className="menu__index-name display">{item.name}</span>
+                  <span className="menu__index-note">{item.note}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
         </nav>
       </div>
 

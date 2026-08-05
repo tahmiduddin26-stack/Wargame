@@ -27,11 +27,58 @@ npm run cap:sync
 
 ## Design system
 
-The look is a field commander's control panel: warm near-black steel, hairline
-rules instead of shadows, condensed stencil-adjacent headings, and every figure
-in tabular mono so numbers line up the way a readout does. Sharp corners
-throughout, with one flourish (an ochre hazard stripe) reserved for locked and
-dangerous things. It ships in two finishes &mdash; see *Two finishes* below.
+**Direction, in one sentence: every screen is the same surveyed valley. One lane,
+measured in metres, marked up by hand.**
+
+That sentence is a correction, and the correction is worth writing down because
+the first direction passed every rule in this file and still came out looking
+generated.
+
+It used to be "a field commander's control panel". That sounds specific. It is
+not: warm near-black, an amber accent, condensed caps, mono readouts, hazard
+stripes and targeting brackets are a commodity aesthetic, sold by the sheet on
+every stock marketplace, and it is the first thing anyone reaches for when asked
+to make a war game look technical. The individual choices were all defensible.
+The direction was the median answer.
+
+The deeper problem was underneath it. Every screen was the same instrument:
+bordered rectangle, hairline rule, label left, value right, stacked vertically.
+A campaign of twenty-four missions rendered as a **sortable table**. A main menu
+as **six identical buttons in a 2x3 grid**. An armoury as a pricing page with
+seven filled amber CTAs marching down the right edge. Uniformity of that kind
+reads as generated no matter how disciplined the hairlines are, and no amount of
+further discipline fixes it, because discipline is what produced it.
+
+So the direction now comes from the game's own material rather than from a genre.
+`Backdrop` already draws a survey tick every 20m along the lane and a numbered
+marker every 200m, because reach is the whole game and being able to read "my
+trebuchet covers 300m" off the ground matters. The menus standing on that same
+graticule is the game's instrument, not a texture chosen to look serious.
+
+What changed:
+
+- **The campaign is a route, not a table.** Two survey legs of twelve stations,
+  chainage marked at each end. Cleared stations are filled squares, open ones
+  hollow with a full-strength edge, unreached ones a tick on the line and nothing
+  more. Picking a station plates it above with a leader line dropped to the mark,
+  the way a callout works on a drawing. Everything the table carried is still
+  there; it is attached to the station you are looking at instead of tiled across
+  every row at once. The whole campaign now fits on one screen without scrolling.
+- **The menu is a numbered index**, rows on a rule. Six identical bordered
+  rectangles were not just the most generated-looking thing on the screen, they
+  were a lie about the content: the campaign is the game and the other five are
+  rooms off the corridor.
+- **Squares, not dots.** A row of circles is a progress bar and a progress bar
+  reads as an app. A square marker on a measured line reads as ground.
+- **The accent went back to being a marker.** Every affordable armoury perk
+  carried a solid amber plate, so seven of them stacked up and "you can afford
+  this" stopped being information. Cost is now a mono figure whose ink carries
+  affordability, which is what the battle dock already did.
+
+What survived, because it was right: stamped plates, hairline rules instead of
+shadows, sharp corners throughout, one flourish (the ochre hazard stripe) kept
+for locked and dangerous things, and every figure in tabular mono. It ships in
+two finishes: see *Two finishes* below.
 
 Two typefaces are self-hosted in `src/assets/fonts` (latin subsets, variable
 weight, 52 KB combined). They are bundled rather than loaded from a CDN because
