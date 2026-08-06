@@ -22,21 +22,18 @@ export function MainMenu() {
   };
 
   /*
-   * Destinations as a numbered index, not a grid of buttons.
-   *
-   * Six identical bordered rectangles in a 2x3 grid is the single most
-   * generated-looking arrangement in interface design, and it was also a lie
-   * about the content: these six are not peers. The campaign is the game and
-   * the rest are places you visit between missions, so the index is ranked and
-   * the plate above it carries the only thing you are likely to want.
+   * Six equal ghost buttons became one brass key carrying the actual next
+   * operation, plus a tile row for the rest. The key is the only thing most
+   * sessions need to press, and making it the only brass object on the screen
+   * says so without a word of copy.
    */
-  const index = [
-    { n: 1, name: 'Missions', note: 'Pick the op', go: () => go('missions') },
-    { n: 2, name: 'Roster', note: 'Units, counters, armour', go: () => go('codex') },
-    { n: 3, name: 'Armoury', note: 'Spend the credits', go: () => go('armoury') },
-    { n: 4, name: 'Survival', note: 'The Long Watch', go: startSurvival },
-    { n: 5, name: 'Briefing', note: 'How the valley works', go: () => go('onboarding') },
-    { n: 6, name: 'Settings', note: 'Speed, sound, finish', go: () => go('settings') },
+  const tiles = [
+    { name: 'Missions', go: () => go('missions') },
+    { name: 'Roster', go: () => go('codex') },
+    { name: 'Armoury', go: () => go('armoury') },
+    { name: 'Survival', go: startSurvival, mode: true },
+    { name: 'Briefing', go: () => go('onboarding') },
+    { name: 'Settings', go: () => go('settings') },
   ];
 
   return (
@@ -47,7 +44,7 @@ export function MainMenu() {
         <header className="menu__brand">
           {/* No kicker above the title. The identifier lives in the footer,
               where it reads as a plate stamp instead of an eyebrow. */}
-          <h1 className="menu__title display--caps">
+          <h1 className="menu__title heavy">
             Age of<br />War
           </h1>
           <div className="menu__underline" />
@@ -82,33 +79,50 @@ export function MainMenu() {
         </header>
 
         <nav className="menu__actions">
-          {/* The only thing most sessions need, plated and bracketed. */}
-          <button className="menu__deploy bracket" onClick={deploy}>
-            {/* The op number rides inline with the name it identifies. */}
-            <span className="menu__deploy-name display">
-              <span className="num menu__index-op">
-                {String(next.id).padStart(2, '0')}
-              </span>
-              {next.name}
+          {/*
+           * Progress as a strip of pips above the key: cleared, next, locked.
+           * It answers "how far am I" and "what now" in one glance, which two
+           * lines of copy were doing badly.
+           */}
+          <div className="menu__progress">
+            <span className="label">Campaign</span>
+            <span className="num menu__progress-count">
+              {String(cleared).padStart(2, '0')} / {LEVELS.length} cleared
             </span>
-            <span className="menu__deploy-brief">{next.briefing}</span>
-            <span className="menu__deploy-go display">
-              {fresh ? 'Begin campaign' : 'Resume campaign'}
-              <span className="menu__deploy-arrow" aria-hidden="true" />
+          </div>
+          <ol className="menu__pips" aria-hidden="true">
+            {LEVELS.map((l) => {
+              const done = !!records[l.id]?.cleared;
+              const here = l.id === nextId;
+              return (
+                <li
+                  key={l.id}
+                  className={`menu__pip${done ? ' menu__pip--done' : here ? ' menu__pip--next' : ''}`}
+                />
+              );
+            })}
+          </ol>
+
+          <button className="menu__key key" onClick={deploy}>
+            <span className="menu__key-op num">{String(next.id).padStart(2, '0')}</span>
+            <span className="menu__key-text">
+              <span className="menu__key-name">{next.name}</span>
+              <span className="menu__key-brief">{next.briefing}</span>
             </span>
+            <span className="menu__key-go">{fresh ? 'Begin' : 'Resume'}</span>
           </button>
 
-          <ol className="menu__index">
-            {index.map((item) => (
-              <li key={item.name}>
-                <button className="menu__index-row" onClick={item.go}>
-                  <span className="num menu__index-n">{String(item.n).padStart(2, '0')}</span>
-                  <span className="menu__index-name display">{item.name}</span>
-                  <span className="menu__index-note">{item.note}</span>
-                </button>
-              </li>
+          <div className="menu__tiles">
+            {tiles.map((t) => (
+              <button
+                key={t.name}
+                className={`menu__tile plate${t.mode ? ' menu__tile--mode' : ''}`}
+                onClick={t.go}
+              >
+                {t.name}
+              </button>
             ))}
-          </ol>
+          </div>
         </nav>
       </div>
 

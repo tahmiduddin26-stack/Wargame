@@ -52,7 +52,7 @@
 .evolve,
 .dial,
 .ms__tier-btn,
-.menu__deploy,
+.menu__key,
 .am__buy,
 .cx__age,
 .st__choice {
@@ -63,14 +63,18 @@
     transform var(--t-tap) var(--ease-out);
 }
 
-.btn:active:not(:disabled),
+/*
+ * Pressing is travel, not shrink.
+ *
+ * This file loads last, so a `transform: scale(.975)` here silently beat the
+ * `translateY(--lift)` that makes a key drop onto its own extruded edge — every
+ * control in the tent would have squashed instead of pressing. The objects that
+ * carry their own press are left alone; only the flat ones still scale.
+ */
 .unit:active,
 .mount:active,
 .evolve:active:not(:disabled),
-.ms__tier-btn:active,
-.menu__deploy:active,
-.am__buy:active:not(:disabled),
-.st__choice:active {
+.dial:active:not(:disabled) {
   transform: scale(0.975);
 }
 
@@ -346,7 +350,7 @@
   .evolve,
   .dial,
   .ms__tier-btn,
-  .menu__deploy,
+  .menu__key,
   .am__buy,
   .cx__age,
   .st__choice {
@@ -355,14 +359,23 @@
   }
 
   .btn:active,
+  .key:active,
+  .plate:active,
+  .scorched:active,
   .unit:active,
   .mount:active,
   .evolve:active,
   .dial:active,
-  .ms__tier-btn:active,
-  .menu__deploy:active,
+  .rail__stop:active,
+  .menu__key:active,
   .am__buy:active,
   .st__choice:active {
+    transform: none;
+  }
+
+  /* A pressed key still has to look pressed; it just gets there without travel. */
+  .rail__stop--on,
+  .st__choice--on {
     transform: none;
   }
 

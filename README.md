@@ -27,84 +27,88 @@ npm run cap:sync
 
 ## Design system
 
-**Direction, in one sentence: every screen is the same surveyed valley. One lane,
-measured in metres, marked up by hand.**
+**Direction, in one sentence: a campaign tent, not a terminal. Painted canvas,
+hammered brass fittings, and keys you press like physical objects.**
 
-That sentence is a correction, and the correction is worth writing down because
-the first direction passed every rule in this file and still came out looking
-generated.
+This is the third direction, and the previous two are worth recording because
+both failed in instructive ways.
 
-It used to be "a field commander's control panel". That sounds specific. It is
-not: warm near-black, an amber accent, condensed caps, mono readouts, hazard
-stripes and targeting brackets are a commodity aesthetic, sold by the sheet on
-every stock marketplace, and it is the first thing anyone reaches for when asked
-to make a war game look technical. The individual choices were all defensible.
-The direction was the median answer.
+"A field commander's control panel" sounded specific and was not: warm
+near-black, an amber accent, condensed caps, mono readouts and targeting
+brackets are a commodity aesthetic sold by the sheet on every stock
+marketplace. The survey sheet that replaced it was genuinely specific and drawn
+from the game's own material, but it was still flat, still an *instrument*. Both
+shared the real problem: every control was a rectangle with a border, which is
+what a UI looks like when nothing in it has been given a material.
 
-The deeper problem was underneath it. Every screen was the same instrument:
-bordered rectangle, hairline rule, label left, value right, stacked vertically.
-A campaign of twenty-four missions rendered as a **sortable table**. A main menu
-as **six identical buttons in a 2x3 grid**. An armoury as a pricing page with
-seven filled amber CTAs marching down the right edge. Uniformity of that kind
-reads as generated no matter how disciplined the hairlines are, and no amount of
-further discipline fixes it, because discipline is what produced it.
+### Four surfaces
 
-So the direction now comes from the game's own material rather than from a genre.
-`Backdrop` already draws a survey tick every 20m along the lane and a numbered
-marker every 200m, because reach is the whole game and being able to read "my
-trebuchet covers 300m" off the ground matters. The menus standing on that same
-graticule is the game's instrument, not a texture chosen to look serious.
+Everything on screen is one of these, and the extrusion is the whole idea. A key
+and a plate sit `--lift` proud of the table on a solid dark edge; pressing a key
+travels it *down* onto that edge. A readout does the opposite and sinks in.
 
-What changed:
+| surface | what it is | what it is for |
+|---|---|---|
+| `.key` | brass, bright top bevel, dark underside | anything you press |
+| `.plate` | blued steel, same extrusion, no warmth | anything that holds things |
+| `.readout` | carved, inner shadow, never raised | anything reporting a figure |
+| `.scorched` | burnt, inner red glow | danger, and only danger |
 
-- **The campaign is a route, not a table.** Two survey legs of twelve stations,
-  chainage marked at each end. Cleared stations are filled squares, open ones
-  hollow with a full-strength edge, unreached ones a tick on the line and nothing
-  more. Picking a station plates it above with a leader line dropped to the mark,
-  the way a callout works on a drawing. Everything the table carried is still
-  there; it is attached to the station you are looking at instead of tiled across
-  every row at once. The whole campaign now fits on one screen without scrolling.
-- **The menu is a numbered index**, rows on a rule. Six identical bordered
-  rectangles were not just the most generated-looking thing on the screen, they
-  were a lie about the content: the campaign is the game and the other five are
-  rooms off the corridor.
-- **Squares, not dots.** A row of circles is a progress bar and a progress bar
-  reads as an app. A square marker on a measured line reads as ground.
-- **The accent went back to being a marker.** Every affordable armoury perk
-  carried a solid amber plate, so seven of them stacked up and "you can afford
-  this" stopped being information. Cost is now a mono figure whose ink carries
-  affordability, which is what the battle dock already did.
+There are exactly four scorched surfaces in the game: wipe progress, abandon, an
+unaffordable card, and the last thirty seconds. Any more and none of them mean
+anything.
 
-What survived, because it was right: stamped plates, hairline rules instead of
-shadows, sharp corners throughout, one flourish (the ochre hazard stripe) kept
-for locked and dangerous things, and every figure in tabular mono. It ships in
-two finishes: see *Two finishes* below.
+### Four hues, fixed meanings
 
-Two typefaces are self-hosted in `src/assets/fonts` (latin subsets, variable
-weight, 52 KB combined). They are bundled rather than loaded from a CDN because
-the game ships in a Capacitor shell with no guaranteed network, and because a
-display face that silently falls back to the platform sans is not the design:
+`--yours` amber, `--theirs` steel cyan, `--danger` red, `--held` green. Nothing
+else on the chrome carries colour. Era accents stay on the battlefield where
+they are the world. Survival is the single exception: its tile is cyan, because
+it is the mode where the enemy never stops coming.
 
-- **Oswald** carries the display voice: headings, unit names, buttons, labels.
-- **JetBrains Mono** carries every figure, so tabular columns align identically
-  on iOS, Android and desktop instead of shifting with whatever mono the platform
-  happens to ship.
+### Three voices
 
-Licences and rationale: `src/assets/fonts/LICENSES.md`.
+- **Bowlby One SC** — the wordmark, a debrief verdict, and the gold figure.
+  Three jobs, and it stops meaning anything the moment a section header borrows
+  it, which is exactly what happened on the first pass and had to be undone.
+- **Barlow Condensed** — every key, name, heading and label.
+- **JetBrains Mono** — every figure, tabular.
 
-Rules that are easy to erode, so they are stated in `src/styles/global.css`:
+All three are self-hosted from `src/assets/fonts` (latin subsets, 128 KB
+combined). No CDN: the game ships in a Capacitor shell with no guaranteed
+network, and a display face that silently falls back to the platform sans is not
+the design.
 
-- **Mono is for figures only.** Gold, reach, damage, timers, mission numbers.
-  Using it for prose labels turns it into a costume for "technical", so small
-  labels use the condensed display face via `.label`.
-- **No label sits above a heading as an eyebrow.** Identifiers such as the
-  mission number ride inline on the heading's baseline.
-- **No thick coloured border down one edge.** That side-tab is the stock
-  AI callout. Emphasis comes from an inset top rule, or from targeting brackets
-  (`.bracket`) on the two genuinely primary surfaces.
-- **Uppercase is for short labels**, never for headings or body copy.
-- **Meters animate a transform, not width**, because they update about twelve
-  times a second during a battle and animating width forces layout every frame.
+### What this changed
+
+- **The menu** is one brass key carrying the actual next operation, a strip of
+  twelve pips above it (cleared / next / locked), and a tile row for everything
+  else. Six equal ghost buttons flattened a real hierarchy; the campaign is the
+  game and the rest are rooms off the corridor.
+- **Selection is a row of keys with one pressed down**, for both the age
+  selector and the difficulty ladder. It replaced a detented rail that was a
+  clever idiom needing explanation, where "which is selected" rode on a
+  two-pixel stem.
+- **A toggle is a throw switch with a brass knob.** Position reads across a
+  room; the ON/OFF text plate it replaced was a word you had to read and then
+  map to a state.
+- **Owned is a state, not a word.** A fitted armoury perk turns the whole plate
+  green rather than swapping its button for the text "Fitted".
+- **The campaign route survived the re-direction unchanged**, because it was
+  right: two survey legs of twelve stations, not a sortable table.
+
+### Two finishes
+
+Night is the tent after dark, one lamp over the table. Day is the same tent with
+the flap open, on sun-bleached canvas. **The brass does not change between them**
+— it is the one material that reads identically in both, which is what holds the
+two finishes together as one design rather than two.
+
+Day's danger colour is crimson rather than night's scorched rust, and that is
+forced rather than chosen: protanopia dims red and keeps blue, so on a light
+canvas a rust red darkens straight into the gold beside it at **dE 1.9 under
+deuteranopia** — an unaffordable cost and an affordable one become the same
+mark. Night keeps rust because its gold is bright enough that lightness alone
+separates the pair. See *Colour and colour vision* below.
 
 ## Selection: a rail, not tabs
 

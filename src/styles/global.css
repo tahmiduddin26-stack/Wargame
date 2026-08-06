@@ -1,45 +1,69 @@
 /*
- * FIELD COMMAND.
+ * THE WAR TABLE.
  *
- * Direction, in one sentence: every screen is the same surveyed valley. One
- * lane, measured in metres, marked up by hand.
+ * Direction, in one sentence: a campaign tent, not a terminal. Painted canvas,
+ * hammered brass fittings, and keys you press like physical objects.
  *
- * That sentence is a correction. The direction used to be "military-surplus
- * control panel", which sounds specific and is not: dark warm-black, an amber
- * accent, condensed caps, mono readouts, hazard stripes and targeting brackets
- * are a commodity look sold as stock packs, and it is the first thing anyone
- * reaches for when asked to make a war game feel technical. Worse, underneath
- * it every screen was the same instrument — bordered rectangle, hairline rule,
- * label left, value right, stacked — so a campaign of twenty-four missions came
- * out as a sortable table and the main menu as six identical buttons in a grid.
- * Uniformity of that kind reads as generated no matter how disciplined the
- * hairlines are.
+ * This replaces two earlier directions. "Military-surplus control panel" was a
+ * commodity look; the survey sheet that followed was more specific but still
+ * flat, still an instrument rather than a place. The tent is a place, and it
+ * gives every control a material: you press brass, you read off blackened
+ * steel, you find carved figures sunk into the surface.
  *
- * The survey is not a costume either: Backdrop already draws a tick every 20m
- * along the lane and a numbered marker every 200m, because reach is the whole
- * game. The menus standing on that same graticule is the game's own instrument
- * rather than a texture picked to look serious.
+ * FOUR SURFACES, and every element on screen is one of them:
  *
- * What survived the correction, because it was right: stamped plates, hairline
- * rules instead of shadows, sharp corners, and every figure in tabular mono so
- * numbers line up in columns the way a readout does.
+ *   .key       Brass. Anything you press. Warm gradient, bright top bevel,
+ *              dark underside, and a 5px extruded edge below so it stands
+ *              proud of the table. Pressing it drops it onto that edge.
+ *   .plate     Blued steel. Anything that holds things: panels, cards, trays.
+ *              Same extrusion, no warmth.
+ *   .readout   Carved. Anything reporting a figure. Sunk into the surface with
+ *              an inner shadow instead of raised, so a number never looks like
+ *              something you could press.
+ *   .scorched  Danger, and only danger. There are exactly four in the game:
+ *              wipe progress, abandon, an unaffordable card, and the last
+ *              thirty seconds. Any more and none of them mean anything.
  *
  * Sizing: the whole UI is measured in `em` against `.stage`, whose font-size is
  * 1% of the stage width. One HUD, any screen, no breakpoints.
  *
- * Two rules worth stating because they are easy to erode:
+ * Rules that survived every re-direction, because they were never the problem:
  *   1. Mono is for figures only. Gold, reach, damage, timers, mission numbers.
- *      Using it for prose labels turns it into a costume for "technical".
- *   2. No label sits above a heading as an eyebrow. Identifiers ride inline with
- *      the thing they identify.
+ *   2. No label sits above a heading as an eyebrow.
+ *   3. Colour has fixed meanings and there are only four of them.
  */
 
 /* Self-hosted: no CDN, no network dependency in the native shell, and no
    silent fallback to the platform sans. See src/assets/fonts/LICENSES.md. */
 @font-face {
-  font-family: 'Oswald';
-  src: url('../assets/fonts/oswald-var.woff2') format('woff2-variations');
-  font-weight: 400 700;
+  font-family: 'Barlow Condensed';
+  src: url('../assets/fonts/barlow-condensed-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('../assets/fonts/barlow-condensed-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('../assets/fonts/barlow-condensed-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+/* The one heavy voice: wordmark, verdicts, and gold. Nothing else. */
+@font-face {
+  font-family: 'Bowlby One SC';
+  src: url('../assets/fonts/bowlby-one-sc-400.woff2') format('woff2');
+  font-weight: 400;
   font-style: normal;
   font-display: block;
 }
@@ -52,178 +76,192 @@
   font-display: block;
 }
 
-/*
- * ---------------------------------------------------------------- palette
- *
- * Two finishes of the same panel: NIGHT (stamped steel under a red lamp) and
- * DAY (a field manual printed on bleached board). Neither is the other with the
- * lightness flipped — a light theme built by inverting a dark one reads as a
- * photographic negative, all the warm ink going cold.
- *
- * The token contract, which is what makes one stylesheet serve both:
- *   --steel-900 .. -500  A surface RAMP, not a lightness scale. 900 is the page,
- *                        500 is the most raised chip. In DAY the hex values
- *                        descend instead of ascending; "raised" still means
- *                        "further from the page", so every consumer holds.
- *   --ochre / --oxide    FILL. Something sits on top of it, and that something
- *                        is --on-accent. Never use for text.
- *   --*-ink              The same accent as INK: text, hairlines, strokes. In
- *                        NIGHT it equals the fill; in DAY it is several stops
- *                        darker, because amber on board is 1.8:1.
- *   --glass*, --scrim    Chrome that floats over the Phaser canvas. The
- *                        battlefield does not change with the theme, so these
- *                        carry their own alpha rather than deriving from a
- *                        surface.
- *
- * Every ink token clears 4.5:1 on its own --steel-900, and every accent used as
- * a bare graphic (gate bars, meter fills, pips) clears 3:1.
- */
 :root {
-  /* Surfaces: warm near-black, not navy, not slate. */
-  --steel-900: #12100e;
-  --steel-800: #191612;
-  --steel-700: #1f1b16;
-  --steel-600: #26211a;
-  --steel-500: #322b22;
-
-  /* Hairlines. */
-  --rule: #3a3125;
-  --rule-bright: #5c4e39;
+  color-scheme: dark;
 
   /*
-   * Ink. Every one of these clears 4.5:1 on --steel-900; --bone-faint used to
-   * sit at 3.3:1, which failed WCAG AA on the labels that carry the readouts.
+   * FOUR HUES, FIXED MEANINGS. Nothing else carries colour.
+   * Era accents stay on the battlefield, where they are the world.
    */
-  --bone: #ece5d6;
-  --bone-dim: #b3a692;
-  --bone-faint: #928471;
+  --yours: #f0b73f;
+  --theirs: #4fb8dc;
+  --danger: #c8452b;
+  --held: #86a35a;
+
+  /* MATERIALS. Not a lightness ramp: four things you could touch. */
+  --brass: #c9973f;
+  --paper: #ecd9ae;
+  --plate: #3d2d22;
+  --slot: #150d09;
+
+  /* The table itself, and the ink on it. */
+  --tent: #100a08;
+  --ink: #f4e8cf;
+  --ink-dim: #c2ab86;
+  --ink-faint: #8d7a5e;
+
+  /* Fittings: the edges where two materials meet. */
+  --edge: #6a4c2a;
+  --edge-deep: #3d2a18;
+  --edge-brass: #56390f;
 
   /*
-   * Faction identity. Separate tokens from the semantic accents below, because
-   * "this is mine" and "this is affordable" are different questions and had been
-   * sharing one colour.
+   * Extrusion. A key stands 5px proud of the table and drops onto this edge
+   * when pressed, which is the whole reason the controls read as objects
+   * rather than as rectangles.
    */
-  --player: #e0aa2e;
-  --enemy: #46a6c8;
+  --under-key: #4a3110;
+  --under-plate: #150e0a;
+  --under-scorch: #180806;
+  --lift: 0.5em;
 
-  /* Functional accents. Ochre = go/affordable, oxide = threat/denied. */
-  --ochre: #e0aa2e;
-  --ochre-deep: #8f6a12;
-  --ochre-lit: #f5c451;
-  --ochre-pressed: #c08e1c;
-  --oxide: #d9563b;
+  --face-key: linear-gradient(180deg, #f2d18c 0%, #d3a24a 18%, #b0842f 62%, #8a6320 100%);
+  --face-plate: linear-gradient(180deg, #3d2d22 0%, #241a13 100%);
+  --face-scorch: linear-gradient(180deg, #3d2118 0%, #25100c 100%);
+  --on-key: #3a2409;
+  --on-scorch: #f0a48f;
+
+  --font-display: 'Bowlby One SC', 'Barlow Condensed', system-ui, sans-serif;
+  --font-body: 'Barlow Condensed', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /*
+   * ---------------------------------------------------------------- legacy
+   *
+   * The old names, mapped onto the new materials. They are kept because the
+   * whole app speaks them and converting every rule in one pass would be a
+   * change nobody could review; screens move onto .key / .plate / .readout as
+   * they are rebuilt. New rules should use the tokens above.
+   */
+  --steel-900: var(--tent);
+  --steel-800: #1d150f;
+  --steel-700: #241a13;
+  --steel-600: var(--plate);
+  --steel-500: #4a3320;
+
+  --rule: var(--edge-deep);
+  --rule-bright: var(--edge);
+
+  --bone: var(--ink);
+  --bone-dim: var(--ink-dim);
+  --bone-faint: var(--ink-faint);
+
+  --player: var(--yours);
+  --enemy: var(--theirs);
+
+  --ochre: var(--brass);
+  --ochre-deep: var(--edge-brass);
+  --ochre-lit: #f2d18c;
+  --ochre-pressed: #8a6320;
+  --oxide: var(--danger);
   --oxide-deep: #7a2a1a;
-  --moss: #8fae6a;
+  --moss: var(--held);
 
-  /*
-   * The counter table's strong multiplier. Its own token because that table is
-   * the one place two figures are scanned against each other in a grid, so the
-   * pair has to be keyed on brightness — and what reads as "brighter than the
-   * muted one" is gold on steel but plain black ink on board. Everywhere else
-   * an accent figure is read against a label, not against another figure.
-   */
-  --mult-strong: var(--ochre);
+  --mult-strong: var(--yours);
+  --ochre-ink: var(--yours);
+  --oxide-ink: #e4705a;
+  --moss-ink: var(--held);
+  --oxide-soft: #f0a48f;
+  --on-accent: var(--on-key);
 
-  /* Accents as ink. Identical to the fills here; DAY pulls them down. */
-  --ochre-ink: var(--ochre);
-  --oxide-ink: var(--oxide);
-  --moss-ink: var(--moss);
-  /* Oxide softened for long runs of text on a dark plate. */
-  --oxide-soft: #efb1a2;
-
-  /* What sits on top of an --ochre or --oxide fill. */
-  --on-accent: #171208;
-
-  /* Recessed track: meters, the lane strip. Below the page, not above it. */
-  --well: #0d0b09;
+  --well: var(--slot);
 
   /*
    * Chrome over the canvas. Alpha is deliberate: the battlefield reads through
    * it, which is how the HUD stays anchored to the world.
    */
-  --glass: rgba(18, 16, 14, 0.82);
-  --glass-raised: rgba(31, 27, 22, 0.94);
-  --glass-solid: rgba(18, 16, 14, 0.95);
-  /* Cooldown wash over a dock card. */
-  --veil: rgba(10, 9, 7, 0.72);
-  /* Full-screen pause blackout. */
-  --scrim: rgba(9, 8, 6, 0.86);
+  --glass: rgba(20, 13, 9, 0.84);
+  --glass-raised: rgba(45, 33, 25, 0.95);
+  --glass-solid: rgba(20, 13, 9, 0.96);
+  --veil: rgba(12, 7, 5, 0.74);
+  --scrim: rgba(10, 6, 4, 0.88);
 
-  --font-display: 'Oswald', system-ui, sans-serif;
-  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  /* Canvas weave. Two threads, crossed; barely there by design. */
+  --weft: rgba(255, 240, 200, 0.014);
+  --warp: rgba(0, 0, 0, 0.22);
 
-  /* The one flourish. */
-  --hazard-gap: #17130d;
-  --hazard: repeating-linear-gradient(-45deg, var(--ochre-deep) 0 6px, var(--hazard-gap) 6px 12px);
+  --hazard-gap: #1a0f0c;
+  --hazard: repeating-linear-gradient(-45deg, var(--edge-brass) 0 6px, var(--hazard-gap) 6px 12px);
 }
 
 /*
- * DAY. Bleached board, printer's ink, stamped amber.
+ * DAY. The same tent with the flap open.
  *
- * The surface ramp descends: the page is the lightest thing on screen and every
- * raised plate steps down towards the ink, which is how printed matter works —
- * a card laid on a page is darker than the page, not brighter.
+ * Sun-bleached canvas instead of shadow, and printer's ink instead of paper
+ * ink. The brass does not change, because brass does not change: it is the one
+ * material that reads identically in both, which is what holds the two finishes
+ * together as one design rather than two.
  */
 :root[data-theme='light'] {
-  --steel-900: #e8e2d4;
-  --steel-800: #ded7c6;
-  --steel-700: #d4ccb8;
-  --steel-600: #c9c0a9;
-  --steel-500: #b7ac91;
+  color-scheme: light;
 
-  --rule: #b0a48a;
-  --rule-bright: #877a60;
+  --yours: #8a5a06;
+  --theirs: #14607f;
+  /*
+   * Day's danger is crimson, not the scorched rust night uses, and that is
+   * forced rather than chosen. Protanopia dims red and keeps blue, so on a light
+   * page a rust red darkens straight into the gold beside it: measured dE 1.9
+   * under deuteranopia, meaning an unaffordable cost and an affordable one are
+   * the same mark. The blue in a crimson holds the pair apart. Night keeps rust
+   * because its gold is bright enough that lightness alone separates them.
+   */
+  --danger: #ab2d4e;
+  --held: #4d6b2a;
 
-  --bone: #1c1810;
-  --bone-dim: #4a4234;
-  --bone-faint: #6b6150;
+  /*
+   * Day's brass is squeezed from both sides: it must clear 3:1 against the
+   * canvas as a bare fill and carry near-black ink at 4.5:1. This value sits at
+   * 3.3 and 4.8. There is not much room either way, which is why it is not
+   * simply night's brass darkened.
+   */
+  --brass: #a3741a;
+  --paper: #efe6d0;
+  --plate: #d8cbae;
+  --slot: #c3b493;
 
-  --player: #7d5505;
-  --enemy: #16607f;
+  --tent: #efe6d0;
+  --ink: #21170c;
+  --ink-dim: #4b3d28;
+  --ink-faint: #6d5c42;
 
-  /* Fill amber is stamped, not highlighter: light ink sits on it at 5.1:1. */
-  --ochre: #8f6209;
-  --ochre-deep: #6d4a05;
-  --ochre-lit: #a97810;
-  --ochre-pressed: #6d4a05;
-  --oxide: #ab2d4e;
+  --edge: #9c8a68;
+  --edge-deep: #b2a184;
+  --edge-brass: #7d5806;
+
+  --under-key: #7d5806;
+  --under-plate: #a8967a;
+  --under-scorch: #7d1c36;
+
+  --face-key: linear-gradient(180deg, #e8bf6a 0%, #d3a24a 18%, #b98c2c 62%, #9c7318 100%);
+  --face-plate: linear-gradient(180deg, #e2d7bd 0%, #cfc0a0 100%);
+  --face-scorch: linear-gradient(180deg, #e9c2cd 0%, #d69fae 100%);
+  /* Near-black, not dark brown: brown on day's brass measures 3.7:1. */
+  --on-key: #0f0903;
+  --on-scorch: #5c1024;
+
+  --steel-800: #e5dbc3;
+  --steel-700: #ddd2b8;
+  --steel-600: var(--plate);
+  --steel-500: #c3b493;
+
+  --ochre-lit: #b98c2c;
+  --ochre-pressed: #7d5806;
   --oxide-deep: #7d1c36;
-  --moss: #4d6b2a;
-
-  /*
-   * Black ink is the strong mark on board. Gold cannot be it: every ink on a
-   * light page is squeezed under 4.5:1 into a narrow band of lightness, and the
-   * table needs 20 dE of separation from --bone-faint on the one axis that
-   * survives tritanopia, which is lightness. Reaching that as an amber would
-   * mean a bronze so deep it stops reading as gold anywhere else in the UI.
-   */
-  --mult-strong: var(--bone);
-
-  /*
-   * Danger is crimson rather than rust, and that is not a style choice.
-   * Protanopia dims the red channel and keeps the blue one, so a rust red
-   * darkens straight into the gold beside it — an unaffordable cost and an
-   * affordable one become the same mark, measured at dE 12.7. The blue in a
-   * crimson holds the pair apart at 28. Night gets the same separation for free
-   * from bright gold over deep oxide, and so never had to solve this.
-   */
-  --ochre-ink: #7d5505;
   --oxide-ink: #ab2d4e;
-  --moss-ink: #46621f;
-  --oxide-soft: #8f2340;
+  --oxide-soft: #7d1c36;
+  --mult-strong: var(--ink);
 
-  --on-accent: #fdf8ec;
+  --glass: rgba(240, 232, 212, 0.9);
+  --glass-raised: rgba(228, 217, 192, 0.96);
+  --glass-solid: rgba(243, 236, 220, 0.97);
+  --veil: rgba(236, 228, 208, 0.76);
+  --scrim: rgba(228, 218, 196, 0.9);
 
-  --well: #c5bca5;
+  /* Sunlit canvas shows its weave far more readily than shadowed canvas. */
+  --weft: rgba(255, 255, 255, 0.4);
+  --warp: rgba(90, 70, 40, 0.05);
 
-  --glass: rgba(238, 233, 221, 0.88);
-  --glass-raised: rgba(228, 222, 207, 0.95);
-  --glass-solid: rgba(240, 236, 226, 0.97);
-  --veil: rgba(232, 227, 213, 0.74);
-  --scrim: rgba(224, 218, 203, 0.9);
-
-  --hazard-gap: #ddd3bb;
+  --hazard-gap: #ded2b4;
 }
 
 * {
@@ -260,31 +298,44 @@ body {
 }
 
 /*
- * Small label. Condensed display face, not mono: these are words, and mono
- * prose is the "technical" costume. Uppercase is fine here because labels are
- * two or three words; long copy never gets it.
+ * Small label. Condensed body face, not mono: these are words, and mono prose is
+ * the "technical" costume. Uppercase is fine here because labels are two or
+ * three words; long copy never gets it.
  */
 .label {
-  font-family: var(--font-display);
-  font-weight: 500;
+  font-family: var(--font-body);
+  font-weight: 600;
   font-size: 1.05em;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--bone-faint);
+  color: var(--ink-faint);
 }
 
+/*
+ * Headings are Barlow at 700, NOT the display face. Bowlby One SC is a single
+ * heavy voice held back for three things — the wordmark, a debrief verdict, and
+ * gold — and it stops meaning anything the moment a section header borrows it.
+ */
 h1,
 h2,
 h3,
 .display {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: 0.02em;
   line-height: 1.03;
   margin: 0;
   /* Deliberately NOT uppercase globally. Long headings in caps are slower to
      read; the few that want caps opt in with .display--caps. */
   text-transform: none;
+}
+
+/* The heavy voice. Wordmark, verdicts, gold. Nothing else. */
+.heavy {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  line-height: 1;
 }
 
 .display--caps {
@@ -295,32 +346,27 @@ h3,
 /* --------------------------------------------------------------- material */
 
 /*
- * The graticule.
+ * The tent.
  *
- * Screens are drawn on a survey sheet rather than on a flat fill. This is the
- * one material in the app and it is not decoration: the battlefield itself is
- * already a surveyed strip (Backdrop draws a tick every 20m and a numbered
- * marker every 200m, because reach is the whole game), so the menus standing on
- * the same graticule is the game's own instrument rather than a texture chosen
- * to look technical.
+ * Painted canvas, not a survey sheet. The previous direction put a graticule
+ * behind every screen, which was specific but flat: a grid is a drawing, and
+ * this is meant to be a place with cloth walls and a lamp over the table.
  *
- * Faint on purpose. It should be the thing you notice second, after the words.
+ * Two very low-contrast weaves crossed at right angles give the surface a
+ * texture that reads as fabric at arm's length and disappears up close, plus a
+ * warm pool of light where the table is. No image, so it costs nothing and
+ * scales with the stage like everything else.
  */
 .field {
-  background-color: var(--steel-900);
+  background-color: var(--tent);
   background-image:
-    repeating-linear-gradient(
-      to right,
-      color-mix(in srgb, var(--rule) 42%, transparent) 0 1px,
-      transparent 1px 7em
+    radial-gradient(
+      120% 90% at 50% 8%,
+      color-mix(in srgb, var(--brass) 9%, transparent) 0%,
+      transparent 62%
     ),
-    repeating-linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--rule) 42%, transparent) 0 1px,
-      transparent 1px 7em
-    );
-  /* Anchored bottom-left, the way a sheet is laid against its origin. */
-  background-position: bottom left;
+    repeating-linear-gradient(90deg, var(--weft) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, var(--warp) 0 1px, transparent 1px 3px);
 }
 
 /*
@@ -333,7 +379,7 @@ h3,
   font-variant-numeric: tabular-nums;
   font-size: 0.95em;
   letter-spacing: -0.02em;
-  color: var(--bone-faint);
+  color: var(--ink-faint);
 }
 
 /* ------------------------------------------------------------------ stage */
@@ -364,21 +410,105 @@ h3,
 
 /* ------------------------------------------------------------- primitives */
 
+/*
+ * THE FOUR SURFACES.
+ *
+ * Everything on screen is one of these. The extrusion is the whole idea: a key
+ * and a plate sit `--lift` proud of the table on a solid dark edge, and a key
+ * pressed travels down onto that edge. A readout does the opposite and sinks.
+ * That is what stops the UI reading as rectangles with borders.
+ */
+
+.key,
+.plate,
+.scorched {
+  border-radius: 1.2em;
+  position: relative;
+  transition: transform 90ms linear, box-shadow 90ms linear, filter 120ms linear;
+}
+
+.key {
+  background: var(--face-key);
+  border: 1px solid var(--edge-brass);
+  color: var(--on-key);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 240, 200, 0.75),
+    inset 0 -3px 0 rgba(60, 35, 8, 0.5),
+    0 var(--lift) 0 var(--under-key);
+}
+
+.plate {
+  background: var(--face-plate);
+  border: 1px solid var(--edge);
+  color: var(--ink-dim);
+  box-shadow:
+    inset 0 1px 0 rgba(214, 168, 96, 0.35),
+    0 var(--lift) 0 var(--under-plate);
+}
+
+.scorched {
+  background: var(--face-scorch);
+  border: 1px solid var(--danger);
+  color: var(--on-scorch);
+  box-shadow:
+    inset 0 -10px 18px -6px color-mix(in srgb, var(--danger) 60%, transparent),
+    0 var(--lift) 0 var(--under-scorch);
+}
+
+/* Pressing drops the object onto its own edge. */
+.key:active,
+.plate:active,
+.scorched:active {
+  transform: translateY(var(--lift));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 240, 200, 0.4),
+    inset 0 -2px 0 rgba(60, 35, 8, 0.4),
+    0 0 0 var(--under-key);
+}
+
+.key:disabled,
+.plate:disabled,
+.scorched:disabled {
+  filter: saturate(0.35) brightness(0.7);
+  cursor: not-allowed;
+}
+
+.key:disabled:active,
+.plate:disabled:active,
+.scorched:disabled:active {
+  transform: none;
+}
+
+/*
+ * Carved. Sunk into the surface, never raised, so a figure can never be
+ * mistaken for something you press.
+ */
+.readout {
+  background: var(--slot);
+  border: 1px solid var(--edge-deep);
+  border-radius: 0.5em;
+  color: var(--ink-faint);
+  box-shadow:
+    inset 0 3px 7px rgba(0, 0, 0, 0.85),
+    inset 0 -1px 0 rgba(214, 168, 96, 0.18);
+}
+
+/* Legacy names, kept so unconverted screens still render as materials. */
 .panel {
-  background: var(--steel-800);
-  border: 1px solid var(--rule);
-  /* Sharp. The timid 8-16px middle is the tell. */
-  border-radius: 0;
+  background: var(--face-plate);
+  border: 1px solid var(--edge);
+  border-radius: 1.2em;
+  box-shadow: inset 0 1px 0 rgba(214, 168, 96, 0.35);
 }
 
 .panel--raised {
-  background: var(--steel-700);
-  border-color: var(--rule-bright);
+  background: linear-gradient(180deg, #4a3320 0%, var(--plate) 100%);
+  border-color: var(--edge);
 }
 
 .rule {
   height: 1px;
-  background: var(--rule);
+  background: var(--edge-deep);
   border: 0;
   margin: 0;
 }
@@ -390,9 +520,9 @@ h3,
 }
 
 /*
- * Targeting brackets. This is how a primary surface is marked out, instead of a
- * thick coloured border down one edge: that side-tab is the stock AI callout and
- * a survey bracket belongs to this world anyway.
+ * Targeting brackets. Kept from the survey pass because they still mark the one
+ * primary surface per screen, and a bracket belongs on a war table as much as it
+ * did on a drawing.
  */
 .bracket {
   position: relative;
@@ -404,7 +534,7 @@ h3,
   position: absolute;
   width: 1.1em;
   height: 1.1em;
-  border-color: var(--ochre-ink);
+  border-color: var(--brass);
   border-style: solid;
   pointer-events: none;
 }
@@ -421,77 +551,117 @@ h3,
   border-width: 0 2px 2px 0;
 }
 
+/* ------------------------------------------------------------------ buttons */
+
 .btn {
   appearance: none;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.5em;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  color: var(--bone);
-  background: var(--steel-600);
-  border: 1px solid var(--rule-bright);
-  border-radius: 0;
-  padding: 0.6em 1.4em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 1.2em;
+  padding: 0.5em 1.3em;
   cursor: pointer;
-  transition: background 120ms linear, border-color 120ms linear, color 120ms linear;
+  /* Default is a blued plate; the brass key is opted into. */
+  background: var(--face-plate);
+  border: 1px solid var(--edge);
+  color: var(--ink-dim);
+  box-shadow:
+    inset 0 1px 0 rgba(214, 168, 96, 0.35),
+    0 var(--lift) 0 var(--under-plate);
+  transition: transform 90ms linear, box-shadow 90ms linear, filter 120ms linear;
 }
 
 .btn:active {
-  background: var(--steel-500);
+  transform: translateY(var(--lift));
+  box-shadow: inset 0 1px 0 rgba(214, 168, 96, 0.2), 0 0 0 var(--under-plate);
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--ochre-ink);
-  outline-offset: 2px;
+  outline: 2px solid var(--yours);
+  outline-offset: 3px;
 }
 
 .btn:disabled {
-  color: var(--bone-faint);
-  border-color: var(--rule);
+  filter: saturate(0.3) brightness(0.65);
   cursor: not-allowed;
 }
 
+.btn:disabled:active {
+  transform: none;
+  box-shadow:
+    inset 0 1px 0 rgba(214, 168, 96, 0.35),
+    0 var(--lift) 0 var(--under-plate);
+}
+
+/* The brass key. One per screen: the thing you are here to press. */
 .btn--primary {
-  background: var(--ochre);
-  border-color: var(--ochre-lit);
-  color: var(--on-accent);
+  background: var(--face-key);
+  border-color: var(--edge-brass);
+  color: var(--on-key);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 240, 200, 0.75),
+    inset 0 -3px 0 rgba(60, 35, 8, 0.5),
+    0 var(--lift) 0 var(--under-key);
 }
 
 .btn--primary:active {
-  background: var(--ochre-pressed);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 240, 200, 0.4),
+    inset 0 -2px 0 rgba(60, 35, 8, 0.4),
+    0 0 0 var(--under-key);
 }
 
-/*
- * A filled primary keeps its fill when disabled unless this says otherwise, and
- * an amber plate reading "Not surveyed" is a button that looks pressable and
- * is not.
- */
 .btn--primary:disabled {
-  background: transparent;
-  border-color: var(--rule);
-  color: var(--bone-faint);
+  background: var(--face-plate);
+  border-color: var(--edge);
+  color: var(--ink-faint);
+  box-shadow:
+    inset 0 1px 0 rgba(214, 168, 96, 0.2),
+    0 var(--lift) 0 var(--under-plate);
 }
 
+/* Scorched. Wipe, abandon, and nothing else on this screen. */
 .btn--danger {
-  border-color: var(--oxide-ink);
-  color: var(--oxide-soft);
+  background: var(--face-scorch);
+  border-color: var(--danger);
+  color: var(--on-scorch);
+  box-shadow:
+    inset 0 -10px 18px -6px color-mix(in srgb, var(--danger) 60%, transparent),
+    0 var(--lift) 0 var(--under-scorch);
+}
+
+.btn--danger:active {
+  box-shadow:
+    inset 0 -6px 12px -6px color-mix(in srgb, var(--danger) 60%, transparent),
+    0 0 0 var(--under-scorch);
 }
 
 .btn--ghost {
   background: transparent;
+  border-color: var(--edge);
+  box-shadow: none;
+}
+
+.btn--ghost:active {
+  transform: none;
+  background: color-mix(in srgb, var(--plate) 70%, transparent);
+  box-shadow: none;
 }
 
 .tag {
-  font-family: var(--font-display);
-  font-weight: 500;
+  font-family: var(--font-body);
+  font-weight: 600;
   font-size: 1.05em;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--bone-dim);
-  border: 1px solid var(--rule);
-  padding: 0.1em 0.5em;
-  /* Not a pill. */
-  border-radius: 0;
+  color: var(--ink-dim);
+  background: var(--slot);
+  border: 1px solid var(--edge-deep);
+  border-radius: 0.4em;
+  padding: 0.15em 0.55em;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7);
   white-space: nowrap;
 }
 
@@ -501,16 +671,18 @@ h3,
 }
 
 /*
- * Meters scale a transform rather than animating width. Animating width forces
- * layout on every frame, and these update ~12 times a second during a battle.
- * Consumers set --fill to a 0..1 ratio.
+ * Meters are carved channels with something bright poured into them. They scale
+ * a transform rather than animating width: animating width forces layout on
+ * every frame, and these update ~12 times a second during a battle.
  */
 .meter {
   position: relative;
-  height: 0.7em;
-  background: var(--well);
-  border: 1px solid var(--rule);
+  height: 0.8em;
+  background: var(--slot);
+  border: 1px solid var(--edge-deep);
+  border-radius: 0.4em;
   overflow: hidden;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.85);
 }
 
 .meter__fill {
@@ -518,17 +690,17 @@ h3,
   inset: 0;
   transform: scaleX(var(--fill, 0));
   transform-origin: left center;
-  background: var(--ochre);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--yours) 70%, #fff) 0%, var(--yours) 55%, color-mix(in srgb, var(--yours) 70%, #000) 100%);
   transition: transform 90ms linear;
   will-change: transform;
 }
 
 .meter__fill--enemy {
-  background: var(--enemy);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--theirs) 70%, #fff) 0%, var(--theirs) 55%, color-mix(in srgb, var(--theirs) 70%, #000) 100%);
 }
 
 .meter__fill--xp {
-  background: var(--moss);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--held) 70%, #fff) 0%, var(--held) 55%, color-mix(in srgb, var(--held) 70%, #000) 100%);
 }
 
 /* ------------------------------------------------------------------ scroll */

@@ -45,9 +45,10 @@ export function Settings() {
         <section className="st__group">
           <h3 className="st__label">Panel finish</h3>
           <p className="st__note">
-            Night is the authored look. Day is the same panel printed on bleached board, for
-            playing in sunlight. Auto follows your device. The battlefield keeps its own light
-            either way: the era colours are the world, not the chrome.
+            Night is the authored look: the tent after dark, one lamp over the table. Day is the
+            same tent with the flap open, on sun-bleached canvas. The brass does not change in
+            either. Auto follows your device, and the battlefield keeps its own light regardless:
+            the era colours are the world, not the chrome.
           </p>
           <div className="st__choices">
             {THEMES.map((theme) => (
@@ -152,8 +153,17 @@ function Toggle({
           <span className="st__label">{label}</span>
           <span className="st__note">{note}</span>
         </span>
-        <span className={`st__switch${on ? ' st__switch--on' : ''}`}>
-          <span className="label">{on ? 'ON' : 'OFF'}</span>
+        {/*
+          * A throw switch, not a word. Position reads across a room and does
+          * not depend on reading; the I/O marks on the track are there for the
+          * same reason a real one has them stamped on.
+          */}
+        <span className={`throw${on ? ' throw--on' : ''}`} aria-hidden="true">
+          <span className="throw__marks">
+            <i>I</i>
+            <i>O</i>
+          </span>
+          <span className="throw__knob" />
         </span>
       </button>
     </section>

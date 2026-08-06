@@ -69,9 +69,16 @@
   color: var(--ochre-ink);
 }
 
+/*
+ * Gold is the third and last place the heavy voice is allowed. It is the figure
+ * the whole game is played against, it changes constantly, and it has to be
+ * readable from the corner of the eye during a push.
+ */
 .hud__gold {
-  font-size: 1.7em;
-  color: var(--ochre-ink);
+  font-family: var(--font-display);
+  font-size: 1.5em;
+  letter-spacing: 0;
+  color: var(--yours);
 }
 
 .hud__age,
@@ -396,7 +403,7 @@
 }
 
 .unit__name {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.35em;
   line-height: 1.05;
   text-transform: uppercase;
@@ -621,7 +628,7 @@
 
 .picker__opt-text b {
   display: block;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.25em;
   text-transform: uppercase;
   letter-spacing: 0.04em;

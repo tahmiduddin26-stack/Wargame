@@ -112,12 +112,14 @@
 }
 
 .menu__title {
-  /* Oswald is condensed, so it carries a larger optical size than the fallback
-     sans did at the same value. */
-  font-size: 10em;
-  line-height: 0.82;
-  letter-spacing: 0.005em;
+  /* Bowlby is very wide and very heavy, so it carries far more optical size per
+     em than the condensed face it replaced. */
+  font-size: 6.6em;
+  line-height: 0.94;
   margin: 0;
+  /* Ink, not --paper: in day the paper token IS the canvas behind it. */
+  color: var(--ink);
+  text-transform: uppercase;
 }
 
 .menu__underline {
@@ -160,147 +162,123 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 1em;
+  gap: 0.9em;
 }
 
-.menu__deploy {
-  appearance: none;
-  text-align: left;
-  background: var(--steel-700);
-  border: 1px solid var(--rule-bright);
-  border-radius: 0;
-  padding: 1.6em 1.8em;
-  color: var(--bone);
-  cursor: pointer;
-  display: grid;
-  gap: 0.5em;
-  transition: background 120ms linear;
-}
-
-.menu__deploy:active {
-  background: var(--steel-600);
-}
-
-/*
- * Inline identifier: the op number sits on the heading's own baseline, sized
- * down and tinted, so it reads as part of the name rather than a label hovering
- * above it.
- */
-.menu__deploy-name {
-  font-size: 3.4em;
-  line-height: 1;
+.menu__progress {
   display: flex;
   align-items: baseline;
-  gap: 0.4em;
+  gap: 0.8em;
 }
 
-.menu__index-op,
-.ms__station-op,
-.db__op,
-.ob__step {
-  flex: none;
-  font-size: 0.44em;
-  font-weight: 500;
-  color: var(--ochre-ink);
-  letter-spacing: 0.04em;
-}
-
-.menu__deploy-go {
-  display: flex;
-  align-items: center;
-  gap: 0.7em;
-  letter-spacing: 0.04em;
-}
-
-/* Drawn arrow, matching the 2px stroke of the icon set. */
-.menu__deploy-arrow {
-  width: 1.6em;
-  height: 2px;
-  background: var(--ochre-ink);
-  position: relative;
-}
-
-.menu__deploy-arrow::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: -0.25em;
-  width: 0.55em;
-  height: 0.55em;
-  border-top: 2px solid var(--ochre-ink);
-  border-right: 2px solid var(--ochre-ink);
-  transform: rotate(45deg);
-  transform-origin: top right;
-}
-
-.menu__deploy-brief {
-  color: var(--bone-dim);
-  font-size: 1.3em;
-  line-height: 1.4;
-}
-
-.menu__deploy-go {
-  font-size: 1.5em;
-  color: var(--ochre-ink);
-  margin-top: 0.4em;
-}
-
-/*
- * The index. Rows on a rule, not boxes in a grid.
- *
- * Six identical bordered rectangles in a 2x3 grid was the most generated-looking
- * arrangement on the screen, and it also flattened a real hierarchy: the plate
- * above is the game, these are the rooms off the corridor. A ruled index is how
- * a manual lists its own sections, which is the register the rest of the app is
- * already in.
- */
-.menu__index {
-  list-style: none;
-  margin: 1.1em 0 0;
-  padding: 0;
-  border-top: 1px solid var(--rule);
-}
-
-.menu__index-row {
-  appearance: none;
-  width: 100%;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--rule);
-  color: var(--bone);
-  cursor: pointer;
-  display: grid;
-  grid-template-columns: 2.6em auto 1fr;
-  align-items: baseline;
-  gap: 1em;
-  padding: 0.66em 0.3em;
-  text-align: left;
-  transition: background-color 120ms linear, padding-left 120ms var(--ease-out, ease);
-}
-
-.menu__index-row:hover,
-.menu__index-row:focus-visible {
-  background: var(--steel-800);
-  /* The row steps aside rather than lifting: no card hover, no shadow. */
-  padding-left: 1em;
-  outline: none;
-}
-
-.menu__index-n {
+.menu__progress-count {
+  color: var(--ink-dim);
   font-size: 1.1em;
-  color: var(--bone-faint);
+  margin-left: auto;
 }
 
-.menu__index-name {
-  font-size: 1.8em;
+/* One pip per operation: cleared, next, locked. */
+.menu__pips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.3em;
+}
+
+.menu__pip {
+  flex: 1;
+  height: 0.55em;
+  border-radius: 0.15em;
+  background: var(--slot);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.menu__pip--done {
+  background: var(--held);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.menu__pip--next {
+  background: var(--yours);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/*
+ * The one brass object on the screen. It carries the operation rather than the
+ * word "Play", so pressing it is a decision you have already made rather than a
+ * menu you have to navigate.
+ */
+.menu__key {
+  appearance: none;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1.1em;
+  padding: 1.1em 1.4em;
+  text-align: left;
+  font-family: var(--font-body);
+}
+
+.menu__key-op {
+  font-size: 1.6em;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--on-key) 72%, transparent);
+}
+
+.menu__key-name {
+  display: block;
+  font-size: 2.4em;
+  font-weight: 700;
   line-height: 1;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
-.menu__index-note {
-  color: var(--bone-faint);
-  font-size: 1.1em;
-  text-align: right;
+.menu__key-brief {
+  display: block;
+  font-size: 1.2em;
+  line-height: 1.3;
+  margin-top: 0.2em;
+  color: color-mix(in srgb, var(--on-key) 80%, transparent);
+}
+
+.menu__key-go {
+  font-size: 1.35em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding-left: 0.9em;
+  border-left: 2px solid color-mix(in srgb, var(--on-key) 30%, transparent);
+}
+
+/* Everything else: blued tiles, plainly secondary to the brass. */
+.menu__tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6em;
+}
+
+.menu__tile {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.8em 0.4em;
+  font-family: var(--font-body);
+  font-size: 1.3em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/*
+ * Survival is the one place the enemy colour appears outside the battlefield,
+ * because it is the mode where they never stop coming.
+ */
+.menu__tile--mode {
+  color: var(--theirs);
+  border-color: color-mix(in srgb, var(--theirs) 45%, var(--edge));
 }
 
 .menu__foot {
@@ -614,8 +592,12 @@
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 2.5em;
-  background: var(--steel-800);
-  border: 1px solid var(--rule-bright);
+  background: var(--face-plate);
+  border: 1px solid var(--edge);
+  border-radius: 1.2em;
+  box-shadow:
+    inset 0 1px 0 rgba(214, 168, 96, 0.35),
+    0 var(--lift) 0 var(--under-plate);
   padding: 1.6em 1.8em;
 }
 
@@ -852,93 +834,86 @@
  * this strip into a rainbow that changed hue on every click. Era colour belongs
  * on the battlefield, where it is the world, not on chrome.
  */
+/*
+ * A row of keys with one pressed down.
+ *
+ * This was a detented rail: a hairline track with stems hanging off it and one
+ * dropped. It was a clever idiom that needed explaining, and "which one is
+ * selected" was carried by a two-pixel stem. Four physical keys with one
+ * visibly pushed in says the same thing with no idiom at all, and it is the
+ * same object the rest of the tent is built from.
+ *
+ * Used by both the age selector and the difficulty ladder, so the app has one
+ * selection language.
+ */
 .rail {
   position: relative;
   display: flex;
   align-items: stretch;
-  gap: 0;
-  padding: 1.1em 2.4em 0;
+  gap: 0.6em;
+  padding: 1.1em 2.4em 0.6em;
 }
 
-/* The rail the detents hang from. */
-.rail__track {
-  position: absolute;
-  top: 1.1em;
-  left: 2.4em;
-  right: 2.4em;
-  height: 1px;
-  background: var(--rule-bright);
+/* The track is gone; the keys are the thing. */
+.rail__track,
+.rail__detent {
+  display: none;
 }
 
 .rail__stop {
   appearance: none;
   position: relative;
-  background: transparent;
-  border: 0;
-  padding: 1.1em 1.4em 0.9em;
   cursor: pointer;
   display: grid;
   grid-template-columns: auto auto;
   align-items: center;
   gap: 0.5em;
-  color: var(--bone-faint);
+  padding: 0.7em 1em;
+  font-family: var(--font-body);
+  border-radius: 1.2em;
+  background: var(--face-plate);
+  border: 1px solid var(--edge);
+  color: var(--ink-faint);
+  box-shadow:
+    inset 0 1px 0 rgba(214, 168, 96, 0.35),
+    0 var(--lift) 0 var(--under-plate);
+  transition: transform 90ms linear, box-shadow 90ms linear, color 120ms linear;
 }
 
-/*
- * The stem: short when idle, dropped and lit when the switch is engaged.
- *
- * Scaled rather than resized. Animating height is layout work, and it is the
- * same mistake the lane bands made: the design detector caught both.
- */
-.rail__detent {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 2px;
-  height: 1.1em;
-  background: var(--rule-bright);
-  transform: translateX(-50%) scaleY(0.45);
-  transform-origin: top center;
-  transition: transform var(--t-state, 220ms) var(--ease-out, ease),
-    background-color var(--t-feedback, 140ms) linear;
+.rail__stop:active {
+  transform: translateY(var(--lift));
+  box-shadow: inset 0 1px 0 rgba(214, 168, 96, 0.2), 0 0 0 var(--under-plate);
 }
 
-.rail__stop--on .rail__detent {
-  transform: translateX(-50%) scaleY(1);
-  background: var(--ochre-ink);
+/* Pressed: brass, and held down on its own edge. */
+.rail__stop--on {
+  background: var(--face-key);
+  border-color: var(--edge-brass);
+  color: var(--on-key);
+  transform: translateY(var(--lift));
+  box-shadow:
+    inset 0 2px 6px rgba(60, 35, 8, 0.55),
+    0 0 0 var(--under-key);
 }
 
 .rail__index {
   font-size: 1.15em;
+  font-weight: 700;
   line-height: 1;
-  padding: 0.25em 0.4em;
-  border: 1px solid var(--rule-bright);
-  color: var(--bone-faint);
-  transition: background-color var(--t-feedback, 140ms) linear,
-    color var(--t-feedback, 140ms) linear, border-color var(--t-feedback, 140ms) linear;
-}
-
-/* Engaged position inverts, which reads as lit rather than merely coloured. */
-.rail__stop--on .rail__index {
-  background: var(--ochre);
-  border-color: var(--ochre-ink);
-  color: var(--on-accent);
+  opacity: 0.7;
 }
 
 .rail__name {
-  font-family: var(--font-display);
-  font-size: 1.45em;
+  font-family: var(--font-body);
+  font-size: 1.35em;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.rail__stop--on .rail__name {
-  color: var(--bone);
-}
-
 .rail__stop:focus-visible {
-  outline: 2px solid var(--ochre-ink);
-  outline-offset: -2px;
+  outline: 2px solid var(--yours);
+  outline-offset: 3px;
 }
 
 /* Compact variant: the difficulty ladder, which also carries a payout figure. */
@@ -947,28 +922,19 @@
   padding-right: 0;
 }
 
-.rail--tight .rail__track {
-  left: 0;
-  right: 0;
-}
-
 .rail--tight .rail__stop {
-  padding: 1em 1.1em 0.7em;
+  grid-template-columns: auto auto auto;
 }
 
 .rail--tight .rail__name {
-  font-size: 1.3em;
+  font-size: 1.25em;
 }
 
 .rail__note {
   font-family: var(--font-mono);
   font-size: 0.95em;
-  color: var(--bone-faint);
   letter-spacing: -0.02em;
-}
-
-.rail__stop--on .rail__note {
-  color: var(--ochre-ink);
+  opacity: 0.75;
 }
 
 /* Era swatch: colour as legend data, next to the era it describes. */
@@ -1058,7 +1024,7 @@
 
 .cx__name {
   display: block;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.15em;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1096,7 +1062,7 @@
 }
 
 .st__label {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.7em;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1114,30 +1080,49 @@
 .st__choices {
   display: flex;
   gap: 0.8em;
+  padding-bottom: var(--lift);
 }
 
+/* Same key idiom as the rails, so the app has one way of showing a choice. */
 .st__choice {
   appearance: none;
-  background: var(--steel-700);
-  border: 1px solid var(--rule-bright);
-  color: var(--bone-dim);
-  font-size: 1.5em;
-  padding: 0.5em 1.4em;
   cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 1.4em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.45em 1.2em;
+  border-radius: 1.2em;
+  background: var(--face-plate);
+  border: 1px solid var(--edge);
+  color: var(--ink-dim);
+  box-shadow:
+    inset 0 1px 0 rgba(214, 168, 96, 0.35),
+    0 var(--lift) 0 var(--under-plate);
+  transition: transform 90ms linear, box-shadow 90ms linear, color 120ms linear;
+}
+
+.st__choice:active {
+  transform: translateY(var(--lift));
+  box-shadow: inset 0 1px 0 rgba(214, 168, 96, 0.2), 0 0 0 var(--under-plate);
+}
+
+.st__choice--on {
+  background: var(--face-key);
+  border-color: var(--edge-brass);
+  color: var(--on-key);
+  transform: translateY(var(--lift));
+  box-shadow:
+    inset 0 2px 6px rgba(60, 35, 8, 0.55),
+    0 0 0 var(--under-key);
 }
 
 /* Word choices, not figures: display face, matching every other named option. */
 .st__choice-word {
-  font-family: var(--font-display);
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.st__choice--on {
-  background: var(--ochre);
-  border-color: var(--ochre-lit);
-  color: var(--on-accent);
 }
 
 .st__toggle {
@@ -1173,23 +1158,61 @@
   margin-bottom: 0;
 }
 
-.st__switch {
+/*
+ * Throw switch. A carved channel with a brass knob thrown to one end.
+ *
+ * The ON/OFF text plate it replaces was a word you had to read and then map to
+ * a state. This is a physical position, which is the whole point of the tent:
+ * the controls are objects, and an object's state is where it is sitting.
+ */
+.throw {
   margin-left: auto;
   flex: none;
-  width: 6em;
-  padding: 0.55em 0;
-  text-align: center;
-  border: 1px solid var(--rule-bright);
-  color: var(--bone-faint);
+  position: relative;
+  width: 5.6em;
+  height: 2.7em;
+  border-radius: 1.35em;
+  background: var(--slot);
+  border: 1px solid var(--edge-deep);
+  box-shadow: inset 0 3px 7px rgba(0, 0, 0, 0.85);
 }
 
-.st__switch--on {
-  background: var(--ochre);
-  border-color: var(--ochre-lit);
+.throw__marks {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.75em;
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  font-style: normal;
+  color: var(--ink-faint);
+  opacity: 0.55;
 }
 
-.st__switch--on .label {
-  color: var(--on-accent);
+.throw__marks i {
+  font-style: normal;
+}
+
+.throw__knob {
+  position: absolute;
+  top: 0.2em;
+  left: 0.2em;
+  width: 2.5em;
+  height: 2.1em;
+  border-radius: 1.05em;
+  background: var(--face-plate);
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 rgba(214, 168, 96, 0.35), 0 2px 3px rgba(0, 0, 0, 0.6);
+  transition: transform 150ms var(--ease-out, ease), background 150ms linear,
+    border-color 150ms linear;
+}
+
+.throw--on .throw__knob {
+  transform: translateX(2.6em);
+  background: var(--face-key);
+  border-color: var(--edge-brass);
 }
 
 .st__confirm {
@@ -1215,8 +1238,12 @@
   max-width: 60em;
 }
 
+/* One of the three places the heavy voice appears. */
 .db__verdict {
-  font-size: 5.6em;
+  font-family: var(--font-display);
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  font-size: 4.2em;
   line-height: 1;
   margin: 0 0 0.3em;
   display: flex;
@@ -1303,7 +1330,7 @@
 }
 
 .cx__kind {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.05em;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1463,13 +1490,23 @@
   background: var(--steel-800);
 }
 
+/*
+ * Owned is a state, not a word. The whole plate goes green rather than the
+ * button being swapped for the text "Fitted", so a glance down the list counts
+ * what you have without reading anything.
+ */
 .am__row--owned {
-  background: var(--steel-700);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--held) 26%, var(--plate)) 0%,
+    color-mix(in srgb, var(--held) 14%, #241a13) 100%
+  );
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--held) 45%, transparent);
 }
 
 .am__name {
   display: block;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.5em;
   letter-spacing: 0.03em;
 }
@@ -1546,7 +1583,7 @@
   background: transparent;
   border: 1px solid var(--rule-bright);
   color: var(--bone-dim);
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.1em;
   letter-spacing: 0.1em;
   text-transform: uppercase;

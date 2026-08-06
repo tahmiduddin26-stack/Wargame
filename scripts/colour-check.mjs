@@ -111,25 +111,45 @@ function block(selector) {
 }
 
 /**
- * Hex declarations plus one level of aliasing, because the dark palette defines
- * its ink accents as `var(--ochre)` rather than repeating the hex — the alias is
- * the statement that they are the same colour there, and resolving it here keeps
- * that from having to be undone for the sake of a script.
+ * Raw declarations: a hex, or an alias to another token. Aliases are how the
+ * palette states that two roles are deliberately the same colour, so they are
+ * kept rather than flattened at parse time.
  */
-function tokens(selector) {
+function rawTokens(selector) {
   const body = block(selector);
   const map = new Map();
-  for (const m of body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{3,6})/g)) map.set(m[1], m[2]);
-  for (const m of body.matchAll(/--([\w-]+):\s*var\(--([\w-]+)\)/g)) {
-    const target = map.get(m[2]);
-    if (target) map.set(m[1], target);
+  for (const m of body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{3,6}|var\(--[\w-]+\))/g)) {
+    map.set(m[1], m[2]);
   }
   return map;
 }
 
-const dark = tokens(':root');
-// Light only restates what it changes, so anything absent is inherited.
-const light = new Map([...dark, ...tokens(":root[data-theme='light']")]);
+/*
+ * Resolve AFTER merging, never before.
+ *
+ * Day restates only what it changes, so `--steel-900: var(--tent)` is declared
+ * once in the dark block and has to pick up day's `--tent` when it is read in
+ * day. Flattening each block on its own quietly measured day's ink against
+ * night's page and reported two failures that did not exist.
+ */
+function resolve(raw) {
+  const out = new Map();
+  for (const name of raw.keys()) {
+    let value = raw.get(name);
+    for (let hop = 0; hop < 8; hop++) {
+      const alias = /^var\(--([\w-]+)\)$/.exec(value);
+      if (!alias) break;
+      value = raw.get(alias[1]);
+      if (!value) break;
+    }
+    if (value && value.startsWith('#')) out.set(name, value);
+  }
+  return out;
+}
+
+const darkRaw = rawTokens(':root');
+const dark = resolve(darkRaw);
+const light = resolve(new Map([...darkRaw, ...rawTokens(":root[data-theme='light']")]));
 
 const THEMES = [
   { name: 'night', tokens: dark },
