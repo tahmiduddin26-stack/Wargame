@@ -113,6 +113,17 @@ the design.
 - **Gold is a rate now, not a multiplier.** The old readout showed
   "Escalation ×1.4" — a multiplier applied to a number the player was never
   shown. It shows `+42/s`.
+- **The roster is cards for comparing, matrix for learning.** It was an
+  eleven-column spreadsheet — role, unit, armour, gold, hp, dmg, rate, dps,
+  reach, speed, bounty — which asks a phone to do something a phone cannot do,
+  and asks a player to hold eleven figures in mind to answer a question about
+  two of them. Four cards carry the figures that change a decision (cost, hp,
+  dps, reach, and the damage-kind/armour pairing); rate, raw damage, speed and
+  bounty were derivable, decorative, or both. The counter matrix moved from a
+  caption above the list to a **fixed panel beside it**, so a unit's numbers and
+  the reason those numbers win or lose are finally on screen at the same time.
+  Each card also keeps a real, carved art slot holding the role glyph, so
+  sprites drop straight in — the difference between a placeholder and a gap.
 
 ### Two finishes
 
@@ -152,9 +163,10 @@ So:
   which the ages are and which a tab bar cannot express. The difficulty tiers use
   the same idiom, so the app has one selection language.
 - **Chrome is amber, cyan, red and neutrals.** Nothing else.
-- **Era colour stays on the battlefield**, plus one swatch in the roster where it
-  is legend data, plus the evolve sweep, where it earns its place by being a
-  520ms event rather than a persistent tint.
+- **Era colour stays on the battlefield**, plus the five swatches riding on the
+  roster's age keys where it is legend data for the colour you are about to be
+  looking at, plus the evolve sweep, where it earns its place by being a 520ms
+  event rather than a persistent tint.
 
 ## Two finishes: night and day
 

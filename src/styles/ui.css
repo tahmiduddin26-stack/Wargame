@@ -937,110 +937,271 @@
   opacity: 0.75;
 }
 
-/* Era swatch: colour as legend data, next to the era it describes. */
+/* ------------------------------------------------------------------ roster */
+
+/* Era colour as legend, on the key for the era it describes. */
 .cx__swatch {
-  display: inline-block;
-  width: 0.8em;
-  height: 0.8em;
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 0.2em;
   background: var(--accent);
-  vertical-align: baseline;
-  margin-right: 0.5em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  flex: none;
 }
 
+.cx__age {
+  grid-template-columns: auto auto;
+}
+
+/*
+ * Two columns: the roster reads, the matrix stays put. The matrix used to sit
+ * above the units as a captioned table, so a unit's own numbers and the reason
+ * those numbers win or lose were never on screen at the same time.
+ */
 .cx__body {
   flex: 1;
-  padding: 1.6em 2.4em 2.4em;
+  display: grid;
+  grid-template-columns: 1fr 21em;
+  gap: 1.6em;
+  padding: 1.2em 2.4em 2em;
+  min-height: 0;
+}
+
+.cx__main {
+  min-height: 0;
+  padding-right: 0.4em;
+}
+
+.cx__aside {
   min-height: 0;
 }
 
 .cx__era {
-  border-top: 1px solid var(--rule-bright);
-  padding-top: 1em;
-  margin-bottom: 1.8em;
+  border-top: 1px solid var(--edge-deep);
+  padding-top: 0.9em;
+  margin-bottom: 1.2em;
 }
 
 .cx__era-name {
-  font-size: 2.8em;
-  color: var(--bone);
+  font-size: 2.4em;
+  color: var(--ink);
 }
 
 .cx__era-tag {
-  color: var(--bone-dim);
-  font-size: 1.4em;
-  margin: 0.2em 0 0.8em;
+  color: var(--ink-dim);
+  font-size: 1.3em;
+  margin: 0.1em 0 0.7em;
 }
 
 .cx__era-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.8em;
+  gap: 1.6em;
 }
 
 .cx__era-stats b {
-  color: var(--bone);
+  color: var(--ink);
 }
 
-.cx__caption {
-  text-align: left;
-  padding: 1.4em 0 0.6em;
-  color: var(--ochre-ink);
+.cx__group {
+  display: block;
+  margin: 1.4em 0 0.7em;
+  color: var(--yours);
 }
 
-.cx__table {
+.cx__group:first-of-type {
+  margin-top: 0;
+}
+
+/* ------------------------------------------------------------------- cards */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8em;
+}
+
+.cards--three {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 75%;
+}
+
+.card {
+  display: grid;
+  gap: 0.45em;
+  padding: 0.8em 0.9em 0.9em;
+  align-content: start;
+}
+
+.card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+.card__role {
+  font-size: 0.95em;
+}
+
+.card__cost {
+  font-size: 1.35em;
+  color: var(--yours);
+}
+
+/*
+ * A real art slot, not a gap. Carved, so it reads as a recess waiting for
+ * something rather than as an empty box nobody finished.
+ */
+.card__art {
+  height: 4.6em;
+  display: grid;
+  place-items: center;
+  color: var(--ink-faint);
+}
+
+.card__name {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1.5em;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 0.1em 0 0;
+}
+
+.card__brief {
+  color: var(--ink-dim);
+  font-size: 1.1em;
+  line-height: 1.3;
+  margin: 0;
+  min-height: 2.6em;
+}
+
+/* Three figures, not eleven columns. */
+.card__figs {
+  display: flex;
+  gap: 1.1em;
+  margin: 0.2em 0 0;
+  border-top: 1px solid var(--edge-deep);
+  padding-top: 0.5em;
+}
+
+.card__figs dt {
+  font-size: 0.85em;
+}
+
+.card__figs dd {
+  margin: 0.1em 0 0;
+  font-size: 1.25em;
+  color: var(--ink);
+}
+
+.card__blast {
+  color: var(--ink-faint);
+  font-size: 0.8em;
+}
+
+/* The two words that decide every trade in the game. */
+.card__trade {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
+  font-family: var(--font-body);
+  font-size: 1.05em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-top: 0.45em;
+  border-top: 1px solid var(--edge-deep);
+}
+
+.card__kind {
+  font-weight: 700;
+  color: var(--yours);
+}
+
+.card__vs {
+  color: var(--ink-faint);
+}
+
+.card__armour {
+  font-weight: 700;
+  color: var(--ink-dim);
+}
+
+/* ------------------------------------------------------------------ matrix */
+
+.matrix-panel {
+  position: sticky;
+  top: 0;
+  padding: 1em 1.1em 1.1em;
+}
+
+.matrix {
   width: 100%;
   border-collapse: collapse;
-  font-size: 1.2em;
 }
 
-.cx__table th {
+.matrix__cap {
   text-align: left;
+  color: var(--yours);
+  padding-bottom: 0.7em;
+}
+
+.matrix__head {
   font-family: var(--font-mono);
-  font-size: 0.85em;
+  font-size: 0.9em;
   font-weight: 400;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--bone-faint);
-  padding: 0.5em 0.7em;
-  border-bottom: 1px solid var(--rule-bright);
+  color: var(--ink-faint);
+  text-align: right;
+  padding: 0 0 0.5em 0.6em;
+  border-bottom: 1px solid var(--edge-deep);
+}
+
+.matrix__kind {
+  font-family: var(--font-body);
+  font-size: 1.15em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--ink-dim);
+  padding: 0.55em 0.6em 0.55em 0;
+  border-bottom: 1px solid var(--edge-deep);
   white-space: nowrap;
 }
 
-.cx__table td {
-  padding: 0.7em;
-  border-bottom: 1px solid var(--rule);
-  vertical-align: top;
-}
-
-.cx__n {
+.matrix__v {
+  font-size: 1.2em;
   text-align: right;
+  padding: 0.55em 0 0.55em 0.6em;
+  border-bottom: 1px solid var(--edge-deep);
+  color: var(--ink-dim);
 }
 
-.cx__role {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  color: var(--bone-dim);
+/*
+ * Strong and weak keyed on brightness rather than green-vs-red. That pair
+ * measured 18.2 dE under protanopia, which is below the point where two colours
+ * read as different at all, in the one table whose whole job is scanning for
+ * good and bad.
+ */
+.matrix__v--good {
+  color: var(--mult-strong);
+  font-weight: 700;
 }
 
-.cx__name {
-  display: block;
-  font-family: var(--font-body);
-  font-size: 1.15em;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.matrix__v--bad {
+  color: var(--ink-faint);
 }
 
-.cx__brief {
-  display: block;
-  color: var(--bone-faint);
-  font-size: 0.9em;
-  margin-top: 0.15em;
-}
-
-.cx__blast {
-  color: var(--oxide-ink);
-  font-size: 0.8em;
-  margin-left: 0.3em;
+.matrix__note {
+  margin: 0.9em 0 0;
+  font-size: 1.05em;
+  line-height: 1.4;
+  color: var(--ink-faint);
 }
 
 /* ------------------------------------------------------------ settings */
