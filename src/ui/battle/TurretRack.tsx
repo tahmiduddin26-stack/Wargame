@@ -5,28 +5,61 @@ import { bridge, type HudSnapshot } from '@/game/bridge';
 import { CloseGlyph, TurretGlyph } from '@/ui/components/Glyph';
 
 /**
- * Four mounts on the gate. Anything built here upgrades itself on evolve, so
- * filling the mounts before you age up is strictly better than after.
+ * Emplacements, off the dock.
  *
- * A mission can seal some or all of them. The rack draws three states, not two,
- * because "you have not bought this yet" and "this mission will never sell you
- * this" have to look different: an offered mount carries a price, a sealed one
- * carries nothing and is not a button at all.
+ * Four mounts held permanent space in the bottom middle of the screen -- the
+ * worst real estate there is in landscape, where neither thumb reaches -- for
+ * something a player touches a handful of times a match and then forgets. They
+ * collapse into one chip carrying the count, and the chip opens a tray.
+ *
+ * Inside the tray a mount still draws three states, not two, because "you have
+ * not bought this yet" and "this mission will never sell you this" have to look
+ * different: an offered mount carries a price, a sealed one carries nothing and
+ * is not a button at all.
  */
 export function TurretRack({ snapshot }: { snapshot: HudSnapshot }) {
+  const [open, setOpen] = useState(false);
   const [picking, setPicking] = useState<number | null>(null);
   const options = turretsForAge(AGES[snapshot.ageIndex].id);
 
   if (snapshot.slotBudget === 0) {
     return (
-      <div className="rack rack--disabled">
-        <span className="label">Emplacements sealed</span>
+      <div className="mountchip mountchip--sealed">
+        <span className="label">Sealed</span>
       </div>
     );
   }
 
+  const built = snapshot.slots.filter((t, i) => i < snapshot.unlockedSlots && t !== null).length;
+
+  const close = () => {
+    setOpen(false);
+    setPicking(null);
+  };
+
   return (
-    <div className="rack">
+    <div className="mounts">
+      <button
+        className={`mountchip plate${open ? ' mountchip--open' : ''}`}
+        aria-expanded={open}
+        onClick={() => (open ? close() : setOpen(true))}
+      >
+        <span className="label">Mounts</span>
+        <span className="num mountchip__count">
+          {built}/{snapshot.slotBudget}
+        </span>
+      </button>
+
+      {open && (
+      <div className="tray plate" role="dialog" aria-label="Gate mounts">
+        <header className="tray__head">
+          <span className="label">Gate mounts</span>
+          <button className="tray__close" onClick={close} aria-label="Close mounts">
+            <CloseGlyph size={14} />
+          </button>
+        </header>
+
+        <div className="tray__rack">
       {snapshot.slots.map((turretId, index) => {
         const sealed = index >= snapshot.slotBudget;
         const locked = index >= snapshot.unlockedSlots;
@@ -62,7 +95,9 @@ export function TurretRack({ snapshot }: { snapshot: HudSnapshot }) {
         return (
           <button
             key={index}
-            className={`mount${def ? ' mount--built' : ' mount--empty'}`}
+            className={`mount${def ? ' mount--built' : ' mount--empty'}${
+              picking === index ? ' mount--picking' : ''
+            }`}
             onClick={() => setPicking(picking === index ? null : index)}
             aria-label={def ? `Mount ${index + 1}: ${def.name}` : `Build on mount ${index + 1}`}
           >
@@ -77,15 +112,11 @@ export function TurretRack({ snapshot }: { snapshot: HudSnapshot }) {
           </button>
         );
       })}
+        </div>
 
-      {picking !== null && (
-        <div className="picker panel panel--raised" role="dialog" aria-label="Choose emplacement">
-          <header className="picker__head">
-            <span className="label">Mount {picking + 1}</span>
-            <button className="picker__close" onClick={() => setPicking(null)} aria-label="Close">
-              <CloseGlyph size={14} />
-            </button>
-          </header>
+        {picking === null ? (
+          <p className="tray__note">Mounts upgrade themselves on evolve. Fill them first.</p>
+        ) : (
           <ul className="picker__list">
             {options.map((t) => {
               const affordable = snapshot.gold >= t.gold;
@@ -111,19 +142,22 @@ export function TurretRack({ snapshot }: { snapshot: HudSnapshot }) {
                 </li>
               );
             })}
+            {snapshot.slots[picking] && (
+              <li>
+                <button
+                  className="picker__scrap"
+                  onClick={() => {
+                    bridge.send({ t: 'scrap', slot: picking });
+                    setPicking(null);
+                  }}
+                >
+                  <span className="label">Scrap for half</span>
+                </button>
+              </li>
+            )}
           </ul>
-          {snapshot.slots[picking] && (
-            <button
-              className="picker__scrap"
-              onClick={() => {
-                bridge.send({ t: 'scrap', slot: picking });
-                setPicking(null);
-              }}
-            >
-              <span className="label">Scrap for half</span>
-            </button>
-          )}
-        </div>
+        )}
+      </div>
       )}
     </div>
   );

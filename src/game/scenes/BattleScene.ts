@@ -447,6 +447,7 @@ export class BattleScene extends Phaser.Scene {
 
     const snapshot: HudSnapshot = {
       gold: Math.floor(p.gold),
+      income: p.income * sim.escalation,
       xp: Math.floor(p.xp),
       ageIndex: p.ageIndex,
       xpToNext: xpToNextAge(p.ageIndex, p.xp),

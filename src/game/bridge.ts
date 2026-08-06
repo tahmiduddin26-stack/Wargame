@@ -20,6 +20,13 @@ export interface LaneBlip {
 
 export interface HudSnapshot {
   gold: number;
+  /**
+   * Effective gold per second: the commander's income with match escalation
+   * already applied. Shown as a figure rather than as the old "Escalation x1.4"
+   * label, because a rate you can read is worth more than a multiplier you have
+   * to apply to a number you were never shown.
+   */
+  income: number;
   xp: number;
   ageIndex: number;
   /** XP still owed for the next age, or null at the cap. */

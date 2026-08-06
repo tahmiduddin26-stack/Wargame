@@ -125,7 +125,7 @@ for (let i = 0; i < 90 && !sweepSeen; i++) {
     for (let k = 0; k < 8; k++) {
       const seen = await page.evaluate(() => ({
         sweep: !!document.querySelector('.era-sweep'),
-        plate: !!document.querySelector('.hud__age--changed'),
+        plate: !!document.querySelector('.hud__yours--changed'),
         stagger: !!document.querySelector('.units--changed'),
       }));
       sweepSeen ||= seen.sweep;

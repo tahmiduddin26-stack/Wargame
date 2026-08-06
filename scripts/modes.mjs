@@ -76,7 +76,7 @@ for (let i = 0; i < 30; i++) {
   }
   await page.waitForTimeout(700);
   const wave = await page.evaluate(() => {
-    const t = document.querySelector('.hud__clock .num')?.textContent ?? '';
+    const t = document.querySelector('.hud__clock-fig')?.textContent ?? '';
     const m = /WAVE (\d+)/.exec(t);
     return m ? Number(m[1]) : null;
   });

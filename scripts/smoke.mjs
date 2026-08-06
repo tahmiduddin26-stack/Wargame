@@ -74,7 +74,7 @@ for (let round = 0; round < 44; round++) {
       elapsed: Math.round(a.elapsed()),
       ages: a.ages(),
       gates: a.gates().map((g) => Math.round(g)),
-      clock: document.querySelector('.hud__clock .num')?.textContent ?? '',
+      clock: document.querySelector('.hud__clock-fig')?.textContent ?? '',
       over: !!document.querySelector('.db__verdict'),
     };
   });

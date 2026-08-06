@@ -67,19 +67,16 @@
  * Pressing is travel, not shrink.
  *
  * This file loads last, so a `transform: scale(.975)` here silently beat the
- * `translateY(--lift)` that makes a key drop onto its own extruded edge — every
- * control in the tent would have squashed instead of pressing. The objects that
- * carry their own press are left alone; only the flat ones still scale.
+ * `translateY(--lift)` that makes a key drop onto its own extruded edge. Every
+ * control in the tent now carries its own press as part of its material, so
+ * there is nothing left here to scale: a squash on top of the travel reads as
+ * the object deforming rather than moving.
+ *
+ * The mount is the one exception. It sits inside a tray rather than on the
+ * table, so it has no extrusion to drop onto.
  */
-.unit:active,
-.mount:active,
-.evolve:active:not(:disabled),
-.dial:active:not(:disabled) {
+.mount:active {
   transform: scale(0.975);
-}
-
-.dial:active {
-  transform: scale(0.955);
 }
 
 /* --------------------------------------------------------------- attention */
@@ -139,7 +136,7 @@
   }
 }
 
-.hud__clock--urgent .num {
+.hud__row--urgent .hud__clock-fig {
   animation: urgent-tick 900ms var(--ease-move) infinite;
 }
 
@@ -234,7 +231,7 @@
   }
 }
 
-.hud__age--changed {
+.hud__yours--changed {
   animation: era-plate 520ms var(--ease-out) 1;
 }
 
@@ -381,11 +378,11 @@
 
   .bloom::after,
   .evolve--ready,
-  .hud__clock--urgent .num,
+  .hud__row--urgent .hud__clock-fig,
   .tick--up,
   .tick--down,
   .era-sweep::before,
-  .hud__age--changed,
+  .hud__yours--changed,
   .units--changed .unit,
   .screen-enter,
   .pause__sheet,

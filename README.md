@@ -95,6 +95,24 @@ the design.
   green rather than swapping its button for the text "Fitted".
 - **The campaign route survived the re-direction unchanged**, because it was
   right: two survey legs of twelve stations, not a sortable table.
+- **The battle HUD went from seven chrome elements to four.** Pause, gold, your
+  age, their gate, the clock, the lane strip and your gate meter each had their
+  own bordered box strung along the top. They collapse into two plates that
+  answer the only two questions a lane war asks — how am I doing, how are they
+  doing — plus the lane strip and the dock. Yours carries an amber edge, theirs
+  a cyan one.
+- **Corners, not the centre.** Held in landscape the hands wrap the short edges,
+  so the bottom corners are the easy zone and the bottom middle is the worst
+  place on the screen. The four emplacement mounts that lived there permanently,
+  for something a player touches a handful of times a match, are now a chip that
+  opens a tray.
+- **Cards say why they are dead.** A brass rail across each purchase card fills
+  as gold approaches the price, so during a fast run you can see which card
+  comes back next without reading four numbers and doing the subtraction. A card
+  on cooldown shows the seconds instead of the queue count.
+- **Gold is a rate now, not a multiplier.** The old readout showed
+  "Escalation ×1.4" — a multiplier applied to a number the player was never
+  shown. It shows `+42/s`.
 
 ### Two finishes
 

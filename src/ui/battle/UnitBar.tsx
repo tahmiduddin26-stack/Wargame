@@ -47,7 +47,25 @@ export function UnitBar({
             <span className="unit__name">{def.name}</span>
             <span className="unit__foot">
               <span className="num unit__cost">{def.gold.toLocaleString('en-GB')}</span>
-              {queued > 0 && <span className="num unit__queued">&times;{queued}</span>}
+              {cooling > 0 ? (
+                <span className="num unit__wait">{cooling.toFixed(1)}s</span>
+              ) : (
+                queued > 0 && <span className="num unit__queued">&times;{queued}</span>
+              )}
+            </span>
+            {/*
+             * The card says why it is dead. A brass rail across the foot fills
+             * as the gold approaches the price, so during a fast purchase run
+             * you can see which card comes back next without reading four
+             * numbers and doing the subtraction yourself.
+             */}
+            <span className="unit__rail" aria-hidden="true">
+              <span
+                className="unit__rail-fill"
+                style={
+                  { '--fill': Math.min(1, snapshot.gold / def.gold) } as React.CSSProperties
+                }
+              />
             </span>
           </button>
         );
