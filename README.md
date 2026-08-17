@@ -16,13 +16,34 @@ npm run build        # typecheck + production bundle into dist/
 npm run typecheck
 ```
 
-Native shells (Capacitor config is already committed):
+## Building the Android app
+
+The Android project is committed under `android/` and opens straight in Android
+Studio. It carries only the scaffold: its `android/.gitignore` excludes build
+output, `local.properties`, and the copied web assets, so those are repopulated
+from the web build on each machine.
 
 ```bash
-npm i -D @capacitor/cli
-npm i @capacitor/core @capacitor/android @capacitor/ios
-npx cap add android && npx cap add ios
-npm run cap:sync
+npm install
+npm run cap:sync:android      # builds the web app and copies it into android/
+```
+
+Then either open `android/` in Android Studio and Run, or build from the CLI:
+
+```bash
+cd android
+./gradlew assembleDebug       # app/build/outputs/apk/debug/app-debug.apk
+```
+
+Android Studio bundles its own SDK and Gradle; the committed Gradle wrapper means
+no separate Gradle install is needed. Landscape is locked in the manifest
+(`android:screenOrientation="landscape"` on `MainActivity`), matching the
+OrientationGate fallback the web build shows in portrait.
+
+iOS is not committed, because it needs macOS to build. To add it:
+
+```bash
+npm i @capacitor/ios && npx cap add ios && npx cap sync ios
 ```
 
 ## Design system
