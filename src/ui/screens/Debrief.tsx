@@ -1,4 +1,5 @@
 import { AGES } from '@/data/ages';
+import { commanderRank } from '@/data/career';
 import { LEVELS, levelById } from '@/data/levels';
 import { isUnlocked, useGame, type DebriefData } from '@/state/store';
 
@@ -30,6 +31,7 @@ function verdictLine(debrief: DebriefData, name: string): string {
 export function Debrief() {
   const debrief = useGame((s) => s.debrief);
   const records = useGame((s) => s.records);
+  const careerXp = useGame((s) => s.careerXp);
   const { startMission, closeDebrief } = useGame();
 
   if (!debrief) {
@@ -81,7 +83,13 @@ export function Debrief() {
             <dt className="label">Credits</dt>
             <dd className="num">{debrief.reward > 0 ? `+${debrief.reward}` : '0'}</dd>
           </div>
+          <div className="db__stat--career">
+            <dt className="label">Commander XP</dt>
+            <dd className="num">+{debrief.careerXpAward}</dd>
+          </div>
         </dl>
+
+        <p className="db__rank label">Rank {commanderRank(careerXp)} · {careerXp.toLocaleString('en-GB')} total XP</p>
 
         <div className="db__actions">
           <button className="btn btn--ghost" onClick={closeDebrief}>

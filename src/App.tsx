@@ -11,6 +11,7 @@ import { Debrief } from '@/ui/screens/Debrief';
 import { MainMenu } from '@/ui/screens/MainMenu';
 import { MissionSelect } from '@/ui/screens/MissionSelect';
 import { Onboarding } from '@/ui/screens/Onboarding';
+import { OnlineLobby } from '@/ui/screens/OnlineLobby';
 import { Settings } from '@/ui/screens/Settings';
 
 export function App() {
@@ -69,6 +70,7 @@ export function App() {
           {screen === 'codex' && <Codex />}
           {screen === 'armoury' && <Armoury />}
           {screen === 'settings' && <Settings />}
+          {screen === 'online' && <OnlineLobby />}
         </div>
       </div>
       {!landscape && <OrientationGate />}

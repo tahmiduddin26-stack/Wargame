@@ -1,11 +1,11 @@
-# Age of War // Field Command
+# Age of War // Doodlebook Battles
 
 A modernised take on Louissi's 2007 Flash game *Age of War*: one horizontal lane,
 two gates, five ages between a sharpened rock and an orbital lance. Built for
 mobile, landscape only, with real jointed-physics ragdolls.
 
-Placeholder art throughout. Every unit is drawn from a procedural skeleton so
-real sprites can be dropped in without touching the rendering pipeline.
+The interface uses hand-drawn SVG insignias. Battlefield units use procedural
+skeletons so character sprites can be added without changing the simulation.
 
 ## Running it
 
@@ -15,6 +15,52 @@ npm run dev          # http://localhost:5173
 npm run build        # typecheck + production bundle into dist/
 npm run typecheck
 ```
+
+## Campaign progression and multiplayer
+
+Sixteen missions unlock in order. Battle XP still unlocks ages within a match;
+commander XP now persists across campaign results and Survival waves. The
+Armoury has Supply, Training and Fortification skill branches. Rank opens a
+skill, its preceding skill must be fitted, and credits pay for it. Existing
+campaign saves recover commander XP from missions already cleared.
+
+To run the browser client and multiplayer server together:
+
+```bash
+npm run build
+npm run multiplayer   # http://127.0.0.1:8787
+```
+
+The server hosts the built client and its WebSocket endpoint. A Vite development
+client (`npm run dev`) also connects to port 8787. Set `PORT` and `HOST` for
+another listen address; for remote play, host the server on an address both
+players can reach and serve it over HTTPS/WSS. If the client is served from
+another origin or a native shell, set `VITE_MULTIPLAYER_URL` to its public
+`wss://.../ws` endpoint before building. For example, in PowerShell:
+
+```powershell
+$env:VITE_MULTIPLAYER_URL='wss://your-game-host.example/ws'
+npm run build
+```
+
+Online profiles are guest profiles held by a private token in the browser and
+persisted in `.data/multiplayer.json` on the server. Share the six-character
+friend code to challenge a friend. Casual battles pair available players;
+ranked battles start near the same rating and widen the search across divisions
+over time. Rating determines Bronze (under 1,100), Silver (1,100), Gold (1,300),
+Platinum (1,500), and Diamond (1,700). Only ranked results change rating or
+enter the leaderboard. Every online battle
+starts with equal resources, runs at normal speed, and uses the server's
+simulation and result. Campaign skills have no effect on online matches.
+
+The guest profile model is suitable for a self-hosted game prototype. A public
+competitive service would need account recovery and stronger abuse controls.
+
+With the server running, `npm run test:multiplayer` checks the protocol,
+matchmaking, friend challenges and ranked results. `npm run
+test:multiplayer-ui` drives two browser clients and saves screenshots to
+`.shots/`. Set `MULTIPLAYER_URL` and `MULTIPLAYER_HTTP` when testing a different
+server address.
 
 Native shells (Capacitor config is already committed):
 
@@ -27,65 +73,25 @@ npm run cap:sync
 
 ## Design system
 
-The look is a field commander's control panel: warm near-black steel, hairline
-rules instead of shadows, condensed stencil-adjacent headings, and every figure
-in tabular mono so numbers line up the way a readout does. Sharp corners
-throughout, with one flourish (an ochre hazard stripe) reserved for locked and
-dangerous things.
+The interface is a battle notebook: warm dotted paper, loose ink borders, offset
+shadows, coloured cutouts and little hand-drawn scenes. The same visual language
+carries through the menu, briefing, campaign, roster, armoury, settings, battle
+HUD, pause sheet and debrief. The battlefield has bright age-specific skies,
+rounded hills, doodled clouds and five distinct fort silhouettes, including a
+stone palisade, medieval keep, gunpowder earthwork and modern bunker.
 
-Two typefaces are self-hosted in `src/assets/fonts` (latin subsets, variable
-weight, 52 KB combined). They are bundled rather than loaded from a CDN because
-the game ships in a Capacitor shell with no guaranteed network, and because a
-display face that silently falls back to the platform sans is not the design:
+`src/styles/sketch.css` is the theme layer over the shared screen layouts. The
+forty equipment insignias are authored SVG paths in `Insignia.tsx`. No generated
+bitmap art is used for the interface.
 
-- **Oswald** carries the display voice: headings, unit names, buttons, labels.
-- **JetBrains Mono** carries every figure, so tabular columns align identically
-  on iOS, Android and desktop instead of shifting with whatever mono the platform
-  happens to ship.
+Patrick Hand draws body copy, controls and small labels; Kalam Bold marks major
+headings and unit names; JetBrains Mono aligns dense figures. All are self-hosted
+for the offline mobile shell. Licences and source links are in
+`src/assets/fonts/LICENSES.md`.
 
-Licences and rationale: `src/assets/fonts/LICENSES.md`.
-
-Rules that are easy to erode, so they are stated in `src/styles/global.css`:
-
-- **Mono is for figures only.** Gold, reach, damage, timers, mission numbers.
-  Using it for prose labels turns it into a costume for "technical", so small
-  labels use the condensed display face via `.label`.
-- **No label sits above a heading as an eyebrow.** Identifiers such as the
-  mission number ride inline on the heading's baseline.
-- **No thick coloured border down one edge.** That side-tab is the stock
-  AI callout. Emphasis comes from an inset top rule, or from targeting brackets
-  (`.bracket`) on the two genuinely primary surfaces.
-- **Uppercase is for short labels**, never for headings or body copy.
-- **Meters animate a transform, not width**, because they update about twelve
-  times a second during a battle and animating width forces layout every frame.
-
-## Selection: a rail, not tabs
-
-The age selector was an underlined tab bar whose active tab was tinted with that
-era's accent, so the strip changed hue on every click: orange, blue-grey, gold,
-green, cyan. Two problems, and the second is the real one.
-
-The underline tab and the iOS segmented pill are the two stock patterns for this
-job. Worth knowing: impeccable's detector **deliberately exempts** selected-tab
-underlines (`opts.tabContext`, keyed on `role="tablist"` plus `aria-selected`),
-so a clean scan will never tell you that you reached for one.
-
-The deeper problem was colour. Era accents were designed as *world* colour: the
-battlefield sky, ground and unit trim change with the age, which is diegetic and
-is the payoff of an evolve. Piping them into UI chrome as well meant colour
-stopped meaning anything and became decoration that changed at random. Counting
-the five era accents, the chrome was carrying nine hues.
-
-So:
-
-- **Selection is a detented rail.** Positions along a track with one engaged, the
-  way a field panel switches between banks. It also suits an ordered ladder,
-  which the ages are and which a tab bar cannot express. The difficulty tiers use
-  the same idiom, so the app has one selection language.
-- **Chrome is amber, cyan, red and neutrals.** Nothing else.
-- **Era colour stays on the battlefield**, plus one swatch in the roster where it
-  is legend data, plus the evolve sweep, where it earns its place by being a
-  520ms event rather than a persistent tint.
+Age and difficulty choices appear as paper stickers. The chosen sticker fills
+yellow, so selection is readable without relying on a hue change alone. Player
+orange and enemy blue are also reinforced by position on the lane strip.
 
 ## Colour and colour vision
 
@@ -101,31 +107,15 @@ player to tell apart:
 node scripts/colour-check.mjs
 ```
 
-Its first run found the palette was worse than it looked, but not where I
-expected:
-
-- **The real failure was the counter table.** Strong multipliers were green and
-  weak ones red, which measured **18.2 dE under protanopia** and is the single
-  most common colour-vision failure there is, in the one table whose whole job is
-  scanning for good and bad. It now keys on brightness and weight instead: strong
-  values are bright amber and bold, weak ones dim. That is also a better readout
-  aesthetic than traffic lights.
-- **The faction pair passed the threshold and was still wrong.** Ochre against
-  oxide measured 24.8 dE under deuteranopia, above the fail line, but the
-  simulated colours were `#bebe24` and `#93932e`: they separated on *lightness*,
-  not hue, which is fragile on a two-pixel lane blip. The enemy is now a steel
-  cyan, and the same pair measures **105.2**.
-
-Colour is also never the only channel. On the lane strip your blips grow up from
-the floor and theirs hang down from the ceiling, so faction survives even if the
-colours do not. Red is now reserved strictly for danger (unaffordable cost,
-critical structure, the last thirty seconds) rather than doubling as the enemy.
+The current orange/blue faction pair stays above 60 dE in all three simulated
+colour-vision conditions. On the lane strip your blips grow up from the floor
+and theirs hang down from the ceiling, so colour is not the only channel. Strong
+counter-table values also use a filled cell and heavier weight.
 
 ## Motion
 
-The thesis, stated in `src/styles/motion.css`: this is an Operate surface with one
-earned focal moment. Motion explains state, acknowledges input and carries
-continuity, and everything else stays still.
+`src/styles/motion.css` keeps motion tied to state: controls acknowledge a press,
+and the age change remains the one large sequence in a battle.
 
 **The focal moment is the evolve**, because the whole game is a race to it. A
 light sweep crosses the dock, the age plate wipes to the new era's accent, and the
@@ -161,18 +151,13 @@ honoured. Its first run caught three real defects: two lane bands were
 transitioning `width`, and the reduced-motion block was losing the cascade to
 `hud.css` because `motion.css` was imported before it.
 
-The design is checked with [impeccable](https://impeccable.style), whose detector
-runs 58 deterministic anti-pattern rules:
+The optional design scan uses [impeccable](https://impeccable.style):
 
 ```bash
 npx impeccable detect src                      # static scan
 CI=1 npx impeccable detect http://127.0.0.1:4173/   # rendered page
 ```
 
-Its first run on this UI found eight issues: a hero eyebrow chip above the title,
-three runs of all-caps body text, four failing contrast pairs at 3.3:1, and a
-width transition. Both scans are clean now. A clean scan is not proof the design
-is good, but every finding it had was real.
 
 ## Why this stack
 
@@ -204,13 +189,14 @@ than losing it.
 ```
 src/
   data/            pure data, no imports outside data/. 20 units, 15 emplacements,
-                   5 ages, 5 specials, 12 missions
+                   5 ages, 5 specials, 16 missions
   game/
     config.ts      every designer-facing tunable, with the reasoning
     sim/           BattleSim: headless, fixed-timestep, deterministic (seeded RNG).
                    Knows nothing about Phaser. EnemyCommander drives it through
                    the same public API the player's HUD uses
     render/        RagdollPool, UnitView, BaseView, Backdrop, Fx
+  ui/components/   hand-drawn SVG equipment insignias and HUD glyphs
     scenes/        BattleScene: owns the Matter world, translates sim events
                    into ragdolls and effects
     bridge.ts      the only seam between Phaser and React
@@ -261,7 +247,7 @@ the oldest corpse on overflow.
 players, because the interesting failures are invisible in a screenshot:
 
 ```bash
-npx tsx scripts/sim-harness.ts        # all 12 missions x 3 strategies
+npx tsx scripts/sim-harness.ts        # all 16 missions x 3 strategies
 npx tsx scripts/sim-harness.ts 6      # one mission, verbose timeline
 TIER=insane npx tsx scripts/sim-harness.ts   # the same, at a difficulty tier
 ```
@@ -320,12 +306,12 @@ canvas and are invisible to the DOM, so `BattleScene` exposes read-only counters
 
 ## Modes and systems
 
-**Campaign.** Twelve missions across four difficulty tiers (Easy / Normal / Hard
+**Campaign.** Sixteen missions across four difficulty tiers (Easy / Normal / Hard
 / Insane), as both Age of War games shipped. Tiers multiply the mission's own
 enemy numbers rather than replacing them, and never touch the player's side, so a
 mission keeps its character at every tier. Clears are recorded per tier, shown as
-a four-pip ladder on each row. Measured with the harness: a competent scripted
-plan takes 11/12 on Easy, 9/12 on Normal and 5/12 on Insane.
+a four-pip ladder on each row. The normal-tier harness takes 12/16 with the
+greedy plan, 7/16 with a swarm, and 12/16 with a mixed line.
 
 **Survival: The Long Watch.** Endless authored waves on one field, no clock. The
 enemy has no economy here; a wave is a written composition granted in full and
@@ -416,10 +402,18 @@ evolve: the card you tap for a Clubman is the card you tap for an Exo Trooper.
 **Four emplacement mounts** on the gate, two free and two bought, in rapid /
 marksman / mortar flavours. They upgrade themselves on evolve.
 
-**Twelve missions.** The first four are the onboarding proper: each unlocks one
+**Sixteen missions.** The first four are the onboarding proper: each unlocks one
 system and caps the age so you cannot outrun the lesson. From mission 5 the cap
 comes off. Six modifiers (sealed emplacements, age cap, glass gates, funded enemy,
-aggressive enemy, wide field) recombine across the campaign.
+aggressive enemy, wide field) recombine across the campaign. Operations 13-16
+revisit a capped powder arsenal, an exposed long field, brittle gates, and a
+reserve assault without emplacements.
+
+**Field insignias.** Twenty unit, fifteen emplacement, and five special silhouettes
+are drawn directly as SVG paths on a shared grid. They describe the actual
+equipment in each age and carry through the dock, mount picker, and roster. Combat SFX and
+impact effects are procedural; accepted orders, construction, gate debris,
+critical structure, and the result cadence have their own feedback.
 
 **Modernisations** over the 2007 original: a mission campaign with modifiers and a
 debrief instead of one endless match; a lane overview strip, because a phone cannot
@@ -429,8 +423,9 @@ and visible escalation so nothing grinds forever; and the ragdolls.
 
 ## Known gaps
 
-- **Real art.** Still procedural placeholder rigs. The skeleton spec has a
-  `texture` slot per bone for when sprites arrive.
+- **Battlefield character art.** Units still use procedural rigs. The skeleton
+  spec has a `texture` slot per bone for when sprites arrive; the interface
+  insignias are finished vector drawings.
 - **Versus / multiplayer.** The sim is deterministic and seeded, so it is
   reachable, but netcode is its own project.
 - **Phaser is a 1.2MB chunk** (330KB gzipped). Already split out; worth lazy-loading

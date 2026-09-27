@@ -93,16 +93,15 @@ export function skeletonFor(def: UnitDef): SkeletonSpec {
 }
 
 /**
- * Placeholder palettes. Player reads as bone and ochre, enemy as ash and
- * oxide red, with the current age's accent as trim so evolving is visible on
- * the battlefield and not just in the HUD.
+ * Paper-cut colours. Warm orange is always the player's army; blue is the
+ * opposing army. Age accents pick out trim without replacing faction colour.
  */
 export function palette(faction: Faction, accent: number): Record<TintRole, number> {
   if (faction === 'player') {
-    return { skin: 0xd8bb96, cloth: 0x8d7f6a, trim: accent, metal: 0x9aa0a6, dark: 0x4a4238 };
+    return { skin: 0xf4c795, cloth: 0xdc8955, trim: accent, metal: 0xc7b88f, dark: 0x58463e };
   }
   // Cool trim against the player's warm accent. Amber against steel blue stays
   // separable under every common colour-vision deficiency; the old oxide red
   // did not, and telling your line from theirs is the whole read of the game.
-  return { skin: 0xa9866a, cloth: 0x4a5560, trim: 0x46a6c8, metal: 0x7d8790, dark: 0x2a3138 };
+  return { skin: 0xd6a987, cloth: 0x5c9dbd, trim: 0x3f8cad, metal: 0x8ab6bd, dark: 0x3c5155 };
 }

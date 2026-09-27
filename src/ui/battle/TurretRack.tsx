@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { AGES } from '@/data/ages';
 import { SLOT_UNLOCK_COST, TURRET_BY_ID, TURRET_ROLE_LABEL, turretsForAge } from '@/data/turrets';
 import { bridge, type HudSnapshot } from '@/game/bridge';
-import { CloseGlyph, TurretGlyph } from '@/ui/components/Glyph';
+import { CloseGlyph } from '@/ui/components/Glyph';
+import { TurretInsignia } from '@/ui/components/Insignia';
 
 /**
  * Four mounts on the gate. Anything built here upgrades itself on evolve, so
@@ -54,7 +55,7 @@ export function TurretRack({ snapshot, noTurrets }: { snapshot: HudSnapshot; noT
           >
             {def ? (
               <>
-                <TurretGlyph role={def.role} size={16} />
+                <TurretInsignia id={def.id} size={23} />
                 <span className="label mount__label">{TURRET_ROLE_LABEL[def.role]}</span>
               </>
             ) : (
@@ -84,7 +85,7 @@ export function TurretRack({ snapshot, noTurrets }: { snapshot: HudSnapshot; noT
                       setPicking(null);
                     }}
                   >
-                    <TurretGlyph role={t.role} size={16} />
+                    <TurretInsignia id={t.id} size={24} />
                     <span className="picker__opt-text">
                       <b>{t.name}</b>
                       <span className="picker__opt-brief">{t.brief}</span>

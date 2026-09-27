@@ -2,6 +2,7 @@ import { AGES } from '@/data/ages';
 import { ROLE_LABEL, unitsForAge } from '@/data/units';
 import { bridge, type HudSnapshot } from '@/game/bridge';
 import { UnitGlyph } from '@/ui/components/Glyph';
+import { UnitInsignia } from '@/ui/components/Insignia';
 
 /**
  * The four purchase cards. Order is fixed across every age (front, ranged,
@@ -43,6 +44,7 @@ export function UnitBar({
             <span className="unit__role">
               <UnitGlyph role={def.role} size={14} />
               <span className="label">{ROLE_LABEL[def.role]}</span>
+              <UnitInsignia id={def.id} className="unit__insignia" />
             </span>
             <span className="unit__name">{def.name}</span>
             <span className="unit__foot">

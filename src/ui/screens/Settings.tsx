@@ -22,7 +22,7 @@ export function Settings() {
       <div className="st__body scroll-y">
         <section className="st__group">
           <h3 className="st__label">Battle speed</h3>
-          <p className="st__note">Applies the moment you deploy. Corpse physics run at real time.</p>
+          <p className="st__note">Applies to campaign and survival when you deploy. Online battles always run at normal speed.</p>
           <div className="st__choices">
             {([1, 1.5, 2] as const).map((factor) => (
               <button
@@ -74,7 +74,7 @@ export function Settings() {
         <section className="st__group st__group--danger">
           <h3 className="st__label">Wipe progress</h3>
           <p className="st__note">
-            Clears every mission record, credit and the briefing flag. Cannot be undone.
+            Clears mission records, commander XP, credits, fitted skills and the briefing flag on this device. Your online profile is kept on the multiplayer server.
           </p>
           {!confirmWipe ? (
             <button className="btn btn--danger" onClick={() => setConfirmWipe(true)}>

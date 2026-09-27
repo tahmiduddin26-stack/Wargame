@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DifficultyId } from '@/data/difficulty';
+import { careerXpForMission, commanderRank } from '@/data/career';
 import { LEVELS } from '@/data/levels';
 import { PERKS, type PerkId } from '@/data/perks';
 
@@ -12,7 +13,8 @@ export type Screen =
   | 'debrief'
   | 'codex'
   | 'armoury'
-  | 'settings';
+  | 'settings'
+  | 'online';
 
 export interface MissionRecord {
   cleared: boolean;
@@ -37,6 +39,7 @@ export interface DebriefData {
   goldSpent: number;
   peakAge: number;
   reward: number;
+  careerXpAward: number;
   firstClear: boolean;
 }
 
@@ -49,6 +52,8 @@ interface GameState {
   onboardingDone: boolean;
   records: Record<number, MissionRecord>;
   credits: number;
+  /** Permanent profile XP; distinct from in-battle evolution XP. */
+  careerXp: number;
   /** Tier used for campaign deploys. Remembered between sessions. */
   difficulty: DifficultyId;
   /** Survival is its own mode, with its own best score. */
@@ -75,7 +80,7 @@ interface GameState {
   setDifficulty: (id: DifficultyId) => void;
   buyPerk: (id: PerkId) => boolean;
   recordSurvival: (waves: number) => void;
-  finishMission: (data: Omit<DebriefData, 'reward' | 'firstClear'>) => void;
+  finishMission: (data: Omit<DebriefData, 'reward' | 'careerXpAward' | 'firstClear'>) => void;
   closeDebrief: () => void;
   completeOnboarding: () => void;
   resetProgress: () => void;
@@ -107,6 +112,7 @@ export const useGame = create<GameState>()(
       onboardingDone: false,
       records: {},
       credits: 0,
+      careerXp: 0,
       difficulty: 'normal',
       survivalBest: 0,
       survivalRun: false,
@@ -133,6 +139,8 @@ export const useGame = create<GameState>()(
         const perk = PERKS.find((p) => p.id === id);
         const state = get();
         if (!perk || state.perks.includes(id) || state.credits < perk.cost) return false;
+        if (commanderRank(state.careerXp) < perk.rank) return false;
+        if (perk.requires && !state.perks.includes(perk.requires)) return false;
         set({ credits: state.credits - perk.cost, perks: [...state.perks, id] });
         return true;
       },
@@ -142,6 +150,7 @@ export const useGame = create<GameState>()(
           survivalBest: Math.max(state.survivalBest, waves),
           // Survival pays a credit per wave held, so it is a real way to earn.
           credits: state.credits + waves,
+          careerXp: state.careerXp + waves * 3,
           survivalRun: false,
         })),
 
@@ -158,11 +167,13 @@ export const useGame = create<GameState>()(
         const reward = data.won
           ? Math.round((level?.reward ?? 0) * scale * data.tierReward)
           : 0;
+        const careerXpAward = careerXpForMission(level?.reward ?? 0, data.tierReward, data.won);
 
         set((state) => ({
-          debrief: { ...data, reward, firstClear },
+          debrief: { ...data, reward, careerXpAward, firstClear },
           screen: 'debrief',
           credits: state.credits + reward,
+          careerXp: state.careerXp + careerXpAward,
           records: data.won
             ? {
                 ...state.records,
@@ -188,7 +199,7 @@ export const useGame = create<GameState>()(
       completeOnboarding: () => set({ onboardingDone: true }),
 
       resetProgress: () =>
-        set({ records: {}, credits: 0, onboardingDone: false, perks: [], survivalBest: 0 }),
+        set({ records: {}, credits: 0, careerXp: 0, onboardingDone: false, perks: [], survivalBest: 0 }),
 
       setSetting: (key, value) =>
         set((state) => ({ settings: { ...state.settings, [key]: value } })),
@@ -199,11 +210,27 @@ export const useGame = create<GameState>()(
         onboardingDone: state.onboardingDone,
         records: state.records,
         credits: state.credits,
+        careerXp: state.careerXp,
         difficulty: state.difficulty,
         survivalBest: state.survivalBest,
         perks: state.perks,
         settings: state.settings,
       }),
+      merge: (persisted, current) => {
+        const saved = persisted as Partial<GameState>;
+        // Existing campaign saves predate career XP. Give completed missions
+        // their base XP once, without touching their credits or purchased perks.
+        const recoveredXp = Object.entries(saved.records ?? {}).reduce(
+          (total, [id, record]) => total + (record?.cleared ? LEVELS.find((l) => l.id === Number(id))?.reward ?? 0 : 0),
+          0,
+        );
+        return {
+          ...current,
+          ...saved,
+          careerXp: saved.careerXp ?? recoveredXp,
+          settings: { ...current.settings, ...saved.settings },
+        };
+      },
     },
   ),
 );

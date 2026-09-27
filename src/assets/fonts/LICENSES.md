@@ -1,15 +1,31 @@
 # Bundled typefaces
 
-Both are self-hosted rather than loaded from a CDN: the game ships in a Capacitor
-shell with no guaranteed network, and a display face that silently falls back to
-the platform sans is not the design.
+All fonts are self-hosted because the game ships in a Capacitor shell with no
+guaranteed network.
 
-Latin subsets only (the UI is English), variable weight axes, woff2.
+The earlier Oswald and JetBrains Mono assets are Latin-subset variable WOFF2
+files. Patrick Hand and Kalam are bundled as their original TTF releases.
+
+## Patrick Hand
+
+Handwritten body copy and small labels for the sketchbook UI.
+
+- Copyright: Patrick Wagesreiter (https://github.com/google/fonts/tree/main/ofl/patrickhand)
+- Licence: SIL Open Font License 1.1, bundled as `PATRICK-HAND-OFL.txt`
+- File: `patrick-hand-regular.ttf`
+
+## Kalam
+
+Bold hand-lettered headings and action labels for the sketchbook UI.
+
+- Copyright: Indian Type Foundry (https://github.com/google/fonts/tree/main/ofl/kalam)
+- Licence: SIL Open Font License 1.1, bundled as `KALAM-OFL.txt`
+- File: `kalam-bold.ttf`
 
 ## Oswald
 
-Display voice: headings, unit names, buttons, mission callsigns. A condensed
-grotesque in the register of stencilled military lettering.
+Legacy display font from the previous theme. The file remains in the source
+tree for reference but is no longer loaded by the current UI.
 
 - Copyright: The Oswald Project Authors (https://github.com/googlefonts/OswaldFont)
 - Licence: SIL Open Font License 1.1 — https://openfontlicense.org

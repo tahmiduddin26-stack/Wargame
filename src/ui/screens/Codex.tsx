@@ -7,6 +7,7 @@ import { ARMOUR_LABEL, ARMOUR_TABLE } from '@/data/types';
 import type { ArmourClass, DamageKind } from '@/data/types';
 import { useGame } from '@/state/store';
 import { TurretGlyph, UnitGlyph } from '@/ui/components/Glyph';
+import { TurretInsignia, UnitInsignia } from '@/ui/components/Insignia';
 
 const KINDS: DamageKind[] = ['impact', 'pierce', 'blast', 'energy'];
 const CLASSES: ArmourClass[] = ['flesh', 'plate', 'hull'];
@@ -76,8 +77,7 @@ export function Codex() {
         </span>
       </header>
 
-      {/* A detented rail, not a tab bar: the ages are an ordered ladder, and
-          the underline-tab is the pattern everything else already uses. */}
+      {/* The ordered age choices are styled as paper stickers by sketch.css. */}
       <nav className="rail" role="tablist" aria-label="Ages">
         <span className="rail__track" aria-hidden="true" />
         {AGES.map((a, i) => (
@@ -144,7 +144,7 @@ export function Codex() {
                   <span className="label">{ROLE_LABEL[u.role]}</span>
                 </td>
                 <td>
-                  <b className="cx__name">{u.name}</b>
+                  <b className="cx__name"><UnitInsignia id={u.id} size={25} className="cx__insignia" />{u.name}</b>
                   <span className="cx__brief">{u.brief}</span>
                 </td>
                 <td className="cx__armour">
@@ -189,7 +189,7 @@ export function Codex() {
                   <span className="label">{TURRET_ROLE_LABEL[t.role]}</span>
                 </td>
                 <td>
-                  <b className="cx__name">{t.name}</b>
+                  <b className="cx__name"><TurretInsignia id={t.id} size={25} className="cx__insignia" />{t.name}</b>
                   <span className="cx__brief">{t.brief}</span>
                 </td>
                 <td className="cx__armour">

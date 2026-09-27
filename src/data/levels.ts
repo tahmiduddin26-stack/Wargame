@@ -1,7 +1,7 @@
 import type { LevelDef, LevelModifier } from './types';
 
 /**
- * Twelve missions. The first four are the onboarding proper: each one unlocks
+ * Sixteen missions. The first four are the onboarding proper: each one unlocks
  * exactly one system and caps the age so the player cannot outrun the lesson.
  * From mission 5 the cap comes off and it becomes the original's open race
  * between economy and evolution.
@@ -152,8 +152,8 @@ export const LEVELS: LevelDef[] = [
   },
   {
     id: 12,
-    name: 'LAST AGE',
-    briefing: 'He will reach the Future Age. Be standing on his gate when he does.',
+    name: 'FUTURE FRONT',
+    briefing: 'The Future Age is within reach. Evolve before their final push and take the gate.',
     baseHp: 2500,
     startGold: 1200,
     income: 14,
@@ -162,6 +162,58 @@ export const LEVELS: LevelDef[] = [
     enemy: { aggression: 1.0, economy: 1.5, warmup: 3 },
     modifiers: ['rich-enemy', 'fast-enemy'],
     reward: 750,
+  },
+  {
+    id: 13,
+    name: 'THE RELIC FRONT',
+    briefing: 'The old arsenal is all that survived the retreat. Win with powder and steel before their funded line breaks through.',
+    baseHp: 2100,
+    startGold: 950,
+    income: 12,
+    maxAge: 2,
+    timeLimit: 300,
+    enemy: { aggression: 0.8, economy: 1.12, warmup: 4 },
+    modifiers: ['age-locked', 'rich-enemy'],
+    reward: 850,
+  },
+  {
+    id: 14,
+    name: 'OPEN COUNTRY',
+    briefing: 'No roof guns or cover. The long sightline belongs to whoever keeps their artillery alive.',
+    baseHp: 2200,
+    startGold: 1450,
+    income: 14,
+    maxAge: 4,
+    timeLimit: 330,
+    enemy: { aggression: 0.9, economy: 1.08, warmup: 4 },
+    modifiers: ['no-turrets', 'artillery-duel'],
+    reward: 950,
+  },
+  {
+    id: 15,
+    name: 'BREACH WINDOW',
+    briefing: 'Both gates are brittle and the enemy is already moving. Commit early; there is no second defence.',
+    baseHp: 1050,
+    startGold: 1550,
+    income: 15,
+    maxAge: 4,
+    timeLimit: 240,
+    enemy: { aggression: 0.94, economy: 1.16, warmup: 2 },
+    modifiers: ['sudden-death', 'fast-enemy'],
+    reward: 1100,
+  },
+  {
+    id: 16,
+    name: 'THE LAST LINE',
+    briefing: 'Their reserves are funded and closing fast. With the mounts sealed, only a sustained counterattack can hold the valley.',
+    baseHp: 2600,
+    startGold: 1850,
+    income: 16,
+    maxAge: 4,
+    timeLimit: 360,
+    enemy: { aggression: 1, economy: 1.25, warmup: 2 },
+    modifiers: ['no-turrets', 'rich-enemy', 'fast-enemy'],
+    reward: 1400,
   },
 ];
 

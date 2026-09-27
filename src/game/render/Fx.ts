@@ -47,6 +47,7 @@ export class Fx {
       s.setPosition(x, y)
         .setFillStyle(colour, 1)
         .setDisplaySize(Phaser.Math.Between(2, 4), Phaser.Math.Between(2, 5))
+        .setRotation(0)
         .setVisible(true)
         .setAlpha(1);
       this.scene.tweens.add({
@@ -99,6 +100,76 @@ export class Fx {
       duration: 100,
       onComplete: () => flash.destroy(),
     });
+  }
+
+  /** A brief survey stamp when a mount is built or opened. */
+  construction(x: number, colour: number): void {
+    const y = VIEW.groundY - 96;
+    const ring = this.takeRing();
+    ring.setPosition(x, y).setRadius(8).setStrokeStyle(2, colour, 0.9).setVisible(true);
+    this.scene.tweens.add({
+      targets: ring,
+      radius: 30,
+      alpha: 0,
+      duration: 330,
+      ease: 'Quad.Out',
+      onComplete: () => this.releaseRing(ring),
+    });
+    for (const dx of [-17, 17]) {
+      const tick = this.scene.add.rectangle(x + dx, y, 2, 14, colour, 0.9);
+      this.layer.add(tick);
+      this.scene.tweens.add({
+        targets: tick,
+        x: x + dx * 1.5,
+        alpha: 0,
+        duration: 310,
+        onComplete: () => tick.destroy(),
+      });
+    }
+  }
+
+  /** Stone and metal chips from a gate strike, scaled by actual damage. */
+  gateDamage(x: number, amount: number): void {
+    const n = Phaser.Math.Clamp(Math.ceil(amount / 90), 2, 6);
+    for (let i = 0; i < n; i++) {
+      const chip = this.takeSpark();
+      const y = VIEW.groundY - Phaser.Math.Between(20, 115);
+      chip.setPosition(x + Phaser.Math.Between(-18, 18), y)
+        .setDisplaySize(Phaser.Math.Between(3, 6), Phaser.Math.Between(2, 4))
+        .setFillStyle(0xbca98a, 0.9)
+        .setRotation(0)
+        .setAlpha(1)
+        .setVisible(true);
+      this.scene.tweens.add({
+        targets: chip,
+        x: chip.x + Phaser.Math.Between(-38, 38),
+        y: VIEW.groundY - Phaser.Math.Between(1, 8),
+        alpha: 0,
+        rotation: Phaser.Math.FloatBetween(-2, 2),
+        duration: Phaser.Math.Between(260, 430),
+        ease: 'Quad.In',
+        onComplete: () => this.releaseSpark(chip),
+      });
+    }
+  }
+
+  /** The age change has a local origin even when the camera flash fills the view. */
+  evolve(x: number, colour: number): void {
+    const y = VIEW.groundY - 100;
+    for (let i = 0; i < 3; i++) {
+      this.scene.time.delayedCall(i * 90, () => {
+        const ring = this.takeRing();
+        ring.setPosition(x, y).setRadius(12).setStrokeStyle(2, colour, 0.85).setVisible(true);
+        this.scene.tweens.add({
+          targets: ring,
+          radius: 70 + i * 25,
+          alpha: 0,
+          duration: 520,
+          ease: 'Cubic.Out',
+          onComplete: () => this.releaseRing(ring),
+        });
+      });
+    }
   }
 
   /** Dust kicked up where a corpse lands or a heavy unit steps. */

@@ -1,30 +1,9 @@
-/*
- * FIELD COMMAND terminal.
- *
- * Direction: military-surplus control panel. Stamped metal plates, hairline
- * rules instead of shadows, condensed stencil-adjacent headings, every figure in
- * tabular mono so numbers line up in columns the way a readout does.
- *
- * Sizing: the whole UI is measured in `em` against `.stage`, whose font-size is
- * 1% of the stage width. One HUD, any screen, no breakpoints.
- *
- * Two rules worth stating because they are easy to erode:
- *   1. Mono is for figures only. Gold, reach, damage, timers, mission numbers.
- *      Using it for prose labels turns it into a costume for "technical".
- *   2. No label sits above a heading as an eyebrow. Identifiers ride inline with
- *      the thing they identify.
- */
+/* Shared layout and sizing primitives. sketch.css supplies the active visual
+ * theme after the screen and HUD styles. The stage is measured in em against
+ * 1% of its width so the DOM controls track Phaser's fitted canvas. */
 
 /* Self-hosted: no CDN, no network dependency in the native shell, and no
    silent fallback to the platform sans. See src/assets/fonts/LICENSES.md. */
-@font-face {
-  font-family: 'Oswald';
-  src: url('../assets/fonts/oswald-var.woff2') format('woff2-variations');
-  font-weight: 400 700;
-  font-style: normal;
-  font-display: block;
-}
-
 @font-face {
   font-family: 'JetBrains Mono';
   src: url('../assets/fonts/jetbrains-mono-var.woff2') format('woff2-variations');
@@ -34,7 +13,7 @@
 }
 
 :root {
-  /* Surfaces: warm near-black, not navy, not slate. */
+  /* Base fallback tokens; sketch.css replaces these for the active theme. */
   --steel-900: #12100e;
   --steel-800: #191612;
   --steel-700: #1f1b16;
@@ -68,7 +47,7 @@
   --oxide-deep: #7a2a1a;
   --moss: #8fae6a;
 
-  --font-display: 'Oswald', system-ui, sans-serif;
+  --font-display: system-ui, sans-serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 

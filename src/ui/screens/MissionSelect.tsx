@@ -1,4 +1,5 @@
 import { AGES } from '@/data/ages';
+import { commanderRank } from '@/data/career';
 import { DIFFICULTIES } from '@/data/difficulty';
 import { LEVELS, MODIFIER_LABEL, MODIFIER_NOTE } from '@/data/levels';
 import { isUnlocked, nextMission, useGame } from '@/state/store';
@@ -13,6 +14,7 @@ export function MissionSelect() {
   const { go, startMission, startSurvival } = useGame();
   const records = useGame((s) => s.records);
   const credits = useGame((s) => s.credits);
+  const careerXp = useGame((s) => s.careerXp);
   const tier = useGame((s) => s.difficulty);
   const setDifficulty = useGame((s) => s.setDifficulty);
   const survivalBest = useGame((s) => s.survivalBest);
@@ -29,7 +31,8 @@ export function MissionSelect() {
         </button>
         <h2 className="ms__title">Campaign</h2>
         <span className="label ms__credits">
-          Credits <span className="num">{credits.toLocaleString('en-GB')}</span>
+          Rank <span className="num">{commanderRank(careerXp)}</span>
+          {' · '}Credits <span className="num">{credits.toLocaleString('en-GB')}</span>
         </span>
       </header>
       <div className="hazard-rule" />

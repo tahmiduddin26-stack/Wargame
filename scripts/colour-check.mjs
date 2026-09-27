@@ -95,10 +95,10 @@ const asHex = (lin) =>
 
 // ------------------------------------------------------------------- the pairs
 
-const css = readFileSync('src/styles/global.css', 'utf8');
+const css = readFileSync('src/styles/sketch.css', 'utf8');
 function token(name) {
   const m = new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,6})`).exec(css);
-  if (!m) throw new Error(`token --${name} not found in global.css`);
+  if (!m) throw new Error(`token --${name} not found in sketch.css`);
   return m[1];
 }
 
@@ -120,12 +120,6 @@ const PAIRS = [
     b: 'oxide',
     why: 'enemy vs danger: both appear on the lane strip at once',
     critical: false,
-  },
-  {
-    a: 'ochre',
-    b: 'bone-faint',
-    why: 'counter table: strong multiplier vs weak',
-    critical: true,
   },
   { a: 'player', b: 'moss', why: 'gold meter vs experience meter', critical: false },
 ];

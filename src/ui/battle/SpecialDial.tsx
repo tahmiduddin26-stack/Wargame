@@ -2,6 +2,7 @@ import { AGES } from '@/data/ages';
 import { SPECIALS } from '@/data/specials';
 import { bridge, type HudSnapshot } from '@/game/bridge';
 import { useJustChanged } from '@/ui/useMotion';
+import { SpecialInsignia } from '@/ui/components/Insignia';
 
 const R = 26;
 const CIRC = 2 * Math.PI * R;
@@ -42,7 +43,7 @@ export function SpecialDial({ snapshot }: { snapshot: HudSnapshot }) {
       </svg>
       <span className="dial__text">
         {ready ? (
-          <span className="label dial__ready">Call</span>
+          <span className="dial__command"><SpecialInsignia age={age.id} size={25} /><span className="label dial__ready">Call</span></span>
         ) : (
           <span className="num dial__count">{Math.ceil(remaining)}</span>
         )}

@@ -17,7 +17,7 @@ export function OrientationGate() {
         <div className="hazard-rule" />
         <h1 className="gate__title">Turn the device sideways</h1>
         <p className="gate__body">
-          The battlefield is one long lane. Field Command needs the width to show you both gates,
+          The battlefield is one long lane. Turn sideways to see both forts,
           your front line and everything in reach between them.
         </p>
 

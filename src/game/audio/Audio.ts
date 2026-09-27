@@ -22,7 +22,7 @@ import type { DamageKind } from '@/data/types';
  *      the first real interaction and everything before that is a no-op.
  */
 
-type Category = 'hit' | 'shot' | 'boom' | 'gate' | 'spawn' | 'ui';
+type Category = 'hit' | 'shot' | 'boom' | 'gate' | 'spawn' | 'ui' | 'command' | 'alert' | 'result';
 
 /** Minimum gap between two sounds of the same category, in seconds. */
 const MIN_GAP: Record<Category, number> = {
@@ -32,6 +32,9 @@ const MIN_GAP: Record<Category, number> = {
   gate: 0.09,
   spawn: 0.08,
   ui: 0.02,
+  command: 0.08,
+  alert: 0.6,
+  result: 0.5,
 };
 
 const MAX_VOICES = 18;
@@ -48,12 +51,15 @@ export class GameAudio {
 
   private voices = 0;
   private lastAt: Record<Category, number> = {
-    hit: 0,
-    shot: 0,
-    boom: 0,
-    gate: 0,
-    spawn: 0,
-    ui: 0,
+    hit: -Infinity,
+    shot: -Infinity,
+    boom: -Infinity,
+    gate: -Infinity,
+    spawn: -Infinity,
+    ui: -Infinity,
+    command: -Infinity,
+    alert: -Infinity,
+    result: -Infinity,
   };
 
   private bed: {
@@ -285,6 +291,50 @@ export class GameAudio {
   /** A unit leaving the gate. Deliberately tiny; this fires constantly. */
   spawn(pan = 0): void {
     this.noiseBurst({ category: 'spawn', pan, gain: 0.1, decay: 0.07, type: 'bandpass', from: 900, to: 500, q: 2 });
+  }
+
+  /** The order was accepted; quiet enough to survive rapid unit purchases. */
+  order(): void {
+    this.tone({ category: 'command', pan: -0.25, gain: 0.12, decay: 0.07, from: 720, to: 570, type: 'triangle' });
+  }
+
+  /** A mount or weapon was bolted onto the gate. */
+  construction(pan = 0): void {
+    this.noiseBurst({ category: 'command', pan, gain: 0.32, decay: 0.19, type: 'bandpass', from: 1800, to: 460, q: 1.8 });
+  }
+
+  /** A short structural alarm at low gate integrity. */
+  warning(): void {
+    this.tone({ category: 'alert', pan: -0.4, gain: 0.17, decay: 0.25, from: 440, to: 220, type: 'triangle' });
+  }
+
+  /** End-of-battle cadence. A small upward or downward interval, not a jingle. */
+  result(won: boolean): void {
+    const slot = this.take('result');
+    if (!slot) return;
+    const { ctx, t, out } = slot;
+    const amp = ctx.createGain();
+    amp.gain.setValueAtTime(0.001, t);
+    amp.gain.linearRampToValueAtTime(0.24, t + 0.035);
+    amp.gain.exponentialRampToValueAtTime(0.0008, t + 0.9);
+    amp.connect(out);
+    const notes = won ? [196, 293.66] : [196, 146.83];
+    notes.forEach((hz, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.value = hz;
+      const voice = ctx.createGain();
+      voice.gain.setValueAtTime(0, t);
+      voice.gain.setValueAtTime(i === 0 ? 0.7 : 0, t + i * 0.2);
+      if (i) voice.gain.linearRampToValueAtTime(0.65, t + 0.23);
+      osc.connect(voice).connect(amp);
+      osc.start(t);
+      if (i === 0) this.release(osc, t + 0.93);
+      else {
+        osc.stop(t + 0.93);
+        osc.onended = () => osc.disconnect();
+      }
+    });
   }
 
   /** Age up. The one triumphant sound in the game, so it gets a chord. */

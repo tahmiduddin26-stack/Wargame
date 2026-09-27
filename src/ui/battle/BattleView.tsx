@@ -7,6 +7,8 @@ import { audio } from '@/game/audio/Audio';
 import { bridge, type HudSnapshot } from '@/game/bridge';
 import { RAGDOLL } from '@/game/config';
 import { BattleScene, battleGameConfig } from '@/game/scenes/BattleScene';
+import { onlineClient, useOnline } from '@/multiplayer/client';
+import { ONLINE_LEVEL } from '@/multiplayer/protocol';
 import { useGame } from '@/state/store';
 import { Hud } from './Hud';
 
@@ -19,7 +21,9 @@ export function BattleView() {
   const perks = useGame((s) => s.perks);
   const survival = useGame((s) => s.survivalRun);
   const go = useGame((s) => s.go);
-  const level = levelById(levelId);
+  const online = useOnline();
+  const onlineMatch = online.match;
+  const level = onlineMatch ? ONLINE_LEVEL : levelById(levelId);
 
   const hostRef = useRef<HTMLDivElement>(null);
   const [snapshot, setSnapshot] = useState<HudSnapshot | null>(null);
@@ -44,12 +48,13 @@ export function BattleView() {
       true,
       {
         level,
-        survival,
-        difficulty: tierId,
-        perks: resolvePerks(perks),
-        seed: 1337 + level.id * 977,
+        survival: onlineMatch ? false : survival,
+        difficulty: onlineMatch ? 'normal' : tierId,
+        perks: onlineMatch ? undefined : resolvePerks(perks),
+        seed: onlineMatch?.seed ?? (1337 + level.id * 977),
+        onlineMatchId: onlineMatch?.matchId,
         corpseCap: settings.reducedCorpses ? Math.floor(RAGDOLL.maxActive / 2) : RAGDOLL.maxActive,
-        speed: settings.speed,
+        speed: onlineMatch ? 1 : settings.speed,
       },
     );
 
@@ -59,7 +64,7 @@ export function BattleView() {
     };
     // Settings are read once at deploy; changing them mid-match would be worse.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [level.id, survival]);
+  }, [level.id, survival, onlineMatch?.matchId]);
 
   useEffect(() => bridge.onSnapshot(setSnapshot), []);
 
@@ -71,6 +76,7 @@ export function BattleView() {
   // Hand the result to the store exactly once; that swaps in the debrief screen.
   useEffect(() => {
     if (!snapshot?.over || reported.current) return;
+    if (onlineMatch) return;
     reported.current = true;
 
     // Survival has no win condition, only how long you lasted.
@@ -92,13 +98,20 @@ export function BattleView() {
       goldSpent: mine.goldSpent,
       peakAge: mine.peakAge,
     });
-  }, [snapshot?.over, snapshot, level.id, finishMission, recordSurvival, go, tierId]);
+  }, [snapshot?.over, snapshot, level.id, finishMission, recordSurvival, go, tierId, onlineMatch]);
+
+  useEffect(() => {
+    if (!onlineMatch) return;
+    if (online.result?.matchId !== onlineMatch.matchId && online.connection !== 'offline') return;
+    const timer = window.setTimeout(() => { onlineClient.returnToLobby(); go('online'); }, online.result ? 900 : 0);
+    return () => window.clearTimeout(timer);
+  }, [onlineMatch, online.result, online.connection, go]);
 
   return (
     <>
       <div className="stage__canvas" ref={hostRef} />
       {snapshot ? (
-        <Hud snapshot={snapshot} level={level} />
+        <Hud snapshot={snapshot} level={level} onlineMatch={onlineMatch} />
       ) : (
         <div className="battle-boot">
           <span className="label blink">Deploying to {level.name}</span>

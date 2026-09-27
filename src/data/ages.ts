@@ -1,9 +1,8 @@
 import type { AgeDef, AgeId } from './types';
 
 /**
- * Five ages, matching the original's arc from cavemen to lasers. The XP gates
- * follow the original's exponential curve (the Flash game asked 4k for age 2
- * and 14k for age 3); later gates are extrapolated on the same ratio.
+ * Five ages, matching the arc from cavemen to lasers. Later gates are tuned
+ * against the campaign clock so Future can actually appear in late missions.
  */
 export const AGES: AgeDef[] = [
   {
@@ -13,9 +12,9 @@ export const AGES: AgeDef[] = [
     tagline: 'Rocks and nerve.',
     evolveXp: 0,
     baseArmour: 1,
-    accent: '#c8783c',
-    skyline: ['#3a2d24', '#6b4a30'],
-    ground: '#5a4530',
+    accent: '#d9784e',
+    skyline: ['#8bc9df', '#d9ece0'],
+    ground: '#c9aa76',
   },
   {
     id: 'medieval',
@@ -24,42 +23,42 @@ export const AGES: AgeDef[] = [
     tagline: 'Steel and siege.',
     evolveXp: 1_200,
     baseArmour: 1.8,
-    accent: '#8fa1b8',
-    skyline: ['#232b33', '#4a5b6b'],
-    ground: '#414a3c',
+    accent: '#708fb6',
+    skyline: ['#96cddd', '#e4efd9'],
+    ground: '#aab682',
   },
   {
     id: 'gunpowder',
     index: 2,
     name: 'Gunpowder Age',
     tagline: 'Powder and drill.',
-    evolveXp: 5_000,
+    evolveXp: 4_500,
     baseArmour: 3.2,
-    accent: '#c9a227',
-    skyline: ['#2a241c', '#6a5a38'],
-    ground: '#4c4531',
+    accent: '#d68c42',
+    skyline: ['#f5c59e', '#fae1b6'],
+    ground: '#c3aa79',
   },
   {
     id: 'modern',
     index: 3,
     name: 'Modern Age',
     tagline: 'Armour and airpower.',
-    evolveXp: 18_000,
+    evolveXp: 14_000,
     baseArmour: 6,
-    accent: '#6f8f5a',
-    skyline: ['#1d2420', '#3f5342'],
-    ground: '#3c4437',
+    accent: '#6c9f73',
+    skyline: ['#a2d3d8', '#e2eecf'],
+    ground: '#a4b68b',
   },
   {
     id: 'future',
     index: 4,
     name: 'Future Age',
     tagline: 'Rails and ion.',
-    evolveXp: 60_000,
+    evolveXp: 32_000,
     baseArmour: 11,
-    accent: '#3fd0c9',
-    skyline: ['#14181f', '#25384a'],
-    ground: '#2b333a',
+    accent: '#71a6bd',
+    skyline: ['#b6b8e7', '#e4e3ef'],
+    ground: '#acafc7',
   },
 ];
 

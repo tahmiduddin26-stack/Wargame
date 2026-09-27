@@ -1,0 +1,1508 @@
+/*
+ * Doodlebook Battles. Ink outlines, warm paper, cut-out colour and a little
+ * deliberate wobble. This layer restyles every existing screen and battle
+ * control without changing their layout or interaction contracts.
+ */
+@font-face {
+  font-family: 'Patrick Hand';
+  src: url('../assets/fonts/patrick-hand-regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kalam';
+  src: url('../assets/fonts/kalam-bold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --paper: #f6ebd3;
+  --paper-bright: #fffaf0;
+  --paper-deep: #ead8ad;
+  --ink: #2d302e;
+  --ink-soft: #56594e;
+  --sun: #ffc55c;
+  --sky: #8ec9df;
+  --coral: #e87754;
+  --grass: #80ac72;
+
+  --steel-900: var(--paper);
+  --steel-800: var(--paper-bright);
+  --steel-700: #fff2cf;
+  --steel-600: #ffe6aa;
+  --steel-500: #d7c394;
+  --rule: #b9a985;
+  --rule-bright: var(--ink);
+  --bone: var(--ink);
+  --bone-dim: var(--ink-soft);
+  --bone-faint: #706959;
+  --player: #e39a32;
+  --enemy: #579db8;
+  --ochre: #ad592e;
+  --ochre-deep: #93502f;
+  --oxide: #bf493e;
+  --oxide-deep: #a9403c;
+  --moss: #4f8662;
+  --font-display: 'Kalam', 'Comic Sans MS', cursive;
+  --font-body: 'Patrick Hand', 'Comic Sans MS', cursive;
+  --hazard: repeating-linear-gradient(-25deg, #ffca62 0 7px, #f7e4b4 7px 14px);
+}
+
+html,
+body {
+  background: #d6bb8b;
+  color: var(--ink);
+}
+
+.stage {
+  background: var(--paper);
+  box-shadow: 0 0 0 3px var(--ink);
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 1.3em;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  color: var(--ink-soft);
+}
+
+h1,
+h2,
+h3,
+.display {
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+
+.display--caps {
+  letter-spacing: -0.035em;
+}
+
+.num {
+  color: inherit;
+}
+
+.panel,
+.panel--raised {
+  background: var(--paper-bright);
+  border: 2px solid var(--ink);
+  border-radius: 15px 12px 17px 11px;
+  box-shadow: 4px 5px 0 rgba(45, 48, 46, 0.22);
+}
+
+.rule {
+  height: 2px;
+  background: var(--ink);
+  border-radius: 50%;
+}
+
+.hazard-rule {
+  height: 0.65em;
+  background: repeating-linear-gradient(100deg, var(--coral) 0 2.8em, transparent 2.8em 3.45em);
+  border-bottom: 2px solid var(--ink);
+  opacity: 1;
+}
+
+.bracket::before,
+.bracket::after {
+  width: 2em;
+  height: 0.8em;
+  border: 0;
+  background: rgba(247, 249, 236, 0.8);
+  box-shadow: 0 1px 0 rgba(45, 48, 46, 0.22);
+  z-index: 2;
+}
+
+.bracket::before {
+  top: -0.5em;
+  left: 1.5em;
+  transform: rotate(-14deg);
+}
+
+.bracket::after {
+  right: 1.8em;
+  bottom: -0.45em;
+  transform: rotate(13deg);
+}
+
+.btn,
+.st__choice,
+.am__buy {
+  font-family: var(--font-body);
+  font-size: 1.75em;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  line-height: 1.05;
+  color: var(--ink);
+  background: var(--paper-bright);
+  border: 2px solid var(--ink);
+  border-radius: 13px 9px 14px 11px;
+  box-shadow: 3px 4px 0 var(--ink);
+}
+
+.btn:active:not(:disabled),
+.st__choice:active,
+.am__buy:active:not(:disabled) {
+  background: #ffe4a5;
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn:focus-visible,
+button:focus-visible {
+  outline: 3px dashed var(--coral);
+  outline-offset: 3px;
+}
+
+.btn--primary,
+.st__choice--on {
+  background: var(--sun);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.btn--primary:active {
+  background: #f2ad42;
+}
+
+.btn--danger {
+  background: #ffe1d8;
+  border-color: var(--oxide);
+  color: var(--oxide-deep);
+}
+
+.btn--ghost {
+  background: var(--paper-bright);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  color: var(--ink-soft);
+  border-color: var(--ink-soft);
+  box-shadow: 2px 2px 0 var(--ink-soft);
+}
+
+.tag {
+  font-family: var(--font-body);
+  font-size: 1.2em;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  background: #fff5d9;
+  border: 1.5px solid var(--ink);
+  border-radius: 9px 6px 10px 7px;
+  padding: 0.1em 0.6em;
+}
+
+.tag--warn {
+  color: var(--oxide-deep);
+  background: #ffe0cf;
+  border-color: var(--oxide);
+}
+
+.meter {
+  background: #d9c99f;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+}
+
+.meter__fill {
+  background: var(--sun);
+  border-radius: inherit;
+}
+
+.meter__fill--enemy {
+  background: var(--sky);
+}
+
+.meter__fill--xp {
+  background: var(--grass);
+}
+
+.scroll-y {
+  scrollbar-color: var(--ink-soft) transparent;
+}
+
+/* Paper sheets sit on a faint pencil-dot grid. */
+.menu,
+.ms,
+.cx,
+.st,
+.ob,
+.db,
+.gate,
+.battle-boot {
+  background-color: var(--paper);
+  background-image: radial-gradient(rgba(79, 68, 46, 0.13) 0.65px, transparent 0.7px);
+  background-size: 19px 19px;
+}
+
+/* The menu reads like the cover of a well-used battle notebook. */
+.menu__grid {
+  grid-template-columns: 1fr 1.04fr;
+  gap: 3.5em;
+  padding: 2.4em 4em 1.2em;
+}
+
+.menu__brand {
+  position: relative;
+}
+
+.menu__title {
+  font-size: 7.7em;
+  line-height: 0.91;
+  color: var(--ink);
+  text-shadow: 3px 3px 0 var(--paper-bright);
+  transform: rotate(-2deg);
+  transform-origin: left center;
+}
+
+.menu__underline {
+  width: 15em;
+  height: 0.65em;
+  border-radius: 50%;
+  transform: rotate(-2deg);
+  background: var(--coral);
+  margin: 0.55em 0 0.1em;
+}
+
+.menu__doodle {
+  width: 27em;
+  height: 7em;
+  color: var(--ink);
+  overflow: visible;
+  transform: rotate(-1deg);
+}
+
+.menu__blurb {
+  font-size: 1.55em;
+  max-width: 24em;
+  line-height: 1.3;
+  color: var(--ink-soft);
+}
+
+.menu__readout {
+  gap: 1.4em;
+  margin-top: 1.3em;
+  padding: 0.75em 1em;
+  background: rgba(255, 250, 240, 0.8);
+  border: 2px dashed var(--ink-soft);
+  border-radius: 13px 16px 12px 15px;
+  transform: rotate(0.5deg);
+}
+
+.menu__readout dt {
+  font-size: 0.95em;
+}
+
+.menu__readout dd {
+  font-size: 1.8em;
+  color: var(--ink);
+}
+
+.menu__of {
+  color: var(--ink-soft);
+}
+
+.menu__actions {
+  gap: 0.9em;
+}
+
+.menu__deploy {
+  background: #cde8e4;
+  border: 3px solid var(--ink);
+  border-radius: 22px 17px 25px 15px;
+  box-shadow: 7px 8px 0 var(--ink);
+  padding: 1.55em 1.75em;
+  transform: rotate(0.6deg);
+}
+
+.menu__deploy:active {
+  background: #acd9d9;
+}
+
+.menu__deploy-name {
+  font-size: 2.8em;
+  gap: 0.25em;
+  color: var(--ink);
+}
+
+.menu__deploy-op,
+.ms__featured-op,
+.db__op,
+.ob__step {
+  color: var(--oxide-deep);
+  font-family: var(--font-display);
+}
+
+.menu__deploy-brief {
+  font-size: 1.5em;
+  color: var(--ink-soft);
+  line-height: 1.28;
+}
+
+.menu__deploy-go {
+  font-family: var(--font-body);
+  font-size: 1.9em;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.menu__deploy-arrow,
+.menu__deploy-arrow::after {
+  background: var(--coral);
+  border-color: var(--coral);
+}
+
+.menu__row .btn {
+  padding: 0.5em 0.8em;
+  font-size: 1.8em;
+}
+
+.menu__row:nth-of-type(2) .btn:first-child,
+.menu__row:nth-of-type(3) .btn:last-child {
+  background: #ffe9b7;
+}
+
+.menu__foot {
+  padding-bottom: 1em;
+  color: var(--ink-soft);
+}
+
+.menu__foot .label {
+  font-size: 1.2em;
+}
+
+/* Briefing diagrams look like notes pinned beside the instructions. */
+.ob__title {
+  font-size: 3.55em;
+}
+
+.ob__copy {
+  font-size: 1.6em;
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+
+.ob__rule {
+  background: #fff1bd;
+  border: 2px solid var(--ink);
+  border-radius: 12px 16px 11px 17px;
+  box-shadow: 3px 4px 0 var(--ink);
+  padding: 0.75em 1em;
+  transform: rotate(-0.5deg);
+}
+
+.ob__rule p {
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.ob__figure {
+  min-height: 20em;
+  padding: 1.8em;
+  background: var(--paper-bright);
+  border: 2px dashed var(--ink-soft);
+  border-radius: 17px 22px 14px 19px;
+  transform: rotate(1deg);
+}
+
+.ob-card,
+.ob-pill,
+.ob-mount {
+  background: #fff3d9;
+  border: 2px solid var(--ink);
+  border-radius: 11px 8px 13px 9px;
+  box-shadow: 3px 3px 0 rgba(45, 48, 46, 0.65);
+  color: var(--ink);
+}
+
+.ob-card--hot {
+  background: var(--sun);
+}
+
+.ob-pill,
+.ob-pill--xp {
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.ob-pill--xp {
+  background: #dceecf;
+}
+
+.ob-mount--sealed {
+  border-color: var(--ink);
+}
+
+.ob-mount--sealed .label {
+  background: var(--paper-bright);
+  color: var(--ink);
+}
+
+.ob-special__ring {
+  background: var(--sun);
+  border: 3px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  color: var(--ink);
+}
+
+.ob__tick {
+  height: 0.55em;
+  border-radius: 999px;
+  border: 1px solid var(--ink);
+  background: var(--paper-bright);
+}
+
+.ob__tick--done {
+  background: var(--grass);
+}
+
+.ob__tick--on {
+  background: var(--coral);
+}
+
+/* Mission sheets, sticker tabs, and paper rows. */
+.ms__head,
+.cx__head,
+.st__head {
+  padding: 1em 2.4em;
+  background: rgba(255, 250, 240, 0.72);
+  border-bottom: 2px solid var(--ink);
+}
+
+.ms__title,
+.cx__title,
+.st__title {
+  font-size: 2.6em;
+}
+
+.ms__body,
+.cx__body,
+.st__body {
+  padding-top: 1.5em;
+}
+
+.ms__featured {
+  background: #ffe6ad;
+  border: 3px solid var(--ink);
+  border-radius: 21px 15px 24px 17px;
+  box-shadow: 6px 7px 0 var(--ink);
+  padding: 1.5em 1.9em;
+  transform: rotate(-0.25deg);
+}
+
+.ms__featured-name {
+  font-size: 2.95em;
+  line-height: 1.05;
+}
+
+.ms__featured-brief,
+.ms__survival-brief,
+.ms__tier-blurb {
+  color: var(--ink-soft);
+  line-height: 1.32;
+}
+
+.ms__featured-brief {
+  font-size: 1.55em;
+}
+
+.ms__spec dd {
+  color: var(--ink);
+}
+
+.ms__tier {
+  border-top: 2px dashed var(--ink-soft);
+}
+
+.rail,
+.rail--tight {
+  gap: 0.6em;
+  padding-top: 0.5em;
+}
+
+.rail__track,
+.rail__detent {
+  display: none;
+}
+
+.rail__stop,
+.rail--tight .rail__stop {
+  padding: 0.45em 0.8em;
+  background: var(--paper-bright);
+  border: 2px solid var(--ink);
+  border-radius: 10px 8px 11px 7px;
+  box-shadow: 2px 3px 0 var(--ink);
+  color: var(--ink-soft);
+}
+
+.rail__stop--on {
+  background: var(--sun);
+  color: var(--ink);
+  transform: rotate(-1deg);
+}
+
+.rail__index,
+.rail__stop--on .rail__index {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+}
+
+.rail__name,
+.rail--tight .rail__name {
+  font-family: var(--font-body);
+  font-size: 1.7em;
+  letter-spacing: 0;
+}
+
+.rail__stop--on .rail__name,
+.rail__stop--on .rail__note {
+  color: var(--ink);
+}
+
+.ms__survival {
+  background: #d7eeda;
+  border: 2px solid var(--ink);
+  border-radius: 15px 21px 13px 18px;
+  box-shadow: 4px 5px 0 var(--ink);
+}
+
+.ms__survival-name {
+  color: var(--ink);
+}
+
+.ms__survival-score .num {
+  color: var(--ink);
+}
+
+.ms__list {
+  gap: 0.65em;
+  background: none;
+  border: 0;
+}
+
+.ms__row {
+  gap: 0.8em;
+  background: var(--paper-bright);
+  border: 2px solid var(--ink);
+  border-radius: 11px 15px 10px 14px;
+  box-shadow: 2px 3px 0 rgba(45, 48, 46, 0.45);
+  padding: 0.65em 1em;
+}
+
+.ms__row:nth-child(even) {
+  border-radius: 15px 10px 13px 9px;
+}
+
+.ms__row--open {
+  background: #fff1c8;
+}
+
+.ms__row--locked {
+  background: #eee4ce;
+  opacity: 0.78;
+}
+
+.ms__row-name {
+  font-family: var(--font-body);
+  font-size: 1.75em;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.ms__row-mods .tag {
+  font-size: 0.85em;
+}
+
+.ms__pip {
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper-deep);
+}
+
+.ms__pip--on {
+  background: var(--grass);
+}
+
+/* Roster and counters: a marked-up field notebook. */
+.cx__era {
+  background: #dcecf0;
+  border: 2px solid var(--ink);
+  border-radius: 14px 20px 15px 18px;
+  box-shadow: 4px 5px 0 var(--ink);
+  padding: 0.8em 1.2em;
+}
+
+.cx__era-name {
+  font-size: 2.7em;
+}
+
+.cx__swatch {
+  border: 1.5px solid var(--ink);
+  border-radius: 40% 60% 55% 45%;
+}
+
+.cx__era-tag {
+  color: var(--ink-soft);
+}
+
+.cx__table {
+  background: rgba(255, 250, 240, 0.82);
+  border: 2px solid var(--ink);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cx__table th {
+  background: #ffe4a5;
+  color: var(--ink);
+  border-bottom: 2px solid var(--ink);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 1.15em;
+  letter-spacing: 0.02em;
+}
+
+.cx__table td {
+  border-bottom: 1px dashed var(--rule);
+}
+
+.cx__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.cx__caption {
+  color: var(--ink);
+  font-size: 1.3em;
+  padding-top: 0.8em;
+}
+
+.cx__name {
+  letter-spacing: -0.015em;
+}
+
+.cx__insignia {
+  color: var(--ochre);
+}
+
+.cx__mult--good {
+  color: var(--ink);
+  background: #deefc5;
+  font-weight: 700;
+}
+
+/* Perks and settings become individual notebook clippings. */
+.am__intro,
+.st__note {
+  color: var(--ink-soft);
+  line-height: 1.32;
+}
+
+.am__intro,
+.am__effect,
+.st__note {
+  font-size: 1.5em;
+}
+
+.am__list {
+  gap: 0.65em;
+  background: none;
+  border: 0;
+}
+
+.am__career {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.45em 1em;
+  padding: 0.8em 1.1em;
+  margin: 0 0 1em;
+  background: #dceecf;
+}
+
+.am__career .meter {
+  grid-column: 1 / -1;
+  height: 0.7em;
+}
+
+.am__branch {
+  margin-bottom: 1.2em;
+}
+
+.am__branch-name {
+  font-size: 2em;
+  margin: 0 0 0.35em;
+  border-bottom: 2px dashed var(--ink-soft);
+}
+
+.am__req {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 1.15em;
+  color: var(--oxide-deep);
+  margin-top: 0.15em;
+}
+
+.am__row {
+  grid-template-columns: minmax(0, 1fr) minmax(9em, auto) 8em;
+}
+
+.am__effect,
+.am__row--owned .am__effect {
+  font-family: var(--font-body);
+  font-size: 1.3em;
+  line-height: 1.15;
+  text-align: right;
+  white-space: normal;
+}
+
+.am__row {
+  background: var(--paper-bright);
+  border: 2px solid var(--ink);
+  border-radius: 12px 17px 11px 15px;
+  box-shadow: 3px 4px 0 rgba(45, 48, 46, 0.35);
+}
+
+.am__row--owned {
+  background: #e2f0d9;
+}
+
+.am__name {
+  letter-spacing: -0.02em;
+}
+
+.am__effect,
+.am__row--owned .am__effect {
+  color: var(--ink);
+}
+
+.st__body {
+  max-width: 65em;
+}
+
+.st__group {
+  background: var(--paper-bright);
+  border: 2px solid var(--ink);
+  border-radius: 13px 18px 10px 16px;
+  box-shadow: 3px 4px 0 rgba(45, 48, 46, 0.4);
+  padding: 1em 1.4em;
+  margin-bottom: 1em;
+}
+
+.st__group--danger {
+  background: #ffe2dc;
+  border-color: var(--oxide-deep);
+}
+
+.st__label {
+  letter-spacing: -0.02em;
+}
+
+.st__choice {
+  font-size: 1.7em;
+}
+
+.st__toggle-text .st__label,
+.st__toggle-text .st__note {
+  display: block;
+}
+
+.st__toggle-text .st__note {
+  margin: 0.2em 0 0;
+}
+
+.st__choice,
+.st__switch {
+  border: 2px solid var(--ink);
+  border-radius: 10px 7px 11px 8px;
+  background: var(--paper-bright);
+  color: var(--ink);
+}
+
+.st__choice--on,
+.st__switch--on {
+  background: var(--sun);
+  border-color: var(--ink);
+}
+
+.st__switch--on .label {
+  color: var(--ink);
+}
+
+/* The result is a big sticker with six little stat scraps. */
+.db__inner {
+  max-width: 78em;
+}
+
+.db__verdict {
+  font-size: 5.2em;
+  transform: rotate(-2deg);
+  text-shadow: 3px 4px 0 var(--paper-bright);
+}
+
+.db--win .db__verdict {
+  color: var(--moss);
+}
+
+.db--loss .db__verdict {
+  color: var(--oxide);
+}
+
+.db__sub {
+  color: var(--ink-soft);
+}
+
+.db__stats {
+  gap: 0.65em;
+  background: none;
+  border: 0;
+}
+
+.db__stats > div {
+  background: var(--paper-bright);
+  border: 2px solid var(--ink);
+  border-radius: 11px 15px 9px 13px;
+  box-shadow: 2px 3px 0 var(--ink);
+}
+
+.db__rank {
+  margin: 1em 0 0;
+  font-size: 1.45em;
+}
+
+@media (max-height: 450px) and (orientation: landscape) {
+  .am__row {
+    grid-template-columns: minmax(0, 1fr) 8em;
+  }
+
+  .am__effect {
+    grid-column: 1;
+    text-align: left;
+  }
+
+  .am__buy,
+  .am__fitted {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+
+.db__stat--reward dd {
+  color: var(--ochre-deep);
+}
+
+/* Multiplayer is a set of notebook cards, with its own scroll region. */
+.online__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.2em 2.4em 2em;
+}
+
+.online__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(19em, 0.75fr);
+  gap: 1.2em;
+  align-items: start;
+}
+
+.online__stack {
+  display: grid;
+  gap: 1.1em;
+  min-width: 0;
+}
+
+.online__panel,
+.online__result {
+  padding: 1em 1.25em;
+  min-width: 0;
+}
+
+.online__panel h3,
+.online__result h3,
+.online__invite h3 {
+  margin: 0 0 0.35em;
+  font-family: var(--font-display);
+  font-size: 1.9em;
+  line-height: 1.1;
+}
+
+.online__panel p,
+.online__result p,
+.online__invite p {
+  margin: 0.4em 0 0.7em;
+  font-size: 1.3em;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.online__rank-line {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+}
+
+.online__rank {
+  display: inline-block;
+  padding: 0.08em 0.5em;
+  border: 2px solid var(--ink);
+  border-radius: 8px 6px 9px 7px;
+  color: var(--ink);
+  background: #dbb995;
+  font-family: var(--font-display);
+  font-size: 1.15em;
+  line-height: 1.15;
+}
+
+.online__rank--silver { background: #dce3e4; }
+.online__rank--gold { background: #ffe08a; }
+.online__rank--platinum { background: #bfe9de; }
+.online__rank--diamond { background: #b7dff1; }
+
+.online__panel .online__rank-note {
+  margin-top: -0.2em;
+  color: var(--ink-soft);
+  font-size: 1.15em;
+}
+
+.online__actions,
+.online__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65em;
+}
+
+.online .btn {
+  font-size: 1.25em;
+  padding: 0.45em 0.8em;
+  min-height: 2.7em;
+  white-space: normal;
+}
+
+.online__name input {
+  min-width: 0;
+  width: 15em;
+  max-width: 100%;
+  flex: 1 1 10em;
+  padding: 0.55em 0.7em;
+  border: 2px solid var(--ink);
+  border-radius: 7px 10px 8px 6px;
+  background: var(--paper-bright);
+  color: var(--ink);
+  font: 1.3em var(--font-body);
+}
+
+.online__name input:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
+.online__friends,
+.online__leaders ol {
+  list-style: none;
+  margin: 0.6em 0 0;
+  padding: 0;
+}
+
+.online__friends li,
+.online__leaders li {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+  padding: 0.6em 0;
+  border-top: 1px dashed var(--ink-soft);
+  font-size: 1.2em;
+}
+
+.online__friends li span {
+  flex: 1;
+  min-width: 0;
+}
+
+.online__friends small {
+  display: block;
+  color: var(--ink-soft);
+}
+
+.online__leaders li span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.online__leaders li span small {
+  display: block;
+  color: var(--ink-soft);
+  min-width: 0;
+  text-align: left;
+}
+
+.online__leaders li small {
+  min-width: 3em;
+  text-align: right;
+}
+
+.online__leaders .online__self {
+  background: #ffe5a7;
+  padding-inline: 0.45em;
+}
+
+.online__notice {
+  margin: 0 0 0.9em;
+  padding: 0.55em 0.8em;
+  background: #ffe5a7;
+  border: 2px dashed var(--ink);
+  font-size: 1.2em;
+}
+
+.online__result {
+  margin-bottom: 1em;
+  background: #d9eccf;
+}
+
+.online__invite {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 2em;
+  background: rgba(45, 48, 46, 0.66);
+}
+
+.online__invite-card {
+  width: min(36em, 100%);
+  padding: 1.5em;
+}
+
+.hud__spacer {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud__versus {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.45em 0.7em;
+  border: 2px solid var(--ink);
+  border-radius: 7px 9px 6px 8px;
+  background: rgba(255, 250, 240, 0.94);
+  box-shadow: 2px 3px 0 rgba(45, 48, 46, 0.7);
+  color: var(--ink);
+}
+
+@media (max-width: 760px) {
+  .online__columns { grid-template-columns: 1fr; }
+  .online__body { padding: 0.9em 1.5em 2em; }
+}
+
+@media (max-height: 450px) and (orientation: landscape) {
+  .online { font-size: 1.18em; }
+  .online__columns { grid-template-columns: 1fr; }
+  .online__body { padding-inline: 1.5em; }
+}
+
+/* The live battle uses legible paper controls over the illustrated lane. */
+.hud__dock {
+  background: linear-gradient(transparent, rgba(246, 235, 211, 0.82));
+}
+
+.hud__pause,
+.hud__res,
+.hud__age,
+.hud__enemy,
+.hud__clock,
+.lane,
+.hud__mine,
+.unit,
+.evolve,
+.mount,
+.dial,
+.rack--disabled {
+  background: rgba(255, 250, 240, 0.95);
+  border: 2px solid var(--ink);
+  border-radius: 11px 8px 12px 9px;
+  box-shadow: 2px 3px 0 rgba(45, 48, 46, 0.7);
+  color: var(--ink);
+}
+
+.hud__pause-bars i {
+  background: var(--ink);
+  border-radius: 2px;
+}
+
+.hud__res-icon,
+.hud__gold,
+.hud__age-name,
+.hud__field {
+  color: var(--ink);
+}
+
+.hud__age {
+  box-shadow: inset 0 4px 0 var(--sun), 2px 3px 0 var(--ink);
+}
+
+.hud__enemy {
+  box-shadow: inset 0 4px 0 var(--sky), 2px 3px 0 var(--ink);
+}
+
+.hud__clock--urgent {
+  background: #ffe2d2;
+  border-color: var(--oxide);
+}
+
+.lane {
+  background: rgba(255, 250, 240, 0.88);
+  padding: 0.35em 0.6em;
+}
+
+.lane__track {
+  background: #e2d5b4;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lane__contest {
+  background: rgba(232, 119, 84, 0.25);
+}
+
+.lane__window {
+  border: 2px solid var(--ink);
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+}
+
+.hud__mine {
+  box-shadow: inset 0 4px 0 var(--sun), 2px 3px 0 var(--ink);
+}
+
+.hud__mine .num,
+.hud__xp-text,
+.hud__age-i,
+.hud__xp-goal {
+  color: var(--ink);
+}
+
+.unit {
+  /* Button defaults are 13.33px in Chromium. Let the dock follow the fitted
+     stage instead, with an 8px floor for the smallest landscape phones. */
+  font-size: clamp(8px, 1.15em, 12px);
+  width: 9em;
+  background: #fff8e7;
+  border-radius: 10px 15px 11px 14px;
+  padding: 0.5em 0.65em;
+}
+
+.unit:nth-child(even) {
+  border-radius: 15px 9px 14px 10px;
+}
+
+.unit--ready {
+  background: #ffe7ab;
+  border-color: var(--ink);
+}
+
+.unit--poor {
+  background: #eee4d1;
+  color: var(--ink-soft);
+}
+
+.unit__role,
+.unit__insignia {
+  color: var(--ink-soft);
+}
+
+.unit--ready .unit__insignia {
+  color: var(--ochre-deep);
+}
+
+.unit__name {
+  font-family: var(--font-display);
+  font-size: 1.5em;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.38;
+}
+
+.unit__cost,
+.unit--poor .unit__cost {
+  font-family: var(--font-body);
+  font-size: 1.7em;
+  color: var(--ink);
+}
+
+.unit__role .label {
+  font-size: max(11px, 1.05em);
+  letter-spacing: 0.015em;
+}
+
+.unit__insignia {
+  width: 2.3em;
+  height: 2.3em;
+}
+
+.evolve,
+.mount,
+.dial {
+  font-size: clamp(8px, 1.15em, 12px);
+}
+
+.rack--disabled {
+  font-size: max(10px, 1em);
+}
+
+.evolve__name {
+  font-family: var(--font-body);
+  font-size: 1.85em;
+  line-height: 1;
+}
+
+.unit__cool {
+  background: rgba(71, 62, 48, 0.32);
+}
+
+.evolve {
+  background: #dcedd2;
+  border-bottom: 2px solid var(--ink);
+  border-radius: 11px 14px 8px 12px;
+}
+
+.evolve--ready {
+  background: #bfe3ad;
+  border-color: var(--ink);
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+}
+
+.evolve--ready .evolve__name,
+.evolve--ready .evolve__need {
+  color: var(--ink);
+}
+
+.mount {
+  background: #fff4d8;
+  border-radius: 8px 11px 9px 12px;
+}
+
+.mount--empty {
+  border-style: dashed;
+}
+
+.mount--built {
+  background: #ffe5a7;
+  border-color: var(--ink);
+  color: var(--ochre-deep);
+}
+
+.mount--locked {
+  background: #eee0bd;
+  border-color: var(--ink);
+}
+
+.mount__hazard {
+  opacity: 0.55;
+}
+
+.picker {
+  background: var(--paper-bright);
+}
+
+.picker__head,
+.picker__opt {
+  border-bottom: 1px dashed var(--ink-soft);
+}
+
+.picker__opt:active {
+  background: #ffe9b5;
+}
+
+.picker__opt-text b {
+  letter-spacing: -0.025em;
+}
+
+.picker__opt-cost {
+  color: var(--ochre-deep);
+}
+
+.dial {
+  background: #ffe6a8;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  box-shadow: 3px 4px 0 var(--ink);
+}
+
+.dial__track {
+  stroke: #d1bea0;
+  stroke-width: 4;
+}
+
+.dial__arc {
+  stroke: var(--coral);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.dial__ready,
+.dial__count,
+.dial--ready .dial__name,
+.dial__name {
+  color: var(--ink);
+}
+
+.dial__name {
+  top: 0.55em;
+  font-family: var(--font-body);
+  font-size: max(10px, 0.95em);
+  letter-spacing: 0;
+  padding: 0 0.8em;
+}
+
+.hud__res,
+.hud__age,
+.hud__enemy,
+.hud__clock,
+.hud__mine {
+  font-size: max(9px, 1em);
+}
+
+.dial__ready {
+  font-family: var(--font-body);
+  font-size: 1.2em;
+  letter-spacing: 0.02em;
+}
+
+.coach__text {
+  font-size: 1.5em;
+  line-height: 1.3;
+}
+
+.coach__dismiss {
+  font-family: var(--font-body);
+  font-size: 1.35em;
+  letter-spacing: 0;
+}
+
+.pause {
+  background: rgba(45, 48, 46, 0.64);
+}
+
+.pause__sheet {
+  background: var(--paper-bright);
+}
+
+.pause__brief,
+.pause__mod-note {
+  color: var(--ink-soft);
+}
+
+.pause__stats {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.pause__stats > div {
+  background: #fff0c7;
+}
+
+.coach {
+  background: #fff0b8;
+  border: 2px solid var(--ink);
+  border-radius: 13px 16px 11px 15px;
+  box-shadow: 4px 5px 0 var(--ink);
+}
+
+.gate__phone {
+  background: var(--paper-bright);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  transform: rotate(-3deg);
+}
+
+.gate {
+  font-size: clamp(15px, 4vw, 20px);
+}
+
+.gate__lane {
+  background: var(--ink);
+}
+
+.gate__gate--mine {
+  background: var(--sun);
+}
+
+.gate__gate--theirs {
+  background: var(--sky);
+}
+
+@media (max-height: 450px) and (orientation: landscape) {
+  .menu__grid {
+    gap: 2em;
+    padding-top: 1.25em;
+  }
+
+  .menu__actions {
+    gap: 0.65em;
+  }
+
+  .menu__deploy {
+    padding: 1.2em 1.5em;
+  }
+
+  .menu__deploy-brief {
+    font-size: 1.35em;
+  }
+
+  .menu__deploy-go {
+    font-size: 1.7em;
+  }
+
+  .menu__row .btn {
+    min-height: 42px;
+    font-size: max(13px, 1.55em);
+  }
+
+  .menu__blurb {
+    font-size: max(13px, 1.55em);
+  }
+
+  .menu__readout dt {
+    font-size: max(10px, 0.95em);
+  }
+
+  .menu__readout dd {
+    font-size: max(14px, 1.8em);
+  }
+
+  .unit__role > svg:first-child {
+    display: none;
+  }
+
+  .dial__name {
+    padding: 0 0.3em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu__title,
+  .menu__deploy,
+  .menu__doodle,
+  .ms__featured,
+  .ob__figure,
+  .db__verdict {
+    transform: none;
+  }
+}

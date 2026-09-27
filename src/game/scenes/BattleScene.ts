@@ -17,6 +17,8 @@ import { BattleSim } from '@/game/sim/BattleSim';
 import { EnemyCommander } from '@/game/sim/EnemyCommander';
 import { SURVIVAL_LEVEL, SurvivalDirector } from '@/game/sim/SurvivalDirector';
 import type { SimProjectile } from '@/game/sim/types';
+import { onlineClient } from '@/multiplayer/client';
+import type { OnlineBattleState, OnlineCommand } from '@/multiplayer/protocol';
 
 export interface BattleSceneData {
   level: LevelDef;
@@ -30,6 +32,8 @@ export interface BattleSceneData {
   corpseCap?: number;
   /** Battle speed from settings. Applied on the first frame. */
   speed?: number;
+  /** When present, the server owns the simulation and this scene renders snapshots. */
+  onlineMatchId?: string;
 }
 
 const SNAPSHOT_INTERVAL = 0.08;
@@ -56,6 +60,10 @@ export class BattleScene extends Phaser.Scene {
   private snapshotTimer = 0;
   private manualCamera = 0;
   private finished = false;
+  private gateWarningPlayed = false;
+  private onlineMatchId: string | null = null;
+  private stopOnline: (() => void) | null = null;
+  private renderedAge = 0;
 
   constructor() {
     super('battle');
@@ -63,13 +71,17 @@ export class BattleScene extends Phaser.Scene {
 
   create(data: BattleSceneData): void {
     const survival = !!data.survival;
+    this.onlineMatchId = data.onlineMatchId ?? null;
     this.sim = new BattleSim(
       survival ? SURVIVAL_LEVEL : data.level,
       data.seed ?? 1337,
       data.difficulty ?? 'normal',
       data.perks ?? NO_PERKS,
     );
-    if (survival) {
+    if (this.onlineMatchId) {
+      this.ai = null;
+      this.waves = null;
+    } else if (survival) {
       this.waves = new SurvivalDirector(this.sim, (data.seed ?? 1337) ^ 0x77a1);
       this.ai = null;
     } else {
@@ -77,8 +89,9 @@ export class BattleScene extends Phaser.Scene {
       this.waves = null;
     }
     this.finished = false;
+    this.gateWarningPlayed = false;
     this.paused = false;
-    this.speed = data.speed ?? 1;
+    this.speed = this.onlineMatchId ? 1 : (data.speed ?? 1);
     this.matter.world.engine.timing.timeScale = this.speed;
 
     createRagdollTextures(this);
@@ -109,6 +122,35 @@ export class BattleScene extends Phaser.Scene {
     // route through SHUTDOWN.
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.teardown());
     this.events.once(Phaser.Scenes.Events.DESTROY, () => this.teardown());
+
+    if (this.onlineMatchId) {
+      this.stopOnline = onlineClient.onBattle((state) => this.applyOnlineState(state), this.onlineMatchId);
+    }
+  }
+
+  private applyOnlineState(state: OnlineBattleState): void {
+    if (this.tornDown) return;
+    this.sim.player = state.player;
+    this.sim.enemy = state.enemy;
+    this.sim.units = state.units;
+    this.sim.projectiles = state.projectiles;
+    this.sim.events = [...state.events];
+    this.sim.elapsed = state.elapsed;
+    this.sim.over = state.over;
+    this.sim.decidedBy = state.decidedBy;
+    this.sim.stats = state.stats;
+    this.drainEvents();
+    this.syncUnits(SNAPSHOT_INTERVAL);
+    this.syncShells();
+    this.playerBase.sync(this.sim.player, ageAt(this.sim.player.ageIndex));
+    this.enemyBase.sync(this.sim.enemy, ageAt(this.sim.enemy.ageIndex));
+    if (this.renderedAge !== this.sim.player.ageIndex) {
+      this.renderedAge = this.sim.player.ageIndex;
+      this.backdrop.setAge(ageAt(this.renderedAge));
+      audio.setBedAge(this.renderedAge);
+    }
+    this.updateCamera(SNAPSHOT_INTERVAL);
+    this.publish();
   }
 
   private buildMatterWorld(): void {
@@ -170,6 +212,11 @@ export class BattleScene extends Phaser.Scene {
 
     this.handleCommands();
 
+    if (this.onlineMatchId) {
+      this.ragdolls.update(raw);
+      return;
+    }
+
     if (!this.paused && !this.finished) {
       this.sim.advance(dt);
       this.ai?.update(dt);
@@ -197,20 +244,39 @@ export class BattleScene extends Phaser.Scene {
 
   private handleCommands(): void {
     for (const cmd of bridge.drain()) {
+      if (this.onlineMatchId) {
+        if (cmd.t === 'lookAt') {
+          this.cameras.main.scrollX = cmd.x - VIEW.width / 2;
+          this.manualCamera = CAMERA.manualHoldTime;
+        } else if (cmd.t !== 'pause' && cmd.t !== 'speed') {
+          onlineClient.command(this.onlineMatchId, cmd as OnlineCommand);
+          if (cmd.t === 'unit') audio.order();
+        }
+        continue;
+      }
       switch (cmd.t) {
         case 'unit': {
           const r = this.sim.queueUnit('player', cmd.id);
           if (r !== 'ok') bridge.reject(r);
+          else audio.order();
           break;
         }
         case 'turret': {
           const r = this.sim.buildTurret('player', cmd.slot, cmd.id);
           if (r !== 'ok') bridge.reject(r);
+          else {
+            audio.construction(this.panAt(this.sim.player.baseX));
+            this.fx.construction(this.sim.player.baseX, 0xe0aa2e);
+          }
           break;
         }
         case 'unlockSlot': {
           const r = this.sim.unlockSlot('player', cmd.slot);
           if (r !== 'ok') bridge.reject(r);
+          else {
+            audio.construction(this.panAt(this.sim.player.baseX));
+            this.fx.construction(this.sim.player.baseX, 0xe0aa2e);
+          }
           break;
         }
         case 'scrap':
@@ -257,7 +323,7 @@ export class BattleScene extends Phaser.Scene {
           const accent = Phaser.Display.Color.HexStringToColor(
             ageAt(this.sim.commander(ev.faction).ageIndex).accent,
           ).color;
-          this.views.set(ev.uid, new UnitView(this, this.unitLayer, def, ev.faction, accent));
+          if (!this.views.has(ev.uid)) this.views.set(ev.uid, new UnitView(this, this.unitLayer, def, ev.faction, accent));
           break;
         }
 
@@ -314,7 +380,14 @@ export class BattleScene extends Phaser.Scene {
         case 'baseHit': {
           const view = ev.faction === 'player' ? this.playerBase : this.enemyBase;
           view.flash();
-          if (this.isOnScreen(ev.x)) audio.gateHit(this.panAt(ev.x));
+          if (this.isOnScreen(ev.x)) {
+            audio.gateHit(this.panAt(ev.x));
+            this.fx.gateDamage(ev.x, ev.amount);
+          }
+          if (ev.faction === 'player' && !this.gateWarningPlayed && this.sim.player.baseHp < this.sim.player.baseMaxHp * 0.25) {
+            this.gateWarningPlayed = true;
+            audio.warning();
+          }
           if (ev.amount > 200 && this.isOnScreen(ev.x)) this.fx.shake(false);
           break;
         }
@@ -323,6 +396,7 @@ export class BattleScene extends Phaser.Scene {
           const age = ageAt(ev.ageIndex);
           const view = ev.faction === 'player' ? this.playerBase : this.enemyBase;
           view.refreshAge(age);
+          this.fx.evolve(this.sim.commander(ev.faction).baseX, Phaser.Display.Color.HexStringToColor(age.accent).color);
           if (ev.faction === 'player') {
             this.backdrop.setAge(age);
             this.cameras.main.flash(240, 240, 226, 200, false);
@@ -353,7 +427,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private finishBattle(winner: Faction): void {
+    if (this.finished) return;
     this.finished = true;
+    audio.result(winner === 'player');
     const loser = winner === 'player' ? this.enemyBase : this.playerBase;
     this.cameras.main.shake(400, 0.009);
     this.cameras.main.zoomTo(1.08, 500, 'Sine.easeInOut');
@@ -364,6 +440,12 @@ export class BattleScene extends Phaser.Scene {
 
   private syncUnits(dt: number): void {
     for (const u of this.sim.units) {
+      if (!this.views.has(u.uid)) {
+        const accent = Phaser.Display.Color.HexStringToColor(
+          ageAt(this.sim.commander(u.faction).ageIndex).accent,
+        ).color;
+        this.views.set(u.uid, new UnitView(this, this.unitLayer, u.def, u.faction, accent));
+      }
       this.views.get(u.uid)?.sync(u, dt);
     }
     // Any view whose unit vanished without a death event (end of match sweep).
@@ -500,6 +582,8 @@ export class BattleScene extends Phaser.Scene {
   private teardown(): void {
     if (this.tornDown) return;
     this.tornDown = true;
+    this.stopOnline?.();
+    this.stopOnline = null;
     audio.stopBed();
     // The handle points at a scene whose Matter world is about to be null, so it
     // goes with the scene.
@@ -551,7 +635,7 @@ export function battleGameConfig(parent: HTMLElement): Phaser.Types.Core.GameCon
     parent,
     width: VIEW.width,
     height: VIEW.height,
-    backgroundColor: '#12100e',
+    backgroundColor: '#a2d0df',
     antialias: true,
     powerPreference: 'high-performance',
     scale: {

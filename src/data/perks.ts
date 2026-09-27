@@ -33,6 +33,9 @@ export interface PerkDef {
   /** Why you would want it. One line, no hedging. */
   brief: string;
   cost: number;
+  branch: 'Supply' | 'Training' | 'Fortification';
+  rank: number;
+  requires?: PerkId;
 }
 
 export const PERKS: PerkDef[] = [
@@ -42,6 +45,8 @@ export const PERKS: PerkDef[] = [
     effect: '+2 gold per second',
     brief: 'A thicker trickle. Matters most in the opening minute.',
     cost: 120,
+    branch: 'Supply',
+    rank: 1,
   },
   {
     id: 'scavengers',
@@ -49,6 +54,9 @@ export const PERKS: PerkDef[] = [
     effect: '+15% loot from kills',
     brief: 'Winning fights funds the next push harder.',
     cost: 180,
+    branch: 'Supply',
+    rank: 2,
+    requires: 'quartermaster',
   },
   {
     id: 'drill-yard',
@@ -56,6 +64,8 @@ export const PERKS: PerkDef[] = [
     effect: '-20% unit cooldowns',
     brief: 'Deploy a saved-up push faster than the gate normally allows.',
     cost: 200,
+    branch: 'Training',
+    rank: 1,
   },
   {
     id: 'engineers',
@@ -63,6 +73,8 @@ export const PERKS: PerkDef[] = [
     effect: '-15% emplacement cost',
     brief: 'Cheaper mounts, so the fourth slot is reachable sooner.',
     cost: 220,
+    branch: 'Fortification',
+    rank: 1,
   },
   {
     id: 'field-hospital',
@@ -70,6 +82,9 @@ export const PERKS: PerkDef[] = [
     effect: '+12% gate structure',
     brief: 'Survive one more push than the mission expects you to.',
     cost: 260,
+    branch: 'Fortification',
+    rank: 2,
+    requires: 'engineers',
   },
   {
     id: 'forward-scouts',
@@ -77,6 +92,9 @@ export const PERKS: PerkDef[] = [
     effect: '+10% experience from kills',
     brief: 'Reach the next age before the opposing commander does.',
     cost: 300,
+    branch: 'Training',
+    rank: 2,
+    requires: 'drill-yard',
   },
   {
     id: 'shell-crates',
@@ -84,6 +102,9 @@ export const PERKS: PerkDef[] = [
     effect: '-15% special cooldown',
     brief: 'One extra barrage in a long mission.',
     cost: 320,
+    branch: 'Training',
+    rank: 4,
+    requires: 'forward-scouts',
   },
   {
     id: 'war-college',
@@ -91,6 +112,9 @@ export const PERKS: PerkDef[] = [
     effect: 'Start every mission one age unlocked',
     brief: 'Skip the stone age opening. Costs you its cheap chaff.',
     cost: 600,
+    branch: 'Supply',
+    rank: 5,
+    requires: 'scavengers',
   },
 ];
 

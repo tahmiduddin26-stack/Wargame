@@ -1,15 +1,16 @@
-import { PERKS } from '@/data/perks';
+import { commanderRank, nextRankXp, RANK_THRESHOLDS } from '@/data/career';
+import { PERKS, PERK_BY_ID, type PerkDef } from '@/data/perks';
 import { useGame } from '@/state/store';
 import { useChangeFlash, useTweenedNumber } from '@/ui/useMotion';
 
 /**
- * The credits sink. A list, not a grid of cards, and every row states its effect
- * in the same units the HUD and roster already use, so nothing here needs a
- * separate explanation of what "+15% loot" means.
+ * Three branches, each with prerequisites. Career XP opens higher tiers while
+ * campaign credits buy the permanent upgrades within them.
  */
 export function Armoury() {
   const go = useGame((s) => s.go);
   const credits = useGame((s) => s.credits);
+  const careerXp = useGame((s) => s.careerXp);
   const owned = useGame((s) => s.perks);
   const buyPerk = useGame((s) => s.buyPerk);
 
@@ -18,6 +19,10 @@ export function Armoury() {
 
   const spent = PERKS.filter((p) => owned.includes(p.id)).reduce((n, p) => n + p.cost, 0);
   const total = PERKS.reduce((n, p) => n + p.cost, 0);
+  const rank = commanderRank(careerXp);
+  const next = nextRankXp(careerXp);
+  const from = RANK_THRESHOLDS[rank - 1];
+  const progress = next == null ? 1 : (careerXp - from) / (next - from);
 
   return (
     <div className="st">
@@ -25,7 +30,7 @@ export function Armoury() {
         <button className="btn btn--ghost" onClick={() => go('menu')}>
           Back
         </button>
-        <h2 className="st__title">Armoury</h2>
+        <h2 className="st__title">Skill tree</h2>
         <span className="label">
           Credits{' '}
           <span className={`num${creditsDir ? ` tick--${creditsDir}` : ''}`}>
@@ -37,41 +42,57 @@ export function Armoury() {
 
       <div className="st__body scroll-y am__body">
         <p className="am__intro">
-          Permanent, bought once, and kept across every mission. The campaign is tuned to be
-          winnable with none of this, so treat it as a head start rather than a requirement.
+          Win missions to earn commander XP and credits. XP opens higher ranks;
+          credits fit each skill once. Follow a branch to reach its later skills.
         </p>
+        <div className="am__career panel">
+          <span className="label">Commander rank <strong className="num">{rank}</strong></span>
+          <span className="num">{careerXp.toLocaleString('en-GB')} XP{next != null ? ` / ${next.toLocaleString('en-GB')}` : ' · MAX'}</span>
+          <div className="meter"><div className="meter__fill meter__fill--xp" style={{ '--fill': progress } as React.CSSProperties} /></div>
+        </div>
         <p className="label am__progress">
           Fitted <span className="num">{owned.length}</span>/<span className="num">{PERKS.length}</span>
           {' '}&middot; <span className="num">{spent.toLocaleString('en-GB')}</span> of{' '}
           <span className="num">{total.toLocaleString('en-GB')}</span> credits committed
         </p>
 
-        <ul className="am__list">
-          {PERKS.map((perk) => {
-            const have = owned.includes(perk.id);
-            const affordable = credits >= perk.cost;
-            return (
-              <li key={perk.id} className={`am__row${have ? ' am__row--owned' : ''}`}>
-                <span className="am__row-main">
-                  <b className="am__name">{perk.name}</b>
-                  <span className="am__brief">{perk.brief}</span>
-                </span>
-                <span className="am__effect num">{perk.effect}</span>
-                {have ? (
-                  <span className="label am__fitted">Fitted</span>
-                ) : (
-                  <button
-                    className={`btn am__buy${affordable ? ' btn--primary' : ''}`}
-                    disabled={!affordable}
-                    onClick={() => buyPerk(perk.id)}
-                  >
-                    <span className="num">{perk.cost.toLocaleString('en-GB')}</span>
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        {(['Supply', 'Training', 'Fortification'] as const).map((branch) => (
+          <section className="am__branch" key={branch}>
+            <h3 className="am__branch-name">{branch}</h3>
+            <ul className="am__list">
+              {PERKS.filter((perk) => perk.branch === branch).map((perk: PerkDef) => {
+                const have = owned.includes(perk.id);
+                const prerequisite = !perk.requires || owned.includes(perk.requires);
+                const unlocked = rank >= perk.rank && prerequisite;
+                const affordable = unlocked && credits >= perk.cost;
+                return (
+                  <li key={perk.id} className={`am__row${have ? ' am__row--owned' : ''}`}>
+                    <span className="am__row-main">
+                      <b className="am__name">{perk.name}</b>
+                      <span className="am__brief">{perk.brief}</span>
+                      {!have && <span className="am__req">
+                        Rank {perk.rank}{perk.requires ? ` · after ${PERK_BY_ID[perk.requires].name}` : ''}
+                      </span>}
+                    </span>
+                    <span className="am__effect num">{perk.effect}</span>
+                    {have ? (
+                      <span className="label am__fitted">Fitted</span>
+                    ) : (
+                      <button
+                        className={`btn am__buy${affordable ? ' btn--primary' : ''}`}
+                        disabled={!affordable}
+                        onClick={() => buyPerk(perk.id)}
+                        title={!unlocked ? 'Unlock the required rank and earlier skill first' : undefined}
+                      >
+                        <span className="num">{perk.cost.toLocaleString('en-GB')}</span>
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))}
       </div>
     </div>
   );

@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["server", "src/data", "src/game/sim", "src/game/config.ts", "src/game/bridge.ts", "src/multiplayer/protocol.ts"]
+}

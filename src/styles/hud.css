@@ -390,6 +390,16 @@
   color: var(--bone-dim);
 }
 
+.unit__insignia {
+  margin-left: auto;
+  flex: none;
+  color: var(--bone-dim);
+}
+
+.unit--ready .unit__insignia {
+  color: var(--ochre);
+}
+
 .unit__role .label {
   font-size: 0.85em;
   letter-spacing: 0.1em;
@@ -702,8 +712,14 @@
   color: var(--bone-dim);
 }
 
+.dial__command {
+  display: grid;
+  justify-items: center;
+  gap: 0.15em;
+}
+
 .dial__ready {
-  font-size: 1.3em;
+  font-size: 0.95em;
   letter-spacing: 0.18em;
   color: var(--ochre);
 }

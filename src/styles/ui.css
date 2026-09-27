@@ -113,8 +113,7 @@
 }
 
 .menu__title {
-  /* Oswald is condensed, so it carries a larger optical size than the fallback
-     sans did at the same value. */
+  /* The sketch theme resets this size for Kalam's wider hand lettering. */
   font-size: 10em;
   line-height: 0.82;
   letter-spacing: 0.005em;
@@ -699,21 +698,8 @@
 
 /* -------------------------------------------------------------- roster */
 
-/*
- * Selector rail.
- *
- * Not an underlined tab bar and not an iOS segmented pill: both are the stock
- * patterns, and the underline variant is specifically exempted by the design
- * detector, so a clean scan will never tell you that you reached for it.
- *
- * A field-command panel selects between banks with a detented switch: positions
- * along a rail with one engaged. That suits an ordered ladder like the ages far
- * better than tabs do, because a rail shows the sequence and a tab bar does not.
- *
- * Colour: amber only. The era accents used to tint the active tab, which turned
- * this strip into a rainbow that changed hue on every click. Era colour belongs
- * on the battlefield, where it is the world, not on chrome.
- */
+/* Ordered age and difficulty selectors. The sketch theme renders these stops
+ * as individual paper stickers while retaining the tab/radio semantics. */
 .rail {
   position: relative;
   display: flex;
@@ -919,11 +905,18 @@
 }
 
 .cx__name {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
   font-family: var(--font-display);
   font-size: 1.15em;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.cx__insignia {
+  flex: none;
+  color: var(--ochre);
 }
 
 .cx__brief {

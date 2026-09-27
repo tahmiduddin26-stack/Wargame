@@ -1,10 +1,8 @@
 /*
  * Motion system.
  *
- * Thesis: this is an Operate surface with one earned focal moment. Motion here
- * explains state, acknowledges input, and carries continuity. The one sequence
- * that gets real authorship is the EVOLVE, because the whole game is a race to
- * it and everything else on screen is a readout that should stay calm.
+ * Motion explains state and acknowledges input. EVOLVE remains the one longer
+ * sequence because it changes the entire roster and battlefield at once.
  *
  * Rules the rest of the file holds to:
  *
@@ -12,8 +10,8 @@
  *     the HUD, so nothing here animates width, height, top, left or margin.
  *   - Feedback is 100-150ms, state changes 150-300ms, overlays 300-400ms, and
  *     the focal sequence up to 700ms. Exits run faster than entrances.
- *   - Deceleration, not bounce. Elastic easing on a military readout would be
- *     a costume.
+ *   - Quick settling movement, so the loose sketchbook shapes still feel
+ *     responsive while the battle is running.
  *   - Nothing loops that is not communicating a live state.
  */
 
