@@ -18,6 +18,8 @@ npm run typecheck
 
 ## Campaign progression and multiplayer
 
+The [mobile game audit and economy plan](docs/mobile-game-audit.md) records the current balance evidence, cosmetic collection, monetisation approach, and release gaps.
+
 Sixteen missions unlock in order. Battle XP still unlocks ages within a match;
 commander XP now persists across campaign results and Survival waves. The
 Armoury has Supply, Training and Fortification skill branches. Rank opens a
@@ -284,10 +286,10 @@ minute mark with both gates untouched.** Diagnosing that drove most of the desig
   matching the original, which is why its strategy guides say to fill your mounts
   *before* you age up.
 
-Current state: every mission resolves in 2.5 to 5.5 minutes with no draws, and
-depending on strategy the scripted players win 5 to 9 of 12. Mission 1 is a
-decisive win in about 40 seconds. The scripted players are crude proxies and a real
-person adapts far better, so treat those win rates as a floor, not a target. The
+Current Normal-tier state: operations 2-16 resolve in 2.5 to 6 minutes with no
+draws. The three scripted plans win 14, 10 and 13 of 16; the first operation
+ends in 1:01 to 3:00 depending on the plan. These scripts are crude proxies,
+not human win-rate evidence. The
 numbers live in `src/data/` and `src/game/config.ts`; `scripts/retune-units.mjs`
 documents the last bulk pass.
 
@@ -310,8 +312,8 @@ canvas and are invisible to the DOM, so `BattleScene` exposes read-only counters
 / Insane), as both Age of War games shipped. Tiers multiply the mission's own
 enemy numbers rather than replacing them, and never touch the player's side, so a
 mission keeps its character at every tier. Clears are recorded per tier, shown as
-a four-pip ladder on each row. The normal-tier harness takes 12/16 with the
-greedy plan, 7/16 with a swarm, and 12/16 with a mixed line.
+a four-pip ladder on each row. The normal-tier harness takes 14/16 with the
+greedy plan, 10/16 with a swarm, and 13/16 with a mixed line.
 
 **Survival: The Long Watch.** Endless authored waves on one field, no clock. The
 enemy has no economy here; a wave is a written composition granted in full and
@@ -319,13 +321,14 @@ bought through the sim's ordinary methods, so nothing about combat is
 special-cased. Two things had to be fixed before it would end at all, both
 documented in `SurvivalDirector`: waves past the queue cap were being silently
 discarded, and once the age ladder tops out quantity cannot escalate past the
-field cap, so late waves gain compounding **veterancy** instead. A run now lasts
-25 to 30 waves in about six minutes.
+field cap, so late waves gain compounding **veterancy** instead. Scripted runs now
+last about 31 to 33 waves in roughly seven minutes.
 
 **Armoury.** Where credits go. Eight perks, bought once and kept, each one a
 single number in the sim. Deliberately small: the whole board is worth about one
 difficulty tier, because the campaign is tuned at Normal with an empty armoury.
-No levels, no currencies to convert, no timers, no adverts.
+Army paints are a separate visual-only collection bought with earned credits.
+There is no real-money checkout, life meter, timer or advert.
 
 **Counters.** See below. This is the deepest change of the build-out.
 
@@ -426,8 +429,8 @@ and visible escalation so nothing grinds forever; and the ragdolls.
 - **Battlefield character art.** Units still use procedural rigs. The skeleton
   spec has a `texture` slot per bone for when sprites arrive; the interface
   insignias are finished vector drawings.
-- **Versus / multiplayer.** The sim is deterministic and seeded, so it is
-  reachable, but netcode is its own project.
+- **Public multiplayer hardening.** Casual, ranked and friend battles exist,
+  but guest profiles still need account recovery and stronger abuse controls.
 - **Phaser is a 1.2MB chunk** (330KB gzipped). Already split out; worth lazy-loading
   behind the menu if startup time matters.
 - Balance beyond mission 5 is tuned against scripted players, not humans.

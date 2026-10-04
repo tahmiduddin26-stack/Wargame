@@ -1,0 +1,35 @@
+# Mobile game audit and economy plan
+
+Checked 27 September 2026. This is a design and implementation audit, not a claim that a live player cohort has been measured.
+
+## What is playable now
+
+- Sixteen campaign operations, four difficulty tiers, survival, a skill tree, casual/friend/ranked battles, and a ranked leaderboard.
+- Unlimited campaign retries. A loss grants modest commander XP but no credits; wins grant credits, and clearing a new tier pays more than farming a repeat.
+- Four visual-only army paints in Armoury. Field Notes is free; Ember March, Goldleaf and Black Iron cost **earned** credits (220 / 450 / 800). A paint changes the player's units, ragdolls and fort. It has no simulation or matchmaking effect and the enemy remains blue for readability.
+- During the final 45 seconds of a timed battle, the HUD says whether the player currently leads on gate integrity or ground. This follows the simulation's actual tie-break rule.
+- Switching away from an offline battle pauses it and shows the pause sheet on return. Online battles keep running on the server.
+
+## Balance evidence
+
+The headless harness drives three simple scripted players through every Normal operation. After shortening operation 1, it takes about **1:01 mixed, 1:29 greedy, and 3:00 swarm**. All three win. The first two now reach a result quickly; the all-clubman plan still needs the clock. This aligns with Apple's recommendation to teach the core loop quickly, but it is not a human onboarding measurement ([Apple: Onboarding for Games](https://developer.apple.com/app-store/onboarding-for-games/)).
+
+Before this pass, the full Normal harness won **14/16 greedy, 10/16 swarm, 13/16 mixed**. The first-operation change does not alter operations 2–16. Many wins are awarded at the clock with both gates untouched, so the new lead cue explains the objective the player is actually playing. The harness is deterministic with one seed and scripted purchase plans. It does **not** establish human win rates, retention, fairness across skill levels, or ranked balance. Do not tune the later campaign to a target win rate until playtest data exists.
+
+Next balance pass should record completion rate and duration by operation and tier, retries before first clear, which roles are bought, time spent capped at 12 units, and clock decisions by gate versus ground. Review operations 7, 10, 14 and 15 first: one or more scripted plans lost there. For online, examine rating drift, division match spread, disconnects, side advantage, and match duration from server data before altering ranks or combat. Never let purchased cosmetics or campaign skills affect ranked simulation.
+
+## Monetisation decision
+
+Use **nonconsumable cosmetics** as the first potential paid product once the native store and account systems exist. The playable collection is earned in game today and shows what a skin changes. Do not label a button with a real-money price until Apple StoreKit and Google Play Billing, purchase validation, ownership recovery and restore are implemented. Apple describes skins as nonconsumables and requires restoration for restorable purchases ([Apple: Freemium Games](https://developer.apple.com/app-store/freemium-games/), [Apple: In-App Purchase](https://developer.apple.com/in-app-purchase/)). Google Play requires its billing system for in-app digital goods in Play-distributed apps unless an applicable exception is used ([Google Play: Payments](https://support.google.com/googleplay/android-developer/answer/9858738)).
+
+**Extra lives are not a good first product for this game.** Campaign retries are currently immediate and unlimited. Adding a life meter would make failure more frustrating just to create something to sell, and a paid revive could alter mission and ranked balance. Keep retries unlimited. If later testing shows demand for a second chance, prototype a clearly limited **earned** single-player rescue rule and rebalance the campaign before considering any sale. Online battles must never offer it.
+
+Do not add random paid loot boxes. If they are ever introduced, both stores require advance odds disclosure ([Apple: App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/uk/), [Google Play: Payments](https://support.google.com/googleplay/android-developer/answer/9858738)). Do not interrupt live battles with ads. Google Play's ads policy disallows unexpected ads during gameplay and explicitly treats opt-in rewarded ads differently ([Google Play: Ads](https://support.google.com/googleplay/android-developer/answer/9857753)). A future opt-in cosmetic reward after a debrief is worth testing; it should not buy combat power.
+
+## Highest-priority missing release work
+
+1. **Account recovery and cloud save.** Campaign cosmetics and credits are local storage; online identity uses a guest token. Device loss currently loses the local collection. Paid ownership must be server validated and restorable before any real-money sale.
+2. **Native billing and entitlement handling.** StoreKit/Play Billing, receipt or purchase-token validation, restore, refund/revocation handling, and a clear purchase history. No billing is integrated today.
+3. **Human playtests and metrics.** Test first-session clarity, thumb reach, text on small landscape phones, mission failure reasons, late-game strategy diversity, and disconnect recovery. Collect only the data needed for balancing, with a privacy notice and appropriate consent.
+4. **Mobile performance and resilience.** Profile mid-range devices for frame time, heat and battery during 12v12 fights and ragdoll bursts. Verify background/resume, phone calls and network loss. Google's current game quality guidance emphasizes stability and 60 fps active gameplay on reference devices ([Android: Game quality guidelines](https://developer.android.com/games/guidelines)).
+5. **Live content process.** New operations or cosmetic sets should be measured against the same balance harness and a small human test group before wider release. Keep the first session free of shop prompts; Apple recommends presenting nonessential purchases after onboarding ([Apple: Onboarding for Games](https://developer.apple.com/app-store/onboarding-for-games/)).

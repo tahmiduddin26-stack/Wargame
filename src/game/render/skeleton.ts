@@ -1,4 +1,5 @@
 import type { Faction, UnitDef } from '@/data/types';
+import { armySkin, type ArmySkinId } from '@/data/cosmetics';
 
 /**
  * One skeleton definition drives both the living unit and its corpse, so the
@@ -96,9 +97,10 @@ export function skeletonFor(def: UnitDef): SkeletonSpec {
  * Paper-cut colours. Warm orange is always the player's army; blue is the
  * opposing army. Age accents pick out trim without replacing faction colour.
  */
-export function palette(faction: Faction, accent: number): Record<TintRole, number> {
+export function palette(faction: Faction, accent: number, skinId: ArmySkinId = 'field'): Record<TintRole, number> {
   if (faction === 'player') {
-    return { skin: 0xf4c795, cloth: 0xdc8955, trim: accent, metal: 0xc7b88f, dark: 0x58463e };
+    const paint = armySkin(skinId);
+    return { skin: 0xf4c795, cloth: paint.cloth, trim: skinId === 'field' ? accent : paint.trim, metal: paint.metal, dark: paint.dark };
   }
   // Cool trim against the player's warm accent. Amber against steel blue stays
   // separable under every common colour-vision deficiency; the old oxide red

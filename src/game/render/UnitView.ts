@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { Faction, UnitDef } from '@/data/types';
+import type { ArmySkinId } from '@/data/cosmetics';
 import { VIEW } from '@/game/config';
 import type { SimUnit } from '@/game/sim/types';
 import { palette, skeletonFor, type BoneSpec } from './skeleton';
@@ -34,11 +35,12 @@ export class UnitView {
     def: UnitDef,
     faction: Faction,
     accent: number,
+    skinId: ArmySkinId = 'field',
   ) {
     this.def = def;
     const spec = skeletonFor(def);
     const H = def.height;
-    const colours = palette(faction, accent);
+    const colours = palette(faction, accent, skinId);
 
     this.container = scene.add.container(0, VIEW.groundY);
     this.container.setScale(faction === 'player' ? 1 : -1, 1);

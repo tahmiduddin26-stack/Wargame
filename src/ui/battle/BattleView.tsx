@@ -19,6 +19,7 @@ export function BattleView() {
   const recordSurvival = useGame((s) => s.recordSurvival);
   const tierId = useGame((s) => s.difficulty);
   const perks = useGame((s) => s.perks);
+  const equippedSkin = useGame((s) => s.equippedSkin);
   const survival = useGame((s) => s.survivalRun);
   const go = useGame((s) => s.go);
   const online = useOnline();
@@ -51,6 +52,7 @@ export function BattleView() {
         survival: onlineMatch ? false : survival,
         difficulty: onlineMatch ? 'normal' : tierId,
         perks: onlineMatch ? undefined : resolvePerks(perks),
+        skinId: equippedSkin,
         seed: onlineMatch?.seed ?? (1337 + level.id * 977),
         onlineMatchId: onlineMatch?.matchId,
         corpseCap: settings.reducedCorpses ? Math.floor(RAGDOLL.maxActive / 2) : RAGDOLL.maxActive,

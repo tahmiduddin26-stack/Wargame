@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DifficultyId } from '@/data/difficulty';
 import { careerXpForMission, commanderRank } from '@/data/career';
+import { ARMY_SKIN_BY_ID, type ArmySkinId } from '@/data/cosmetics';
 import { LEVELS } from '@/data/levels';
 import { PERKS, type PerkId } from '@/data/perks';
 
@@ -62,6 +63,9 @@ interface GameState {
   survivalRun: boolean;
   /** Permanently purchased armoury perks. */
   perks: PerkId[];
+  /** Cosmetic ownership and loadout are local to this device. */
+  ownedSkins: ArmySkinId[];
+  equippedSkin: ArmySkinId;
 
   settings: {
     /** Battle speed preference, restored on deploy. */
@@ -79,6 +83,8 @@ interface GameState {
   startSurvival: () => void;
   setDifficulty: (id: DifficultyId) => void;
   buyPerk: (id: PerkId) => boolean;
+  buySkin: (id: ArmySkinId) => boolean;
+  equipSkin: (id: ArmySkinId) => boolean;
   recordSurvival: (waves: number) => void;
   finishMission: (data: Omit<DebriefData, 'reward' | 'careerXpAward' | 'firstClear'>) => void;
   closeDebrief: () => void;
@@ -117,6 +123,8 @@ export const useGame = create<GameState>()(
       survivalBest: 0,
       survivalRun: false,
       perks: [],
+      ownedSkins: ['field'],
+      equippedSkin: 'field',
       settings: {
         speed: 1,
         haptics: true,
@@ -142,6 +150,24 @@ export const useGame = create<GameState>()(
         if (commanderRank(state.careerXp) < perk.rank) return false;
         if (perk.requires && !state.perks.includes(perk.requires)) return false;
         set({ credits: state.credits - perk.cost, perks: [...state.perks, id] });
+        return true;
+      },
+
+      buySkin: (id) => {
+        const skin = ARMY_SKIN_BY_ID[id];
+        const state = get();
+        if (!skin || state.ownedSkins.includes(id) || state.credits < skin.cost) return false;
+        set({
+          credits: state.credits - skin.cost,
+          ownedSkins: [...state.ownedSkins, id],
+          equippedSkin: id,
+        });
+        return true;
+      },
+
+      equipSkin: (id) => {
+        if (!get().ownedSkins.includes(id)) return false;
+        set({ equippedSkin: id });
         return true;
       },
 
@@ -199,7 +225,7 @@ export const useGame = create<GameState>()(
       completeOnboarding: () => set({ onboardingDone: true }),
 
       resetProgress: () =>
-        set({ records: {}, credits: 0, careerXp: 0, onboardingDone: false, perks: [], survivalBest: 0 }),
+        set({ records: {}, credits: 0, careerXp: 0, onboardingDone: false, perks: [], survivalBest: 0, ownedSkins: ['field'], equippedSkin: 'field' }),
 
       setSetting: (key, value) =>
         set((state) => ({ settings: { ...state.settings, [key]: value } })),
@@ -214,6 +240,8 @@ export const useGame = create<GameState>()(
         difficulty: state.difficulty,
         survivalBest: state.survivalBest,
         perks: state.perks,
+        ownedSkins: state.ownedSkins,
+        equippedSkin: state.equippedSkin,
         settings: state.settings,
       }),
       merge: (persisted, current) => {
@@ -224,10 +252,15 @@ export const useGame = create<GameState>()(
           (total, [id, record]) => total + (record?.cleared ? LEVELS.find((l) => l.id === Number(id))?.reward ?? 0 : 0),
           0,
         );
+        const ownedSkins: ArmySkinId[] = Array.isArray(saved.ownedSkins)
+          ? ['field', ...saved.ownedSkins.filter((id): id is ArmySkinId => !!ARMY_SKIN_BY_ID[id])]
+          : ['field'];
         return {
           ...current,
           ...saved,
           careerXp: saved.careerXp ?? recoveredXp,
+          ownedSkins: Array.from(new Set(ownedSkins)),
+          equippedSkin: saved.equippedSkin && ownedSkins.includes(saved.equippedSkin) ? saved.equippedSkin : 'field',
           settings: { ...current.settings, ...saved.settings },
         };
       },

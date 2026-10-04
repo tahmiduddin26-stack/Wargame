@@ -40,6 +40,20 @@ export function Hud({ snapshot, level, onlineMatch }: { snapshot: HudSnapshot; l
   const [paused, setPaused] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
 
+  // Phone calls and app switching should not cost an offline mission. Leave the
+  // pause sheet up on return so the player chooses when to resume.
+  useEffect(() => {
+    if (onlineMatchId) return;
+    const onVisibility = () => {
+      if (!document.hidden) return;
+      setPaused(true);
+      bridge.send({ t: 'pause', on: true });
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    onVisibility();
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [onlineMatchId]);
+
   // Nudge the dock when a purchase is refused. This must NOT remount the dock:
   // keying it off a counter recreated every button on every refused tap, which
   // dropped the taps that came immediately after -- exactly when a player is
@@ -70,6 +84,12 @@ export function Hud({ snapshot, level, onlineMatch }: { snapshot: HudSnapshot; l
     nextAge && snapshot.nextAgeXp
       ? Math.min(1, snapshot.xp / snapshot.nextAgeXp)
       : 1;
+  // Match the simulation's clock decision: structure first, then front line.
+  const gateLead = snapshot.baseHp / snapshot.baseMaxHp - snapshot.enemyBaseHp / snapshot.enemyBaseMaxHp;
+  const leadByGate = Math.abs(gateLead) > 0.005;
+  const aheadAtClock = leadByGate
+    ? gateLead > 0
+    : snapshot.playerFront + snapshot.enemyFront >= snapshot.laneLength;
 
   const pause = (on: boolean) => {
     setPaused(on);
@@ -186,7 +206,11 @@ export function Hud({ snapshot, level, onlineMatch }: { snapshot: HudSnapshot; l
         ) : (
           <div className={`hud__clock${snapshot.timeLeft <= 30 ? ' hud__clock--urgent' : ''}`}>
             <span className="num">{mmss(snapshot.timeLeft)}</span>
-            {snapshot.escalation > 1.02 ? (
+            {snapshot.timeLeft <= 45 ? (
+              <span className="label hud__esc" title="At zero, gate integrity decides; if tied, the side holding more ground wins.">
+                {aheadAtClock ? 'Ahead' : 'Behind'} · {leadByGate ? 'gate' : 'ground'}
+              </span>
+            ) : snapshot.escalation > 1.02 ? (
               <span className="label hud__esc">
                 Escalation <span className="num">&times;{snapshot.escalation.toFixed(1)}</span>
               </span>

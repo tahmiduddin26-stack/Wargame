@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { commanderRank, nextRankXp, RANK_THRESHOLDS } from '@/data/career';
+import { ARMY_SKINS } from '@/data/cosmetics';
 import { PERKS, PERK_BY_ID, type PerkDef } from '@/data/perks';
 import { useGame } from '@/state/store';
 import { useChangeFlash, useTweenedNumber } from '@/ui/useMotion';
@@ -8,11 +10,16 @@ import { useChangeFlash, useTweenedNumber } from '@/ui/useMotion';
  * campaign credits buy the permanent upgrades within them.
  */
 export function Armoury() {
+  const [tab, setTab] = useState<'skills' | 'skins'>('skills');
   const go = useGame((s) => s.go);
   const credits = useGame((s) => s.credits);
   const careerXp = useGame((s) => s.careerXp);
   const owned = useGame((s) => s.perks);
   const buyPerk = useGame((s) => s.buyPerk);
+  const ownedSkins = useGame((s) => s.ownedSkins);
+  const equippedSkin = useGame((s) => s.equippedSkin);
+  const buySkin = useGame((s) => s.buySkin);
+  const equipSkin = useGame((s) => s.equipSkin);
 
   const shownCredits = useTweenedNumber(credits);
   const creditsDir = useChangeFlash(credits);
@@ -30,7 +37,7 @@ export function Armoury() {
         <button className="btn btn--ghost" onClick={() => go('menu')}>
           Back
         </button>
-        <h2 className="st__title">Skill tree</h2>
+        <h2 className="st__title">Armoury</h2>
         <span className="label">
           Credits{' '}
           <span className={`num${creditsDir ? ` tick--${creditsDir}` : ''}`}>
@@ -41,6 +48,11 @@ export function Armoury() {
       <div className="hazard-rule" />
 
       <div className="st__body scroll-y am__body">
+        <div className="am__tabs" role="tablist" aria-label="Armoury sections">
+          <button role="tab" aria-selected={tab === 'skills'} className={`btn${tab === 'skills' ? ' btn--primary' : ''}`} onClick={() => setTab('skills')}>Skill tree</button>
+          <button role="tab" aria-selected={tab === 'skins'} className={`btn${tab === 'skins' ? ' btn--primary' : ''}`} onClick={() => setTab('skins')}>Army paints</button>
+        </div>
+        {tab === 'skills' ? <>
         <p className="am__intro">
           Win missions to earn commander XP and credits. XP opens higher ranks;
           credits fit each skill once. Follow a branch to reach its later skills.
@@ -93,6 +105,26 @@ export function Armoury() {
             </ul>
           </section>
         ))}
+        </> : <>
+          <p className="am__intro">Paints change your army and fort in campaign, survival and your local online view. They never change damage, health or matchmaking. Earn credits by playing; there is no real-money checkout in this build.</p>
+          <ul className="am__skins">
+            {ARMY_SKINS.map((skin) => {
+              const ownedSkin = ownedSkins.includes(skin.id);
+              const equipped = equippedSkin === skin.id;
+              return <li className={`am__skin${equipped ? ' am__skin--equipped' : ''}`} key={skin.id}>
+                <div className="am__skin-preview" style={{ '--skin-cloth': `#${skin.cloth.toString(16).padStart(6, '0')}`, '--skin-trim': `#${skin.trim.toString(16).padStart(6, '0')}`, '--skin-wall': `#${skin.fortPaper.toString(16).padStart(6, '0')}` } as React.CSSProperties} aria-hidden="true">
+                  <span className="am__skin-flag" /><span className="am__skin-fort" /><span className="am__skin-soldier" />
+                </div>
+                <div className="am__skin-copy"><h3>{skin.name}</h3><p>{skin.note}</p><span className="label">Visual only · all ages</span></div>
+                {equipped ? <span className="label am__skin-state">Equipped</span> : ownedSkin ?
+                  <button className="btn" onClick={() => equipSkin(skin.id)}>Equip</button> :
+                  <button className="btn btn--primary" disabled={credits < skin.cost} onClick={() => buySkin(skin.id)}>
+                    Unlock · <span className="num">{skin.cost}</span>
+                  </button>}
+              </li>;
+            })}
+          </ul>
+        </>}
       </div>
     </div>
   );

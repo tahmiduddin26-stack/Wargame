@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { DamageKind, Faction, UnitDef } from '@/data/types';
+import type { ArmySkinId } from '@/data/cosmetics';
 import { MATTER_CATEGORY, RAGDOLL, VIEW } from '@/game/config';
 import { palette, skeletonFor, type BoneSpec, type SkeletonSpec } from './skeleton';
 
@@ -28,6 +29,7 @@ export interface RagdollRequest {
   kind: DamageKind;
   /** Current age accent, used for limb trim. */
   accent: number;
+  skinId?: ArmySkinId;
   /** Walk-cycle phase at the moment of death, so the pose carries over. */
   phase: number;
 }
@@ -75,7 +77,7 @@ export class RagdollPool {
 
     const spec = skeletonFor(req.def);
     const H = req.def.height;
-    const colours = palette(req.faction, req.accent);
+    const colours = palette(req.faction, req.accent, req.skinId);
     const facing = req.faction === 'player' ? 1 : -1;
     const feetY = VIEW.groundY;
 

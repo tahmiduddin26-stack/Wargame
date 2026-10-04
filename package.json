@@ -11,6 +11,7 @@
     "multiplayer": "tsx server/index.ts",
     "test:multiplayer": "node scripts/multiplayer-test.mjs",
     "test:multiplayer-ui": "node scripts/multiplayer-ui-test.mjs",
+    "test:cosmetics": "node scripts/cosmetics-check.mjs",
     "cap:sync": "npm run build && cap sync"
   },
   "repository": {

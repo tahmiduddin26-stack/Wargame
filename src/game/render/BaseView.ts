@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { AgeDef, Faction } from '@/data/types';
+import { armySkin, type ArmySkinId } from '@/data/cosmetics';
 import { VIEW, WORLD } from '@/game/config';
 import type { Commander } from '@/game/sim/types';
 
@@ -37,6 +38,7 @@ function sketch(g: Phaser.GameObjects.Graphics, points: readonly Point[], width 
 export class BaseView {
   private scene: Phaser.Scene;
   private faction: Faction;
+  private skinId: ArmySkinId;
   private g: Phaser.GameObjects.Graphics;
   private mounts: Phaser.GameObjects.Graphics;
   private hpBack: Phaser.GameObjects.Rectangle;
@@ -47,9 +49,10 @@ export class BaseView {
   private dir: number;
   private lastSignature = '';
 
-  constructor(scene: Phaser.Scene, faction: Faction, x: number, age: AgeDef) {
+  constructor(scene: Phaser.Scene, faction: Faction, x: number, age: AgeDef, skinId: ArmySkinId = 'field') {
     this.scene = scene;
     this.faction = faction;
+    this.skinId = skinId;
     this.x = x;
     this.dir = faction === 'player' ? 1 : -1;
 
@@ -91,11 +94,13 @@ export class BaseView {
   /** Five hand-built silhouettes. None is a roofed house with a new prop on top. */
   private drawStructure(age: AgeDef): void {
     const g = this.g;
-    const accent = Phaser.Display.Color.HexStringToColor(age.accent).color;
-    const paper = this.faction === 'player' ? 0xf5d58c : 0xb6dce1;
-    const mid = this.faction === 'player' ? 0xe5aa67 : 0x7eb7c6;
-    const shade = this.faction === 'player' ? 0xba7952 : 0x5a8fa0;
-    const light = this.faction === 'player' ? 0xffeabc : 0xe0f3ed;
+    const paint = armySkin(this.skinId);
+    const accent = this.faction === 'player' && this.skinId !== 'field'
+      ? paint.trim : Phaser.Display.Color.HexStringToColor(age.accent).color;
+    const paper = this.faction === 'player' ? paint.fortPaper : 0xb6dce1;
+    const mid = this.faction === 'player' ? paint.fortMid : 0x7eb7c6;
+    const shade = this.faction === 'player' ? paint.fortShade : 0x5a8fa0;
+    const light = this.faction === 'player' ? paint.fortLight : 0xe0f3ed;
 
     g.clear();
     // A faint pencil baseline keeps the paper-cut fort planted in the lane.

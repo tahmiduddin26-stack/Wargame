@@ -5,6 +5,7 @@ import { UNIT_BY_ID } from '@/data/units';
 import type { DifficultyId } from '@/data/difficulty';
 import { NO_PERKS, type PerkEffects } from '@/data/perks';
 import type { Faction, LevelDef } from '@/data/types';
+import type { ArmySkinId } from '@/data/cosmetics';
 import { audio } from '@/game/audio/Audio';
 import { bridge, type HudSnapshot, type LaneBlip } from '@/game/bridge';
 import { CAMERA, MATTER_CATEGORY, SIM, VIEW, WORLD } from '@/game/config';
@@ -34,6 +35,8 @@ export interface BattleSceneData {
   speed?: number;
   /** When present, the server owns the simulation and this scene renders snapshots. */
   onlineMatchId?: string;
+  /** Local player's visual-only army paint. */
+  skinId?: ArmySkinId;
 }
 
 const SNAPSHOT_INTERVAL = 0.08;
@@ -64,12 +67,14 @@ export class BattleScene extends Phaser.Scene {
   private onlineMatchId: string | null = null;
   private stopOnline: (() => void) | null = null;
   private renderedAge = 0;
+  private skinId: ArmySkinId = 'field';
 
   constructor() {
     super('battle');
   }
 
   create(data: BattleSceneData): void {
+    this.skinId = data.skinId ?? 'field';
     const survival = !!data.survival;
     this.onlineMatchId = data.onlineMatchId ?? null;
     this.sim = new BattleSim(
@@ -103,7 +108,7 @@ export class BattleScene extends Phaser.Scene {
     this.buildMatterWorld();
 
     this.backdrop = new Backdrop(this, this.sim.laneLength, AGES[0]);
-    this.playerBase = new BaseView(this, 'player', this.sim.player.baseX, AGES[0]);
+    this.playerBase = new BaseView(this, 'player', this.sim.player.baseX, AGES[0], this.skinId);
     this.enemyBase = new BaseView(this, 'enemy', this.sim.enemy.baseX, AGES[0]);
     this.ragdolls = new RagdollPool(this, this.corpseLayer, data.corpseCap);
     this.fx = new Fx(this, this.fxLayer);
@@ -323,7 +328,7 @@ export class BattleScene extends Phaser.Scene {
           const accent = Phaser.Display.Color.HexStringToColor(
             ageAt(this.sim.commander(ev.faction).ageIndex).accent,
           ).color;
-          if (!this.views.has(ev.uid)) this.views.set(ev.uid, new UnitView(this, this.unitLayer, def, ev.faction, accent));
+          if (!this.views.has(ev.uid)) this.views.set(ev.uid, new UnitView(this, this.unitLayer, def, ev.faction, accent, this.skinId));
           break;
         }
 
@@ -342,6 +347,7 @@ export class BattleScene extends Phaser.Scene {
               force: ev.force,
               kind: ev.kind,
               accent,
+              skinId: this.skinId,
               phase: view ? view.phase : 0,
             });
           }
@@ -444,7 +450,7 @@ export class BattleScene extends Phaser.Scene {
         const accent = Phaser.Display.Color.HexStringToColor(
           ageAt(this.sim.commander(u.faction).ageIndex).accent,
         ).color;
-        this.views.set(u.uid, new UnitView(this, this.unitLayer, u.def, u.faction, accent));
+        this.views.set(u.uid, new UnitView(this, this.unitLayer, u.def, u.faction, accent, this.skinId));
       }
       this.views.get(u.uid)?.sync(u, dt);
     }

@@ -74,7 +74,7 @@ export function Settings() {
         <section className="st__group st__group--danger">
           <h3 className="st__label">Wipe progress</h3>
           <p className="st__note">
-            Clears mission records, commander XP, credits, fitted skills and the briefing flag on this device. Your online profile is kept on the multiplayer server.
+            Clears mission records, commander XP, credits, fitted skills, army paints and the briefing flag on this device. Your online profile is kept on the multiplayer server.
           </p>
           {!confirmWipe ? (
             <button className="btn btn--danger" onClick={() => setConfirmWipe(true)}>
