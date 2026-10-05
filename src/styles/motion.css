@@ -381,6 +381,7 @@
 
   .lane__blip,
   .lane__window,
+  .lane__hold,
   .lane__contest {
     transition: none;
   }

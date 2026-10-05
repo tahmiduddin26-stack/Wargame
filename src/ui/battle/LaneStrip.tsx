@@ -21,6 +21,7 @@ import { useMeasuredWidth } from '@/ui/useMotion';
  */
 export function LaneStrip({ snapshot }: { snapshot: HudSnapshot }) {
   const { laneLength, blips, cameraX, cameraSpan, playerFront, enemyFront } = snapshot;
+  const { playerGround, enemyGround } = snapshot;
   const [trackRef, trackWidth] = useMeasuredWidth<HTMLDivElement>();
 
   /** Lane metres to pixels along the measured track. */
@@ -34,6 +35,17 @@ export function LaneStrip({ snapshot }: { snapshot: HudSnapshot }) {
 
   const contestFrom = Math.min(playerFront, enemyFront);
   const contestSpan = Math.abs(enemyFront - playerFront);
+
+  // Ground held: the clock's tie-break, drawn as a marker that drifts off centre
+  // toward whoever has been holding the field forward. It is a rolling average,
+  // so it moves slowly, which is the point: one late runner does not shift it.
+  const holdShare = Math.max(0.04, Math.min(0.96, 0.5 + (playerGround - enemyGround) / 2));
+  const holdLabel =
+    Math.abs(playerGround - enemyGround) < 0.01
+      ? 'Ground held: level'
+      : playerGround > enemyGround
+        ? 'Ground held: yours'
+        : 'Ground held: theirs';
 
   return (
     <div className="lane" onPointerDown={jump} role="presentation">
@@ -65,6 +77,13 @@ export function LaneStrip({ snapshot }: { snapshot: HudSnapshot }) {
             }}
           />
         ))}
+        <span className="lane__mid" />
+        <span
+          className="lane__hold"
+          title={holdLabel}
+          aria-label={holdLabel}
+          style={{ transform: `translateX(${px(holdShare * laneLength)}px)` }}
+        />
         <span className="lane__gate lane__gate--mine" />
         <span className="lane__gate lane__gate--theirs" />
         {/* What the camera is currently showing. */}

@@ -274,6 +274,33 @@
   opacity: 0.85;
 }
 
+/*
+ * Ground held. A fixed centre tick and a marker that drifts from it, so the
+ * read is "which side of the middle", not a colour. It sits on the track's
+ * bottom edge, clear of both blip rows' tallest marks.
+ */
+.lane__mid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: rgba(236, 229, 214, 0.25);
+}
+
+.lane__hold {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0.5em;
+  height: 0.5em;
+  margin-left: -0.25em;
+  background: var(--ink, #ece5d6);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  transition: transform var(--t-sample) linear;
+  will-change: transform;
+}
+
 .lane__window {
   position: absolute;
   top: -1px;

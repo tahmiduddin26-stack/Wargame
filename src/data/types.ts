@@ -129,7 +129,7 @@ export interface LevelDef {
    */
   timeLimit: number;
   enemy: {
-    /** 0..1. Scales enemy spend rate, reaction time and push size. */
+    /** 0..1 per mission (tiers may lift it to 1.3). Scales spend rate, reaction time and push size. */
     aggression: number;
     /** Multiplies enemy income. Above 1 means the player is outspent. */
     economy: number;

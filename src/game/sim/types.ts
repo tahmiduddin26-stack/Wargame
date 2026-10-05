@@ -54,6 +54,14 @@ export interface Commander {
    * veterancy rather than hidden.
    */
   buff: number;
+  /**
+   * Ground held, as a rolling average of how far this side's front line stands
+   * from its own gate (0 at the gate, 1 at the enemy's). It settles a clock
+   * finish when both gates are level. A single-frame read of the front line
+   * made those finishes close to a coin toss: whichever side happened to have a
+   * runner forward on the last tick took the mission.
+   */
+  ground: number;
 }
 
 export type ProjectileTarget = { kind: 'unit'; uid: number } | { kind: 'base'; faction: Faction };

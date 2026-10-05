@@ -562,6 +562,8 @@ export class BattleScene extends Phaser.Scene {
       blips,
       playerFront: sim.frontLine('player'),
       enemyFront: sim.frontLine('enemy'),
+      playerGround: p.ground,
+      enemyGround: e.ground,
       laneLength: sim.laneLength,
       cameraX: this.cameras.main.scrollX,
       cameraSpan: VIEW.width,

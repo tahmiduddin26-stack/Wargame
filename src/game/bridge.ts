@@ -48,6 +48,9 @@ export interface HudSnapshot {
   blips: LaneBlip[];
   playerFront: number;
   enemyFront: number;
+  /** Rolling ground-held averages (0 at your own gate, 1 at theirs). */
+  playerGround: number;
+  enemyGround: number;
   laneLength: number;
   cameraX: number;
   cameraSpan: number;

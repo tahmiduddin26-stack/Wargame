@@ -88,7 +88,9 @@ export class BattleSim {
 
     const tier = difficulty(difficultyId);
     this.enemyPlan = {
-      aggression: Math.min(1, level.enemy.aggression * tier.aggression),
+      // Missions top out at 1. Tiers may push past it, otherwise Hard and Insane
+      // both clamp to the same commander on every late mission.
+      aggression: Math.min(1.3, level.enemy.aggression * tier.aggression),
       economy: level.enemy.economy * tier.economy,
       warmup: level.enemy.warmup * tier.warmup,
     };
@@ -112,6 +114,8 @@ export class BattleSim {
       income * this.enemyPlan.economy,
       Math.round(level.startGold * this.enemyPlan.economy),
     );
+
+    this.enemy.buff = tier.veterancy;
 
     if (level.modifiers.includes('no-turrets')) {
       this.player.unlockedSlots = 0;
@@ -159,6 +163,7 @@ export class BattleSim {
       specialCd: 0,
       income,
       buff: 1,
+      ground: 0,
     };
   }
 
@@ -285,8 +290,10 @@ export class BattleSim {
     const c = this.commander(faction);
     c.ageIndex += 1;
 
-    // Reinforce the gate and heal by the amount the upgrade added.
-    const nextMax = Math.round(this.level.baseHp * AGES[c.ageIndex].baseArmour);
+    // Reinforce the gate and heal by the amount the upgrade added. Field
+    // Hospital has to carry through, or the first evolve quietly undid it.
+    const hpScale = faction === 'player' ? this.perks.baseHpScale : 1;
+    const nextMax = Math.round(this.level.baseHp * AGES[c.ageIndex].baseArmour * hpScale);
     c.baseHp += nextMax - c.baseMaxHp;
     c.baseMaxHp = nextMax;
 
@@ -370,7 +377,22 @@ export class BattleSim {
     this.moveAndFight('enemy', dt);
     this.stepProjectiles(dt);
     this.sweepDead();
+    this.trackGround(dt);
     this.checkOver();
+  }
+
+  /** Folds this tick's front lines into each side's ground-held average. */
+  private trackGround(dt: number): void {
+    const span = Math.abs(this.enemy.baseX - this.player.baseX);
+    const k = Math.min(1, dt / ECON.groundMemory);
+    for (const c of [this.player, this.enemy]) {
+      const advance = clamp(
+        ((this.frontLine(c.faction) - c.baseX) * BattleSim.dir(c.faction)) / span,
+        0,
+        1,
+      );
+      c.ground += (advance - c.ground) * k;
+    }
   }
 
   private runGate(c: Commander, dt: number): void {
@@ -759,11 +781,8 @@ export class BattleSim {
       return;
     }
 
-    const mid = this.laneLength / 2;
-    const myPush = this.frontLine('player') - mid;
-    const theirPush = mid - this.frontLine('enemy');
     this.decidedBy = 'ground';
-    this.finish(myPush >= theirPush ? 'player' : 'enemy');
+    this.finish(this.player.ground >= this.enemy.ground ? 'player' : 'enemy');
   }
 
   /** How the match was settled. Shown in the debrief. */

@@ -23,6 +23,13 @@ export interface DifficultyDef {
   aggression: number;
   /** Multiplies the enemy's warmup, so higher tiers start sooner. */
   warmup: number;
+  /**
+   * Enemy unit hitpoints and damage. Money alone stops separating the tiers
+   * once both sides sit at the field cap: a richer commander just banks the
+   * difference. Troop quality is the lever that still bites there, and it is
+   * stated in the blurb rather than hidden.
+   */
+  veterancy: number;
   /** Multiplies credits earned. Clearing on Insane is worth the pain. */
   reward: number;
 }
@@ -31,10 +38,11 @@ export const DIFFICULTIES: DifficultyDef[] = [
   {
     id: 'easy',
     name: 'Easy',
-    blurb: 'Their commander is poorly funded and slow off the mark.',
+    blurb: 'Their commander is poorly funded, slow off the mark, and fields green troops.',
     economy: 0.7,
     aggression: 0.75,
     warmup: 1.4,
+    veterancy: 0.9,
     reward: 0.6,
   },
   {
@@ -44,24 +52,27 @@ export const DIFFICULTIES: DifficultyDef[] = [
     economy: 1,
     aggression: 1,
     warmup: 1,
+    veterancy: 1,
     reward: 1,
   },
   {
     id: 'hard',
     name: 'Hard',
-    blurb: 'Better funded, quicker to answer a push, and awake early.',
+    blurb: 'Better funded, quicker to answer a push, awake early, with seasoned troops.',
     economy: 1.35,
     aggression: 1.15,
     warmup: 0.7,
+    veterancy: 1.05,
     reward: 1.5,
   },
   {
     id: 'insane',
     name: 'Insane',
-    blurb: 'Outspends you almost two to one and never wastes a purchase.',
+    blurb: 'Outspends you almost two to one with veteran troops, and never wastes a purchase.',
     economy: 1.8,
     aggression: 1.3,
     warmup: 0.5,
+    veterancy: 1.12,
     reward: 2.2,
   },
 ];

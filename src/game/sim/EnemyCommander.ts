@@ -4,6 +4,7 @@ import { turretsForAge } from '@/data/turrets';
 import { unitsForAge } from '@/data/units';
 import type { ArmourClass, TurretRole, UnitRole } from '@/data/types';
 import { ARMOUR_TABLE } from '@/data/types';
+import { SIM } from '@/game/config';
 import { BattleSim } from './BattleSim';
 import { Rng } from './rng';
 
@@ -40,8 +41,8 @@ export class EnemyCommander {
     if (this.thinkTimer > 0) return;
 
     const aggression = sim.enemyPlan.aggression;
-    // Aggressive commanders act roughly twice as often.
-    this.thinkTimer = this.rng.range(0.55, 1.5) * (1.7 - aggression);
+    // Aggressive commanders act roughly twice as often, Insane ones faster still.
+    this.thinkTimer = this.rng.range(0.55, 1.5) * Math.max(0.4, 1.7 - aggression);
 
     const threat = this.assessThreat();
 
@@ -49,6 +50,23 @@ export class EnemyCommander {
     if (this.considerEvolve(threat)) return;
     if (this.considerDefence(threat)) return;
     this.considerUnits(threat, aggression);
+
+    // A well-funded commander that only ever buys one thing per decision banks
+    // most of what a higher tier hands it, which made Insane play much like Hard.
+    // When gold is genuinely piling up, keep spending while there is room.
+    for (let extra = 0; extra < 2 && this.overfunded(); extra++) {
+      if (!this.considerUnits(threat, aggression)) break;
+    }
+  }
+
+  /** True when gold is well past what the best unit on the roster costs. */
+  private overfunded(): boolean {
+    const c = this.sim.enemy;
+    if (c.queue.length >= 3) return false;
+    if (this.sim.fieldCount('enemy') + c.queue.length >= SIM.maxUnitsPerSide) return false;
+    const roster = unitsForAge(AGES[c.ageIndex].id);
+    const priciest = roster.reduce((m, u) => Math.max(m, u.gold), 0);
+    return c.gold > priciest * 2;
   }
 
   /**
@@ -159,12 +177,12 @@ export class EnemyCommander {
   private considerUnits(
     threat: { units: number; dominantArmour: ArmourClass },
     aggression: number,
-  ): void {
+  ): boolean {
     const sim = this.sim;
     const c = sim.enemy;
     const age = AGES[c.ageIndex].id;
     const roster = unitsForAge(age).filter((u) => (c.cooldowns[u.id] ?? 0) <= 0);
-    if (!roster.length) return;
+    if (!roster.length) return false;
 
     if (this.boughtTotal >= 6) {
       this.bought = { melee: 0, ranged: 0, heavy: 0, artillery: 0 };
@@ -182,11 +200,10 @@ export class EnemyCommander {
     // Under pressure, throw bodies in the way regardless of the plan.
     if (threat.units >= 3) {
       const melee = roster.find((u) => u.role === 'melee');
-      if (melee && c.gold >= melee.gold) {
-        sim.queueUnit('enemy', melee.id);
+      if (melee && c.gold >= melee.gold && sim.queueUnit('enemy', melee.id) === 'ok') {
         this.bought.melee++;
         this.boughtTotal++;
-        return;
+        return true;
       }
     }
 
@@ -214,19 +231,24 @@ export class EnemyCommander {
         !!next && c.xp >= next.evolveXp * 0.85 && def.role === 'heavy' && aggression < 0.6;
       if (savingToEvolve) continue;
 
-      sim.queueUnit('enemy', def.id);
+      if (sim.queueUnit('enemy', def.id) !== 'ok') continue;
       this.bought[def.role]++;
       this.boughtTotal++;
-      return;
+      return true;
     }
 
     // Composition satisfied but gold is piling up: buy the best thing available.
     const affordable = roster.filter((u) => c.gold >= u.gold).sort((a, b) => b.gold - a.gold);
-    if (affordable.length && c.gold > affordable[0].gold * 1.6) {
-      sim.queueUnit('enemy', affordable[0].id);
+    if (
+      affordable.length &&
+      c.gold > affordable[0].gold * 1.6 &&
+      sim.queueUnit('enemy', affordable[0].id) === 'ok'
+    ) {
       this.bought[affordable[0].role]++;
       this.boughtTotal++;
+      return true;
     }
+    return false;
   }
 }
 

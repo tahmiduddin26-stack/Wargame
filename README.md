@@ -257,6 +257,17 @@ TIER=insane npx tsx scripts/sim-harness.ts   # the same, at a difficulty tier
 It also probes Survival, reporting how many waves each plan holds before the gate
 falls.
 
+One seed per mission turned out to be too weak an instrument: a single changed
+purchase flips a result, and the single-seed table could not even tell Easy from
+Normal. `scripts/balance-sweep.ts` runs every mission over several seeds at every
+tier and reports win rates instead:
+
+```bash
+npx tsx scripts/balance-sweep.ts             # 8 seeds x 3 plans, all tiers (~1 min)
+SEEDS=20 TIERS=normal npx tsx scripts/balance-sweep.ts
+CHECK=1 npx tsx scripts/balance-sweep.ts     # exits 1 if a harder tier is easier
+```
+
 The first run of it found that **every single mission ground to a draw at the eight
 minute mark with both gates untouched.** Diagnosing that drove most of the design:
 
@@ -286,10 +297,22 @@ minute mark with both gates untouched.** Diagnosing that drove most of the desig
   matching the original, which is why its strategy guides say to fill your mounts
   *before* you age up.
 
-Current Normal-tier state: operations 2-16 resolve in 2.5 to 6 minutes with no
-draws. The three scripted plans win 14, 10 and 13 of 16; the first operation
-ends in 1:01 to 3:00 depending on the plan. These scripts are crude proxies,
-not human win-rate evidence. The
+- **The clock's ground tie-break was a coin toss.** Most timed finishes have
+  both gates level, and the rule compared the two front lines on the final tick,
+  so whichever side happened to have a runner forward won. Under it, Easy won
+  exactly as often as Normal (70%) and Insane about as often as Hard. Ground is
+  now a rolling average over roughly the last forty seconds (`ECON.groundMemory`),
+  shown as a marker under the lane strip.
+- **Higher tiers handed the enemy money it could not spend.** At the twelve-unit
+  field cap a richer commander just banked the difference: about 1,200 idle gold
+  on Insane. The commander now keeps buying while it is overfunded, tiers may
+  lift its aggression past the mission's 1.0, and each tier sets a stated troop
+  quality (Easy 0.9x, Hard 1.05x, Insane 1.12x hitpoints and damage).
+
+Current state across 8 seeds x 3 plans per mission: **Easy 91%, Normal 71%, Hard
+57%, Insane 26%**, mean match about 4.3 minutes. Operations 6 and 14 (wide fields)
+are deliberately lost by the all-melee plan; operation 16 is the hardest at about
+25 to 30%. These scripts are crude proxies, not human win-rate evidence. The
 numbers live in `src/data/` and `src/game/config.ts`; `scripts/retune-units.mjs`
 documents the last bulk pass.
 
@@ -312,8 +335,8 @@ canvas and are invisible to the DOM, so `BattleScene` exposes read-only counters
 / Insane), as both Age of War games shipped. Tiers multiply the mission's own
 enemy numbers rather than replacing them, and never touch the player's side, so a
 mission keeps its character at every tier. Clears are recorded per tier, shown as
-a four-pip ladder on each row. The normal-tier harness takes 14/16 with the
-greedy plan, 10/16 with a swarm, and 13/16 with a mixed line.
+a four-pip ladder on each row. Higher tiers also field better troops, stated in
+the tier blurb. Against the scripted plans the tiers win about 91 / 71 / 57 / 26%.
 
 **Survival: The Long Watch.** Endless authored waves on one field, no clock. The
 enemy has no economy here; a wave is a written composition granted in full and

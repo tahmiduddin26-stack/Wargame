@@ -1302,6 +1302,10 @@ button:focus-visible {
   background: rgba(232, 119, 84, 0.25);
 }
 
+.lane__mid {
+  background: rgba(45, 48, 46, 0.35);
+}
+
 .lane__window {
   border: 2px solid var(--ink);
   background: rgba(255, 255, 255, 0.18);

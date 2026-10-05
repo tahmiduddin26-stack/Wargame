@@ -50,7 +50,8 @@ export function BattleView() {
       {
         level,
         survival: onlineMatch ? false : survival,
-        difficulty: onlineMatch ? 'normal' : tierId,
+        // Survival keeps one leaderboard of waves, so it is always played as written.
+        difficulty: onlineMatch || survival ? 'normal' : tierId,
         perks: onlineMatch ? undefined : resolvePerks(perks),
         skinId: equippedSkin,
         seed: onlineMatch?.seed ?? (1337 + level.id * 977),

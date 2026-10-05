@@ -84,12 +84,12 @@ export function Hud({ snapshot, level, onlineMatch }: { snapshot: HudSnapshot; l
     nextAge && snapshot.nextAgeXp
       ? Math.min(1, snapshot.xp / snapshot.nextAgeXp)
       : 1;
-  // Match the simulation's clock decision: structure first, then front line.
+  // Match the simulation's clock decision: structure first, then ground held.
   const gateLead = snapshot.baseHp / snapshot.baseMaxHp - snapshot.enemyBaseHp / snapshot.enemyBaseMaxHp;
   const leadByGate = Math.abs(gateLead) > 0.005;
   const aheadAtClock = leadByGate
     ? gateLead > 0
-    : snapshot.playerFront + snapshot.enemyFront >= snapshot.laneLength;
+    : snapshot.playerGround >= snapshot.enemyGround;
 
   const pause = (on: boolean) => {
     setPaused(on);
@@ -207,7 +207,7 @@ export function Hud({ snapshot, level, onlineMatch }: { snapshot: HudSnapshot; l
           <div className={`hud__clock${snapshot.timeLeft <= 30 ? ' hud__clock--urgent' : ''}`}>
             <span className="num">{mmss(snapshot.timeLeft)}</span>
             {snapshot.timeLeft <= 45 ? (
-              <span className="label hud__esc" title="At zero, gate integrity decides; if tied, the side holding more ground wins.">
+              <span className="label hud__esc" title="At zero, gate integrity decides; if tied, the side that has held more ground over the last minute or so wins. The marker under the lane strip shows it.">
                 {aheadAtClock ? 'Ahead' : 'Behind'} · {leadByGate ? 'gate' : 'ground'}
               </span>
             ) : snapshot.escalation > 1.02 ? (

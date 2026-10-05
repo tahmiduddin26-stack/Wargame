@@ -85,6 +85,13 @@ export const ECON = {
   escalationStart: 55,
   escalationFull: 235,
   escalationMax: 2.5,
+
+  /**
+   * Seconds of memory in the ground-held average. Long enough that a late
+   * runner cannot steal a clock finish, short enough that the last minute of
+   * pushing still counts for more than the opening one.
+   */
+  groundMemory: 40,
 } as const;
 
 /**

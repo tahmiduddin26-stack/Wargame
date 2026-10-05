@@ -216,11 +216,14 @@ export class RagdollPool {
   }
 
   private destroyCorpse(corpse: Corpse): void {
-    for (const c of corpse.constraints) this.scene.matter.world.removeConstraint(c);
-    for (const limb of corpse.limbs) {
-      this.scene.matter.world.remove(limb.body);
-      limb.img.destroy();
+    // When React destroys the game, Matter tears its world down before the
+    // scene's DESTROY handlers run. The bodies go with it; only images remain.
+    const world = this.scene.matter?.world;
+    if (world) {
+      for (const c of corpse.constraints) world.removeConstraint(c);
+      for (const limb of corpse.limbs) world.remove(limb.body);
     }
+    for (const limb of corpse.limbs) limb.img.destroy();
   }
 
   clear(): void {
