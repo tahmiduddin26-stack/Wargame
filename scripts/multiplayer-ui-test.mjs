@@ -5,7 +5,10 @@ import { chromium } from 'playwright';
 const base = process.env.MULTIPLAYER_HTTP ?? 'http://127.0.0.1:8788/';
 const out = process.env.SHOT_DIR ?? '.shots';
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'] });
+const browser = await chromium.launch({
+  executablePath: process.env.CHROME_PATH,
+  args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'],
+});
 const errors = [];
 
 async function setup(viewport) {
