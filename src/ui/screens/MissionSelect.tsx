@@ -1,7 +1,7 @@
 import { AGES } from '@/data/ages';
 import { commanderRank } from '@/data/career';
 import { DIFFICULTIES } from '@/data/difficulty';
-import { LEVELS, MODIFIER_LABEL, MODIFIER_NOTE } from '@/data/levels';
+import { CHAPTERS, LEVELS, MODIFIER_LABEL, MODIFIER_NOTE } from '@/data/levels';
 import { isUnlocked, nextMission, useGame } from '@/state/store';
 
 function mmss(seconds: number): string {
@@ -73,6 +73,12 @@ export function MissionSelect() {
                 <dt className="label">Income</dt>
                 <dd className="num">{featured.income}/s</dd>
               </div>
+              {(featured.startAge ?? 0) > 0 && (
+                <div>
+                  <dt className="label">Deploys in</dt>
+                  <dd className="num">{AGES[featured.startAge!].name.split(' ')[0]}</dd>
+                </div>
+              )}
               <div>
                 <dt className="label">Age cap</dt>
                 <dd className="num">{AGES[Math.min(featured.maxAge, 4)].name.split(' ')[0]}</dd>
@@ -134,53 +140,66 @@ export function MissionSelect() {
           </button>
         </section>
 
-        <div className="ms__list-head">
-          <span className="label">All operations</span>
-          <div className="rule ms__list-rule" />
-        </div>
-
-        <ol className="ms__list">
-          {LEVELS.map((level) => {
-            const record = records[level.id];
-            const unlocked = isUnlocked(level.id, records);
-            const state = record?.cleared ? 'cleared' : unlocked ? 'open' : 'locked';
-            return (
-              <li key={level.id} className={`ms__row ms__row--${state}`}>
-                <span className="num ms__row-num">{String(level.id).padStart(2, '0')}</span>
-                <span className="ms__row-name display">{level.name}</span>
-                <span className="ms__row-mods">
-                  {level.modifiers.slice(0, 2).map((m) => (
-                    <span className="tag" key={m}>
-                      {MODIFIER_LABEL[m]}
-                    </span>
-                  ))}
+        {/* Forty operations read as five chapters rather than one long scroll. */}
+        {CHAPTERS.map((chapter, ci) => {
+          const levels = LEVELS.filter((l) => l.id >= chapter.from && l.id <= chapter.to);
+          const cleared = levels.filter((l) => records[l.id]?.cleared).length;
+          return (
+            <section key={chapter.name} className="ms__chapter">
+              <div className="ms__list-head">
+                <span className="label">
+                  Chapter <span className="num">{ci + 1}</span> · {chapter.name}
                 </span>
-                <span className="num ms__row-time">
-                  {record?.bestTime != null ? mmss(record.bestTime) : '--:--'}
+                <div className="rule ms__list-rule" />
+                <span className="label num">
+                  {cleared}/{levels.length}
                 </span>
-                <span className="ms__row-tiers" aria-label="Tiers cleared">
-                  {DIFFICULTIES.map((d) => (
-                    <span
-                      key={d.id}
-                      title={d.name}
-                      className={`ms__pip${record?.clearedTiers?.includes(d.id) ? ' ms__pip--on' : ''}`}
-                    />
-                  ))}
-                </span>
-                <span className="label ms__row-state">
-                  {state === 'cleared' ? 'Cleared' : state === 'open' ? 'Open' : 'Locked'}
-                </span>
-                <button
-                  className="btn ms__row-go"
-                  disabled={!unlocked}
-                  onClick={() => startMission(level.id)}
-                >
-                  {record?.cleared ? 'Replay' : 'Start'}
-                </button>
-              </li>
-            );
-          })}
-        </ol>
+              </div>
+              <ol className="ms__list">
+                {levels.map((level) => {
+                  const record = records[level.id];
+                  const unlocked = isUnlocked(level.id, records);
+                  const state = record?.cleared ? 'cleared' : unlocked ? 'open' : 'locked';
+                  return (
+                    <li key={level.id} className={`ms__row ms__row--${state}`}>
+                      <span className="num ms__row-num">{String(level.id).padStart(2, '0')}</span>
+                      <span className="ms__row-name display">{level.name}</span>
+                      <span className="ms__row-mods">
+                        {level.modifiers.slice(0, 2).map((m) => (
+                          <span className="tag" key={m}>
+                            {MODIFIER_LABEL[m]}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="num ms__row-time">
+                        {record?.bestTime != null ? mmss(record.bestTime) : '--:--'}
+                      </span>
+                      <span className="ms__row-tiers" aria-label="Tiers cleared">
+                        {DIFFICULTIES.map((d) => (
+                          <span
+                            key={d.id}
+                            title={d.name}
+                            className={`ms__pip${record?.clearedTiers?.includes(d.id) ? ' ms__pip--on' : ''}`}
+                          />
+                        ))}
+                      </span>
+                      <span className="label ms__row-state">
+                        {state === 'cleared' ? 'Cleared' : state === 'open' ? 'Open' : 'Locked'}
+                      </span>
+                      <button
+                        className="btn ms__row-go"
+                        disabled={!unlocked}
+                        onClick={() => startMission(level.id)}
+                      >
+                        {record?.cleared ? 'Replay' : 'Start'}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          );
+        })}
       </div>
     </div>
   );

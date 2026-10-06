@@ -160,6 +160,12 @@ export class EnemyCommander {
         sim.buildTurret('enemy', empty, cheap.id);
         return true;
       }
+      // With nothing on the walls yet, save for a first mount rather than
+      // pouring the opening chest into troops. Otherwise a poorer commander,
+      // unable to afford the gun, rushes harder than a rich one, and on
+      // mid-war deployments that made Easy play harder than Normal.
+      const unarmed = c.slots.every((slot) => slot === null);
+      if (unarmed && threat.units < 2 && sim.elapsed < 45) return true;
       return false;
     }
 

@@ -7,6 +7,7 @@
  *   npx tsx scripts/balance-sweep.ts            # 8 seeds, all tiers
  *   SEEDS=20 npx tsx scripts/balance-sweep.ts   # tighter numbers
  *   TIERS=normal,hard npx tsx scripts/balance-sweep.ts
+ *   OPS=17-40 npx tsx scripts/balance-sweep.ts  # a range of missions
  *   CHECK=1 npx tsx scripts/balance-sweep.ts    # exit 1 if tiers stop ordering
  *
  * Still scripted players, not people. Use it to keep the tiers ordered and to
@@ -19,6 +20,9 @@ import { run, type Strategy } from './harness-core';
 const SEEDS = Number(process.env.SEEDS ?? 8);
 const TIERS = (process.env.TIERS ?? 'easy,normal,hard,insane').split(',') as DifficultyId[];
 const STRATEGIES: Strategy[] = ['greedy', 'swarm', 'mixed'];
+// OPS=17-40 limits the sweep to a range of missions.
+const [opFrom, opTo] = (process.env.OPS ?? '1-999').split('-').map(Number);
+const MISSIONS = LEVELS.filter((l) => l.id >= opFrom && l.id <= (opTo || opFrom));
 
 interface Cell {
   wins: number;
@@ -33,7 +37,7 @@ const overall: Record<string, Cell> = {};
 for (const tier of TIERS) {
   table[tier] = {};
   overall[tier] = { wins: 0, games: 0, gateWins: 0, seconds: 0 };
-  for (const level of LEVELS) {
+  for (const level of MISSIONS) {
     const cell: Cell = { wins: 0, games: 0, gateWins: 0, seconds: 0 };
     for (const strategy of STRATEGIES) {
       for (let s = 0; s < SEEDS; s++) {
@@ -59,7 +63,7 @@ const pct = (n: number, d: number) => `${Math.round((n / Math.max(1, d)) * 100)}
 
 console.log(`player win rate, ${SEEDS} seeds x ${STRATEGIES.length} plans per cell\n`);
 console.log('OP  ' + TIERS.map((t) => t.toUpperCase().padStart(7)).join(''));
-for (const level of LEVELS) {
+for (const level of MISSIONS) {
   const row = TIERS.map((t) => {
     const c = table[t][level.id];
     return pct(c.wins, c.games).padStart(7);

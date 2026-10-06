@@ -20,7 +20,7 @@ npm run typecheck
 
 The [mobile game audit and economy plan](docs/mobile-game-audit.md) records the current balance evidence, cosmetic collection, monetisation approach, and release gaps.
 
-Sixteen missions unlock in order. Battle XP still unlocks ages within a match;
+Forty missions in five chapters unlock in order. Battle XP still unlocks ages within a match;
 commander XP now persists across campaign results and Survival waves. The
 Armoury has Supply, Training and Fortification skill branches. Rank opens a
 skill, its preceding skill must be fitted, and credits pay for it. Existing
@@ -191,7 +191,7 @@ than losing it.
 ```
 src/
   data/            pure data, no imports outside data/. 20 units, 15 emplacements,
-                   5 ages, 5 specials, 16 missions
+                   5 ages, 5 specials, 40 missions
   game/
     config.ts      every designer-facing tunable, with the reasoning
     sim/           BattleSim: headless, fixed-timestep, deterministic (seeded RNG).
@@ -249,7 +249,7 @@ the oldest corpse on overflow.
 players, because the interesting failures are invisible in a screenshot:
 
 ```bash
-npx tsx scripts/sim-harness.ts        # all 16 missions x 3 strategies
+npx tsx scripts/sim-harness.ts        # all 40 missions x 3 strategies
 npx tsx scripts/sim-harness.ts 6      # one mission, verbose timeline
 TIER=insane npx tsx scripts/sim-harness.ts   # the same, at a difficulty tier
 ```
@@ -309,10 +309,12 @@ minute mark with both gates untouched.** Diagnosing that drove most of the desig
   lift its aggression past the mission's 1.0, and each tier sets a stated troop
   quality (Easy 0.9x, Hard 1.05x, Insane 1.12x hitpoints and damage).
 
-Current state across 8 seeds x 3 plans per mission: **Easy 91%, Normal 71%, Hard
-57%, Insane 26%**, mean match about 4.3 minutes. Operations 6 and 14 (wide fields)
-are deliberately lost by the all-melee plan; operation 16 is the hardest at about
-25 to 30%. These scripts are crude proxies, not human win-rate evidence. The
+Current state across all forty missions, 8 seeds x 3 plans each: **Easy 80%,
+Normal 58%, Hard 45%, Insane 27%**, mean match about 4.7 minutes. Normal runs
+from 100% on the opening missions to roughly 30 to 45% on chapter finales.
+Operations 6 and 14 (wide fields) are deliberately lost by the all-melee plan.
+With 24 games per cell, single missions still show the odd Hard/Insane
+inversion inside the noise; the overall ladder is checked by `CHECK=1`. These scripts are crude proxies, not human win-rate evidence. The
 numbers live in `src/data/` and `src/game/config.ts`; `scripts/retune-units.mjs`
 documents the last bulk pass.
 
@@ -331,12 +333,13 @@ canvas and are invisible to the DOM, so `BattleScene` exposes read-only counters
 
 ## Modes and systems
 
-**Campaign.** Sixteen missions across four difficulty tiers (Easy / Normal / Hard
+**Campaign.** Forty missions in five chapters across four difficulty tiers (Easy / Normal / Hard
 / Insane), as both Age of War games shipped. Tiers multiply the mission's own
 enemy numbers rather than replacing them, and never touch the player's side, so a
 mission keeps its character at every tier. Clears are recorded per tier, shown as
 a four-pip ladder on each row. Higher tiers also field better troops, stated in
-the tier blurb. Against the scripted plans the tiers win about 91 / 71 / 57 / 26%.
+the tier blurb. Against the scripted plans the tiers win about 80 / 58 / 45 / 27%
+over the forty missions.
 
 **Survival: The Long Watch.** Endless authored waves on one field, no clock. The
 enemy has no economy here; a wave is a written composition granted in full and
@@ -428,12 +431,16 @@ evolve: the card you tap for a Clubman is the card you tap for an Exo Trooper.
 **Four emplacement mounts** on the gate, two free and two bought, in rapid /
 marksman / mortar flavours. They upgrade themselves on evolve.
 
-**Sixteen missions.** The first four are the onboarding proper: each unlocks one
-system and caps the age so you cannot outrun the lesson. From mission 5 the cap
-comes off. Six modifiers (sealed emplacements, age cap, glass gates, funded enemy,
-aggressive enemy, wide field) recombine across the campaign. Operations 13-16
-revisit a capped powder arsenal, an exposed long field, brittle gates, and a
-reserve assault without emplacements.
+**Forty missions in five chapters**: The Valley (1-8), The Marches (9-16), The
+Iron Coast (17-24), The Burning Plain (25-32) and The Last Age (33-40). The first
+four are the onboarding proper: each unlocks one system and caps the age so you
+cannot outrun the lesson. From mission 5 the cap comes off. Nine modifiers
+recombine across the campaign: sealed emplacements, age cap, glass gates, funded
+enemy, aggressive enemy, wide field, and from chapter 3 an enemy that deploys an
+age ahead, veteran enemy troops (+10%), and scorched earth (passive income cut to a
+third, kills pay 50% more). From chapter 3 some missions also deploy both sides mid-war
+in the Gunpowder, Modern or Future Age, so the late campaign is not five minutes
+of clubmen every time.
 
 **Field insignias.** Twenty unit, fifteen emplacement, and five special silhouettes
 are drawn directly as SVG paths on a shared grid. They describe the actual

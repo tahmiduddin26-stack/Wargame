@@ -107,9 +107,12 @@ export class BattleScene extends Phaser.Scene {
 
     this.buildMatterWorld();
 
-    this.backdrop = new Backdrop(this, this.sim.laneLength, AGES[0]);
-    this.playerBase = new BaseView(this, 'player', this.sim.player.baseX, AGES[0], this.skinId);
-    this.enemyBase = new BaseView(this, 'enemy', this.sim.enemy.baseX, AGES[0]);
+    // Later missions deploy mid-war, so everything opens in the sim's ages.
+    const myAge = this.sim.player.ageIndex;
+    this.renderedAge = myAge;
+    this.backdrop = new Backdrop(this, this.sim.laneLength, AGES[myAge]);
+    this.playerBase = new BaseView(this, 'player', this.sim.player.baseX, AGES[myAge], this.skinId);
+    this.enemyBase = new BaseView(this, 'enemy', this.sim.enemy.baseX, AGES[this.sim.enemy.ageIndex]);
     this.ragdolls = new RagdollPool(this, this.corpseLayer, data.corpseCap);
     this.fx = new Fx(this, this.fxLayer);
 
@@ -121,7 +124,7 @@ export class BattleScene extends Phaser.Scene {
     this.exposeQaHandle();
 
     audio.unlock();
-    audio.startBed(0);
+    audio.startBed(this.sim.player.ageIndex);
 
     // Both events, because destroying the game from React does not reliably
     // route through SHUTDOWN.

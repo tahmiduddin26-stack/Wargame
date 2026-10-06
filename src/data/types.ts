@@ -102,7 +102,10 @@ export type LevelModifier =
   | 'sudden-death'
   | 'rich-enemy'
   | 'fast-enemy'
-  | 'artillery-duel';
+  | 'artillery-duel'
+  | 'head-start'
+  | 'veteran-enemy'
+  | 'scorched-earth';
 
 export interface LevelDef {
   id: number;
@@ -118,6 +121,11 @@ export interface LevelDef {
   income: number;
   /** Highest age either side may reach. Caps the tutorial levels. */
   maxAge: number;
+  /**
+   * Age both sides deploy in. Defaults to Stone. Later missions open mid-war so
+   * the campaign is not five minutes of clubmen every time.
+   */
+  startAge?: number;
   /**
    * Seconds on the mission clock.
    *

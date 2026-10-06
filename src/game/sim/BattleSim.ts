@@ -62,6 +62,8 @@ export class BattleSim {
   };
 
   private rng: Rng;
+  /** Loot multiplier for both sides. Raised by scorched earth. */
+  private lootScale = 1;
   private nextUid = 1;
   private nextPid = 1;
   private accumulator = 0;
@@ -115,7 +117,30 @@ export class BattleSim {
       Math.round(level.startGold * this.enemyPlan.economy),
     );
 
-    this.enemy.buff = tier.veterancy;
+    this.enemy.buff = tier.veterancy * (level.modifiers.includes('veteran-enemy') ? 1.1 : 1);
+
+    // Scorched earth: the trickle is cut to a third, and kills pay more. Cutting
+    // it to nothing turned every match into a standoff won by whoever waited
+    // behind their guns longest, since attacking only fed the defender loot.
+    if (level.modifiers.includes('scorched-earth')) {
+      this.player.income *= 0.35;
+      this.enemy.income *= 0.35;
+      this.lootScale = 1.5;
+    }
+
+    // Mid-war deployments. Both sides open in the mission's age with the gate
+    // and banked XP that age implies; a head start puts the enemy one further.
+    const startAge = Math.min(level.startAge ?? 0, this.maxAgeIndex);
+    this.advanceAge(this.player, startAge);
+    const headStart = level.modifiers.includes('head-start');
+    this.advanceAge(this.enemy, Math.min(headStart ? startAge + 1 : startAge, this.maxAgeIndex));
+    // A full age is about 2.4x the combat power, so a head start with nothing
+    // to answer it was simply a loss. You deploy most of the way to catching up.
+    if (headStart && this.player.ageIndex < this.maxAgeIndex) {
+      const from = AGES[this.player.ageIndex].evolveXp;
+      const to = AGES[this.player.ageIndex + 1].evolveXp;
+      this.player.xp = from + (to - from) * 0.6;
+    }
 
     if (level.modifiers.includes('no-turrets')) {
       this.player.unlockedSlots = 0;
@@ -138,6 +163,16 @@ export class BattleSim {
       this.player.baseMaxHp = max;
       this.stats.player.peakAge = this.player.ageIndex;
     }
+  }
+
+  /** Sets a commander's opening age, before anything has been bought. */
+  private advanceAge(c: Commander, ageIndex: number): void {
+    if (ageIndex <= c.ageIndex) return;
+    c.ageIndex = ageIndex;
+    c.xp = AGES[ageIndex].evolveXp;
+    c.baseMaxHp = Math.round(this.level.baseHp * AGES[ageIndex].baseArmour);
+    c.baseHp = c.baseMaxHp;
+    this.stats[c.faction].peakAge = ageIndex;
   }
 
   private makeCommander(
@@ -715,7 +750,7 @@ export class BattleSim {
     const c = this.commander(attacker);
     const mine = attacker === 'player';
     c.xp += target.def.bounty * (mine ? this.perks.xpScale : 1);
-    c.gold += target.def.loot * ECON.lootScale * (mine ? this.perks.lootScale : 1);
+    c.gold += target.def.loot * ECON.lootScale * this.lootScale * (mine ? this.perks.lootScale : 1);
     this.stats[attacker].kills += 1;
     this.stats[target.faction].losses += 1;
 
