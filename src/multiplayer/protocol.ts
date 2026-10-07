@@ -59,7 +59,8 @@ export type ClientMessage =
   | { t: 'leaderboard' };
 
 export type ServerMessage =
-  | { t: 'welcome'; token: string; profile: PublicProfile; friends: FriendProfile[]; leaderboard: PublicProfile[] }
+  | { t: 'welcome'; token: string; profile: PublicProfile; friends: FriendProfile[]; leaderboard: PublicProfile[]; reconnectGraceMs: number }
+  | { t: 'session_idle' }
   | { t: 'profile'; profile: PublicProfile; friends: FriendProfile[] }
   | { t: 'leaderboard'; entries: PublicProfile[] }
   | { t: 'queued'; mode: 'random' | 'ranked' }
@@ -69,4 +70,4 @@ export type ServerMessage =
   | { t: 'match'; matchId: string; mode: MatchMode; opponent: PublicProfile; seed: number }
   | { t: 'state'; matchId: string; state: OnlineBattleState }
   | { t: 'reject'; reason: 'poor' | 'locked' | 'cooldown' | 'full' }
-  | { t: 'result'; matchId: string; won: boolean; mode: MatchMode; reason: string; ratingDelta: number; rating: number };
+  | { t: 'result'; matchId: string; won: boolean; mode: MatchMode; reason: string; ratingDelta: number; rating: number; seconds: number; kills: number; losses: number; peakAge: number };

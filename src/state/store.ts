@@ -5,6 +5,9 @@ import { careerXpForMission, commanderRank } from '@/data/career';
 import { ARMY_SKIN_BY_ID, type ArmySkinId } from '@/data/cosmetics';
 import { LEVELS } from '@/data/levels';
 import { PERKS, type PerkId } from '@/data/perks';
+import { readProgress } from './backup';
+import { defaultProgress, emptyServiceStats, localProgress, type BattleRecord, type LocalProgress, type MissionRecord, type ServiceStats } from './progress';
+export type { MissionRecord } from './progress';
 
 export type Screen =
   | 'menu'
@@ -12,20 +15,12 @@ export type Screen =
   | 'missions'
   | 'battle'
   | 'debrief'
+  | 'survival-debrief'
+  | 'service-record'
   | 'codex'
   | 'armoury'
   | 'settings'
   | 'online';
-
-export interface MissionRecord {
-  cleared: boolean;
-  /** Fastest clear, seconds. */
-  bestTime: number | null;
-  /** Highest age reached in a clear. Lower is a flex. */
-  bestAge: number | null;
-  /** Tiers this mission has been cleared on. Drives the ladder on the list. */
-  clearedTiers?: DifficultyId[];
-}
 
 export interface DebriefData {
   levelId: number;
@@ -44,39 +39,28 @@ export interface DebriefData {
   firstClear: boolean;
 }
 
-interface GameState {
+export interface SurvivalDebriefData {
+  waves: number;
+  seconds: number;
+  kills: number;
+  losses: number;
+  peakAge: number;
+  won: boolean;
+  reward: number;
+  careerXpAward: number;
+  previousBest: number;
+}
+
+interface GameState extends LocalProgress {
   screen: Screen;
   /** Mission currently loaded, or about to be. */
   activeLevel: number;
   debrief: DebriefData | null;
-
-  onboardingDone: boolean;
-  records: Record<number, MissionRecord>;
-  credits: number;
-  /** Permanent profile XP; distinct from in-battle evolution XP. */
-  careerXp: number;
-  /** Tier used for campaign deploys. Remembered between sessions. */
-  difficulty: DifficultyId;
-  /** Survival is its own mode, with its own best score. */
-  survivalBest: number;
+  survivalDebrief: SurvivalDebriefData | null;
+  /** Changes on every deploy, including restarting the same level. */
+  battleId: number;
   /** True while a Survival run is the active battle. */
   survivalRun: boolean;
-  /** Permanently purchased armoury perks. */
-  perks: PerkId[];
-  /** Cosmetic ownership and loadout are local to this device. */
-  ownedSkins: ArmySkinId[];
-  equippedSkin: ArmySkinId;
-
-  settings: {
-    /** Battle speed preference, restored on deploy. */
-    speed: 1 | 1.5 | 2;
-    haptics: boolean;
-    /** Halves the corpse cap on weaker devices. */
-    reducedCorpses: boolean;
-    showLaneStrip: boolean;
-    sfx: boolean;
-    music: boolean;
-  };
 
   go: (screen: Screen) => void;
   startMission: (levelId: number) => void;
@@ -85,15 +69,33 @@ interface GameState {
   buyPerk: (id: PerkId) => boolean;
   buySkin: (id: ArmySkinId) => boolean;
   equipSkin: (id: ArmySkinId) => boolean;
-  recordSurvival: (waves: number) => void;
+  finishSurvival: (data: Omit<SurvivalDebriefData, 'reward' | 'careerXpAward' | 'previousBest'>) => void;
   finishMission: (data: Omit<DebriefData, 'reward' | 'careerXpAward' | 'firstClear'>) => void;
   closeDebrief: () => void;
   completeOnboarding: () => void;
   resetProgress: () => void;
+  restoreProgress: (progress: LocalProgress) => void;
   setSetting: <K extends keyof GameState['settings']>(
     key: K,
     value: GameState['settings'][K],
   ) => void;
+}
+
+function recordBattle(stats: ServiceStats, data: { kills: number; losses: number; seconds: number; peakAge: number }): ServiceStats {
+  return {
+    ...stats, kills: stats.kills + data.kills, losses: stats.losses + data.losses,
+    secondsPlayed: stats.secondsPlayed + data.seconds, highestAge: Math.max(stats.highestAge, data.peakAge),
+  };
+}
+
+function historyEntry(state: GameState, data: Omit<BattleRecord, 'id' | 'finishedAt' | 'difficulty'>): BattleRecord[] {
+  const finishedAt = new Date().toISOString();
+  return [{
+    id: `${finishedAt}-${state.battleId}`, finishedAt, difficulty: state.difficulty,
+    mode: data.mode, levelId: data.levelId, won: data.won, waves: data.waves,
+    seconds: data.seconds, kills: data.kills, losses: data.losses, peakAge: data.peakAge,
+    credits: data.credits, xp: data.xp,
+  }, ...state.battleHistory].slice(0, 20);
 }
 
 /** A mission is playable once the one before it has been cleared. */
@@ -112,34 +114,22 @@ export function nextMission(records: Record<number, MissionRecord>): number {
 export const useGame = create<GameState>()(
   persist(
     (set, get) => ({
+      ...defaultProgress(),
       screen: 'menu',
       activeLevel: 1,
       debrief: null,
-      onboardingDone: false,
-      records: {},
-      credits: 0,
-      careerXp: 0,
-      difficulty: 'normal',
-      survivalBest: 0,
+      survivalDebrief: null,
+      battleId: 0,
       survivalRun: false,
-      perks: [],
-      ownedSkins: ['field'],
-      equippedSkin: 'field',
-      settings: {
-        speed: 1,
-        haptics: true,
-        reducedCorpses: false,
-        showLaneStrip: true,
-        sfx: true,
-        music: true,
-      },
 
       go: (screen) => set({ screen }),
 
-      startMission: (levelId) =>
-        set({ activeLevel: levelId, screen: 'battle', debrief: null, survivalRun: false }),
+      startMission: (levelId) => {
+        if (!LEVELS.some((level) => level.id === levelId) || !isUnlocked(levelId, get().records)) return;
+        set((s) => ({ activeLevel: levelId, screen: 'battle', debrief: null, survivalDebrief: null, survivalRun: false, battleId: s.battleId + 1 }));
+      },
 
-      startSurvival: () => set({ screen: 'battle', debrief: null, survivalRun: true }),
+      startSurvival: () => set((s) => ({ screen: 'battle', debrief: null, survivalDebrief: null, survivalRun: true, battleId: s.battleId + 1 })),
 
       setDifficulty: (id) => set({ difficulty: id }),
 
@@ -171,18 +161,28 @@ export const useGame = create<GameState>()(
         return true;
       },
 
-      recordSurvival: (waves) =>
-        set((state) => ({
-          survivalBest: Math.max(state.survivalBest, waves),
-          // Survival pays a credit per wave held, so it is a real way to earn.
-          credits: state.credits + waves,
-          careerXp: state.careerXp + waves * 3,
+      finishSurvival: (data) => {
+        const state = get();
+        if (state.screen !== 'battle' || !state.survivalRun) return;
+        // The score is the wave reached, consistent with existing saved bests.
+        const reward = data.waves;
+        const careerXpAward = data.waves * 3;
+        set({
+          survivalDebrief: { ...data, reward, careerXpAward, previousBest: state.survivalBest },
+          screen: 'survival-debrief',
+          survivalBest: Math.max(state.survivalBest, data.waves),
+          credits: state.credits + reward,
+          careerXp: state.careerXp + careerXpAward,
           survivalRun: false,
-        })),
+          serviceStats: { ...recordBattle(state.serviceStats, data), survivalRuns: state.serviceStats.survivalRuns + 1 },
+          battleHistory: historyEntry(state, { ...data, mode: 'survival', levelId: 0, credits: reward, xp: careerXpAward }),
+        });
+      },
 
       finishMission: (data) => {
         const level = LEVELS.find((l) => l.id === data.levelId);
         const state = get();
+        if (!level || state.screen !== 'battle' || state.survivalRun || state.activeLevel !== data.levelId) return;
         const prior = state.records[data.levelId];
         const tier = state.difficulty;
         const firstClear = data.won && !prior?.cleared;
@@ -200,6 +200,12 @@ export const useGame = create<GameState>()(
           screen: 'debrief',
           credits: state.credits + reward,
           careerXp: state.careerXp + careerXpAward,
+          serviceStats: {
+            ...recordBattle(state.serviceStats, data),
+            campaignBattles: state.serviceStats.campaignBattles + 1,
+            campaignWins: state.serviceStats.campaignWins + Number(data.won),
+          },
+          battleHistory: historyEntry(state, { ...data, mode: 'campaign', waves: 0, credits: reward, xp: careerXpAward }),
           records: data.won
             ? {
                 ...state.records,
@@ -220,50 +226,25 @@ export const useGame = create<GameState>()(
         }));
       },
 
-      closeDebrief: () => set({ debrief: null, screen: 'missions' }),
+      closeDebrief: () => set({ debrief: null, survivalDebrief: null, screen: 'missions' }),
 
       completeOnboarding: () => set({ onboardingDone: true }),
 
       resetProgress: () =>
-        set({ records: {}, credits: 0, careerXp: 0, onboardingDone: false, perks: [], survivalBest: 0, ownedSkins: ['field'], equippedSkin: 'field' }),
+        set({ records: {}, credits: 0, careerXp: 0, onboardingDone: false, perks: [], survivalBest: 0, ownedSkins: ['field'], equippedSkin: 'field', serviceStats: emptyServiceStats(), battleHistory: [], debrief: null, survivalDebrief: null, survivalRun: false }),
+
+      restoreProgress: (progress) => set({
+        ...readProgress(progress, true), screen: 'menu', activeLevel: 1,
+        debrief: null, survivalDebrief: null, survivalRun: false,
+      }),
 
       setSetting: (key, value) =>
         set((state) => ({ settings: { ...state.settings, [key]: value } })),
     }),
     {
       name: 'aow.progress.v1',
-      partialize: (state) => ({
-        onboardingDone: state.onboardingDone,
-        records: state.records,
-        credits: state.credits,
-        careerXp: state.careerXp,
-        difficulty: state.difficulty,
-        survivalBest: state.survivalBest,
-        perks: state.perks,
-        ownedSkins: state.ownedSkins,
-        equippedSkin: state.equippedSkin,
-        settings: state.settings,
-      }),
-      merge: (persisted, current) => {
-        const saved = persisted as Partial<GameState>;
-        // Existing campaign saves predate career XP. Give completed missions
-        // their base XP once, without touching their credits or purchased perks.
-        const recoveredXp = Object.entries(saved.records ?? {}).reduce(
-          (total, [id, record]) => total + (record?.cleared ? LEVELS.find((l) => l.id === Number(id))?.reward ?? 0 : 0),
-          0,
-        );
-        const ownedSkins: ArmySkinId[] = Array.isArray(saved.ownedSkins)
-          ? ['field', ...saved.ownedSkins.filter((id): id is ArmySkinId => !!ARMY_SKIN_BY_ID[id])]
-          : ['field'];
-        return {
-          ...current,
-          ...saved,
-          careerXp: saved.careerXp ?? recoveredXp,
-          ownedSkins: Array.from(new Set(ownedSkins)),
-          equippedSkin: saved.equippedSkin && ownedSkins.includes(saved.equippedSkin) ? saved.equippedSkin : 'field',
-          settings: { ...current.settings, ...saved.settings },
-        };
-      },
+      partialize: (state) => localProgress(state),
+      merge: (persisted, current) => ({ ...current, ...readProgress(persisted) }),
     },
   ),
 );

@@ -1,0 +1,81 @@
+/* New pages share the battle notebook's drawn borders and paper palette. */
+.sr__body { flex: 1; min-height: 0; padding: 1.5em 2.4em 2.4em; }
+.sr .st__head .btn { min-height: 44px; font-size: max(14px, 1.5em); }
+.sr .st__title { font-size: max(22px, 2.6em); }
+.sr .st__head .label { font-size: max(12px, 1.3em); }
+.sr__career { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 2em; padding: 1.2em 1.6em; background: #dceecf; }
+.sr__career h3 { font-size: max(24px, 3em); margin: 0.15em 0 0; }
+.sr__career .label, .sr__xp { font-size: max(13px, 1.5em); }
+.sr__xp p { margin: 0 0 0.4em; }
+.sr__xp > span { display: block; margin-top: 0.3em; }
+.sr progress { display: block; width: 100%; height: 8px; appearance: none; border: 1px solid var(--ink); border-radius: 4px; overflow: hidden; background: var(--paper); accent-color: var(--moss); }
+.sr progress::-webkit-progress-bar { background: var(--paper); }
+.sr progress::-webkit-progress-value { background: var(--moss); }
+.sr progress::-moz-progress-bar { background: var(--moss); }
+.sr__totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1em; margin: 1.4em 0; }
+.sr__totals > div { background: var(--paper-bright); border: 2px solid var(--ink); border-radius: 10px 14px 9px 12px; padding: 1em; min-width: 0; }
+.sr__totals dt { font-size: max(12px, 1.4em); color: var(--ink-soft); }
+.sr__totals dd { font-size: max(16px, 1.9em); margin: 0.35em 0 0; overflow-wrap: anywhere; }
+.sr__note { font-size: max(12px, 1.4em); line-height: 1.35; color: var(--ink-soft); max-width: 65em; }
+.sr__section-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 1.4em; margin: 2em 0 0.8em; }
+.sr__section-head h3 { font-size: max(22px, 2.7em); margin: 0; }
+.sr__section-head span { font-size: max(12px, 1.4em); }
+.sr__medals { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2em; }
+.sr__medal { display: grid; grid-template-columns: 6em minmax(0, 1fr); gap: 1em; padding: 1.2em; border: 2px dashed var(--ink-soft); border-radius: 13px 9px 14px 11px; background: var(--paper-bright); }
+.sr__medal--earned { border: 2px solid var(--ink); background: #fff0c3; box-shadow: 2px 3px 0 var(--ink); }
+.sr__drawing { width: 100%; height: auto; color: var(--ink); opacity: 0.5; }
+.sr__medal--earned .sr__drawing { opacity: 1; }
+.sr__medal h4 { font-family: var(--font-display); font-size: max(16px, 1.9em); margin: 0; line-height: 1.1; }
+.sr__medal p { font-size: max(12px, 1.35em); line-height: 1.3; margin: 0.5em 0; }
+.sr__medal-status { display: block; font-size: max(12px, 1.35em); margin-bottom: 0.35em; }
+.sr__links, .db__actions { flex-wrap: wrap; }
+.sr__links { display: flex; gap: 1em; margin: 2em 0 0; }
+.sr .btn, .db__actions .btn { min-height: 44px; font-size: max(14px, 1.6em); }
+.db__inner { min-height: 0; width: 100%; max-width: 90em; justify-content: flex-start; padding: 2em 3em; }
+.db__stats { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 1.6em 0 0; }
+.db__stats dt { font-size: max(12px, 1.3em); }
+.db__stats dd { font-size: max(16px, 2.1em); overflow-wrap: anywhere; }
+.db__sub, .db__rank { font-size: max(13px, 1.5em); line-height: 1.3; }
+.db__rank { margin: 1.2em 0; }
+.sd .db__verdict { margin-top: 0.2em; }
+.sd__wave { background: #ffe6ad !important; }
+@media (max-width: 760px) {
+  .sr__medals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sr__career { gap: 1.2em; }
+  .sr__totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sr__career > .btn { grid-column: 1 / -1; justify-self: start; }
+}
+
+.sr__history { list-style: none; margin: 0 0 1em; padding: 0; display: grid; gap: 0.8em; }
+.sr__history li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 1.4em; align-items: center; padding: 1em 1.3em; background: var(--paper-bright); border: 2px solid var(--ink); border-radius: 11px 14px 10px 12px; font-size: max(12px, 1.4em); }
+.sr__history strong { display: block; font-family: var(--font-display); font-size: 1.2em; }
+.sr__history div > span { color: var(--ink-soft); }
+.sr__outcome { font-size: 1.25em; }
+.save__actions { display: flex; flex-wrap: wrap; gap: 1em; }
+.st:not(.online) .st__head .btn { min-height: 44px; font-size: max(14px, 1.5em); }
+.st:not(.online) .st__title { font-size: max(22px, 2.6em); }
+.st:not(.online) .st__head .label { font-size: max(12px, 1.3em); }
+.st:not(.online) .st__note { font-size: max(13px, 1.5em); }
+.st:not(.online) .st__label { font-size: max(17px, 1.7em); }
+.st__toggle { min-height: 44px; }
+.save .btn, .st__confirm .btn, .st__choices .st__choice { min-height: 44px; font-size: max(14px, 1.6em); }
+.save__message, .save__preview { font-size: max(13px, 1.5em); line-height: 1.35; }
+.save__message--error { color: var(--oxide-deep); }
+.save__preview { border-top: 2px dashed var(--ink-soft); margin-top: 1em; padding-top: 1em; }
+.save__preview h4 { font-family: var(--font-display); margin: 0; font-size: 1.35em; }
+.save__preview dl { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8em; }
+.save__preview dd { margin: 0.2em 0 0; font-family: var(--font-mono); }
+.db__tip { font-size: max(13px, 1.5em); line-height: 1.3; background: #ffe6ad; border-left: 3px solid var(--ink); padding: 0.6em 0.8em; margin: 0 0 1em; }
+.device .btn { min-height: 44px; font-size: max(14px, 1.6em); }
+.device__update { font-size: max(13px, 1.5em); border-top: 2px dashed var(--ink); margin-top: 1em; }
+.network-veil { position: absolute; inset: 0; z-index: 20; background: rgba(45, 48, 46, 0.55); display: grid; place-items: center; padding: 2em; }
+.network-veil__card { width: min(64em, 100%); padding: 2em; }
+.network-veil h3 { font-size: max(24px, 3em); margin: 0 0 0.5em; }
+.network-veil p { font-size: max(14px, 1.8em); line-height: 1.3; }
+.network-veil .btn { font-size: max(14px, 1.8em); min-height: 44px; }
+.reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { animation: none !important; transition: none !important; }
+.reduce-motion button:active { transform: none !important; }
+@media (max-width: 760px) {
+  .sr__history li { grid-template-columns: minmax(0, 1fr) auto; gap: 0.6em; }
+  .sr__history li > span:last-child { grid-column: 1 / -1; }
+}

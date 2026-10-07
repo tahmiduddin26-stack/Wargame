@@ -33,7 +33,7 @@ class TestClient {
     });
   }
   send(message) { this.ws.send(JSON.stringify(message)); }
-  take(match) {
+  take(match, timeoutMs = 5000) {
     const index = this.messages.findIndex(match);
     if (index >= 0) return Promise.resolve(this.messages.splice(index, 1)[0]);
     return new Promise((resolve, reject) => {
@@ -41,7 +41,7 @@ class TestClient {
       const timer = setTimeout(() => {
         this.waiters = this.waiters.filter((item) => item !== entry);
         reject(new Error('Timed out waiting for server message'));
-      }, 5000);
+      }, timeoutMs);
       this.waiters.push(entry);
     });
   }
@@ -119,10 +119,50 @@ try {
   const board = await a.client.take((m) => m.t === 'leaderboard' && m.entries.some((p) => p.id === a.welcome.profile.id && p.rating === 1016));
   assert(board.entries.find((p) => p.id === b.welcome.profile.id).rating === 984);
 
+  // A brief dropout resumes the original authoritative match and perspective.
+  a.client.send({ t: 'queue', mode: 'ranked' });
+  await a.client.take((m) => m.t === 'queued');
+  b.client.send({ t: 'queue', mode: 'ranked' });
+  const recoveryMatch = await b.client.take((m) => m.t === 'match');
+  await a.client.take((m) => m.t === 'match' && m.matchId === recoveryMatch.matchId);
+  const beforeDrop = await b.client.take((m) => m.t === 'state' && m.matchId === recoveryMatch.matchId);
+  b.client.close();
+  await a.client.take((m) => m.t === 'notice' && m.message.includes('disconnected'));
+  a.client.send({ t: 'command', matchId: recoveryMatch.matchId, command: { t: 'unit', id: 'clubman' } });
+  await a.client.take((m) => m.t === 'state' && m.matchId === recoveryMatch.matchId && m.state.units.length > 0);
+  const rejoined = await connect(b.welcome.token);
+  const resumed = await rejoined.client.take((m) => m.t === 'match');
+  assert.equal(resumed.matchId, recoveryMatch.matchId);
+  assert.equal(resumed.seed, recoveryMatch.seed);
+  const resumedState = await rejoined.client.take((m) => m.t === 'state' && m.matchId === resumed.matchId);
+  assert(resumedState.state.elapsed >= beforeDrop.state.elapsed);
+  assert(resumedState.state.units.some((u) => u.faction === 'enemy'), 'rejoined player must keep their mirrored side');
+  assert.equal(rejoined.welcome.profile.rating, 984, 'rejoining must not settle a ranked result');
+  rejoined.client.send({ t: 'leave', matchId: resumed.matchId });
+  const settled = await rejoined.client.take((m) => m.t === 'result' && m.matchId === resumed.matchId);
+  assert(settled.ratingDelta < 0);
+  await a.client.take((m) => m.t === 'result' && m.matchId === resumed.matchId);
+
+  // Expired casual dropout awards no rating and delivers the missed result once.
+  a.client.send({ t: 'queue', mode: 'random' });
+  await a.client.take((m) => m.t === 'queued');
+  rejoined.client.send({ t: 'queue', mode: 'random' });
+  const expiredMatch = await rejoined.client.take((m) => m.t === 'match');
+  await a.client.take((m) => m.t === 'match' && m.matchId === expiredMatch.matchId);
+  rejoined.client.close();
+  const timedOut = await a.client.take((m) => m.t === 'result' && m.matchId === expiredMatch.matchId, a.welcome.reconnectGraceMs + 5000);
+  assert.equal(timedOut.reason, 'disconnect');
+  assert.equal(timedOut.ratingDelta, 0);
+  const recoveredResult = await connect(b.welcome.token);
+  const missed = await recoveredResult.client.take((m) => m.t === 'result' && m.matchId === expiredMatch.matchId);
+  assert.equal(missed.won, false);
+  assert.equal(missed.rating, settled.rating);
+  assert.equal(missed.ratingDelta, 0);
+
   const reconnect = await connect(a.welcome.token);
   assert.equal(reconnect.welcome.profile.id, a.welcome.profile.id);
-  assert.equal(reconnect.welcome.profile.rating, 1016);
-  console.log('Multiplayer protocol passed: friends, invite, mirrored state, validation, random, ranked, rating, leaderboard, token reconnect.');
+  assert.equal(reconnect.welcome.profile.rating, 1016 - settled.ratingDelta);
+  console.log('Multiplayer protocol passed: friend/casual/ranked battles, validation, ratings, same-match rejoin, disconnect timeout and recovered result.');
 } finally {
   for (const client of clients) client.close();
 }

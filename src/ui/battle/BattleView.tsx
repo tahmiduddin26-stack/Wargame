@@ -6,6 +6,7 @@ import { resolvePerks } from '@/data/perks';
 import { audio } from '@/game/audio/Audio';
 import { bridge, type HudSnapshot } from '@/game/bridge';
 import { RAGDOLL } from '@/game/config';
+import { SURVIVAL_LEVEL } from '@/game/sim/SurvivalDirector';
 import { BattleScene, battleGameConfig } from '@/game/scenes/BattleScene';
 import { onlineClient, useOnline } from '@/multiplayer/client';
 import { ONLINE_LEVEL } from '@/multiplayer/protocol';
@@ -16,7 +17,7 @@ export function BattleView() {
   const levelId = useGame((s) => s.activeLevel);
   const settings = useGame((s) => s.settings);
   const finishMission = useGame((s) => s.finishMission);
-  const recordSurvival = useGame((s) => s.recordSurvival);
+  const finishSurvival = useGame((s) => s.finishSurvival);
   const tierId = useGame((s) => s.difficulty);
   const perks = useGame((s) => s.perks);
   const equippedSkin = useGame((s) => s.equippedSkin);
@@ -24,7 +25,8 @@ export function BattleView() {
   const go = useGame((s) => s.go);
   const online = useOnline();
   const onlineMatch = online.match;
-  const level = onlineMatch ? ONLINE_LEVEL : levelById(levelId);
+  const wasOnline = useRef(!!onlineMatch);
+  const level = onlineMatch ? ONLINE_LEVEL : survival ? SURVIVAL_LEVEL : levelById(levelId);
 
   const hostRef = useRef<HTMLDivElement>(null);
   const [snapshot, setSnapshot] = useState<HudSnapshot | null>(null);
@@ -35,6 +37,7 @@ export function BattleView() {
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
+    if (wasOnline.current && !onlineMatch) return;
 
     bridge.reset();
     reported.current = false;
@@ -78,17 +81,18 @@ export function BattleView() {
   // Hand the result to the store exactly once; that swaps in the debrief screen.
   useEffect(() => {
     if (!snapshot?.over || reported.current) return;
-    if (onlineMatch) return;
+    if (wasOnline.current) return;
     reported.current = true;
 
-    // Survival has no win condition, only how long you lasted.
+    const mine = snapshot.stats.player;
     if (snapshot.survival) {
-      recordSurvival(snapshot.wave);
-      go('missions');
+      finishSurvival({
+        waves: snapshot.wave, seconds: snapshot.elapsed, kills: mine.kills,
+        losses: mine.losses, peakAge: mine.peakAge, won: snapshot.over === 'player',
+      });
       return;
     }
 
-    const mine = snapshot.stats.player;
     finishMission({
       levelId: level.id,
       won: snapshot.over === 'player',
@@ -100,12 +104,12 @@ export function BattleView() {
       goldSpent: mine.goldSpent,
       peakAge: mine.peakAge,
     });
-  }, [snapshot?.over, snapshot, level.id, finishMission, recordSurvival, go, tierId, onlineMatch]);
+  }, [snapshot?.over, snapshot, level.id, finishMission, finishSurvival, tierId, onlineMatch]);
 
   useEffect(() => {
-    if (!onlineMatch) return;
-    if (online.result?.matchId !== onlineMatch.matchId && online.connection !== 'offline') return;
-    const timer = window.setTimeout(() => { onlineClient.returnToLobby(); go('online'); }, online.result ? 900 : 0);
+    if (wasOnline.current && !onlineMatch) { go('online'); return; }
+    if (!onlineMatch || online.result?.matchId !== onlineMatch.matchId) return;
+    const timer = window.setTimeout(() => { onlineClient.returnToLobby(); go('online'); }, 900);
     return () => window.clearTimeout(timer);
   }, [onlineMatch, online.result, online.connection, go]);
 
@@ -119,6 +123,16 @@ export function BattleView() {
           <span className="label blink">Deploying to {level.name}</span>
         </div>
       )}
+      {onlineMatch && online.connection !== 'online' && <div className="network-veil">
+        <section className="panel network-veil__card" role="status">
+          <h3>Reconnecting…</h3>
+          <p>The server keeps your battle running. Rejoin within {online.reconnectGraceMs / 1000} seconds to continue; a longer disconnect forfeits the match.</p>
+          <div className="save__actions">
+            <button className="btn btn--primary" onClick={() => onlineClient.connect()}>Reconnect now</button>
+            <button className="btn btn--ghost" onClick={() => onlineClient.leave(onlineMatch.matchId)}>Leave battle</button>
+          </div>
+        </section>
+      </div>}
     </>
   );
 }

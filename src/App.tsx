@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { audio, installAudioUnlock } from '@/game/audio/Audio';
-import { bridge } from '@/game/bridge';
 import { useGame } from '@/state/store';
 import { OrientationGate } from '@/ui/OrientationGate';
 import { useIsLandscape } from '@/ui/useOrientation';
@@ -13,12 +12,16 @@ import { MissionSelect } from '@/ui/screens/MissionSelect';
 import { Onboarding } from '@/ui/screens/Onboarding';
 import { OnlineLobby } from '@/ui/screens/OnlineLobby';
 import { Settings } from '@/ui/screens/Settings';
+import { ServiceRecord } from '@/ui/screens/ServiceRecord';
+import { SurvivalDebrief } from '@/ui/screens/SurvivalDebrief';
 
 export function App() {
   const landscape = useIsLandscape();
   const screen = useGame((s) => s.screen);
+  const battleId = useGame((s) => s.battleId);
   const sfxOn = useGame((s) => s.settings.sfx);
   const musicOn = useGame((s) => s.settings.music);
+  const reducedMotion = useGame((s) => s.settings.reducedMotion);
 
   // Browsers refuse to start an audio context outside a gesture, so this arms
   // one listener and the first touch anywhere brings the whole mixer up.
@@ -46,11 +49,6 @@ export function App() {
     audio.setMusic(musicOn);
   }, [sfxOn, musicOn]);
 
-  // Rotating away mid-battle pauses rather than losing the match.
-  useEffect(() => {
-    if (screen === 'battle' && !landscape) bridge.send({ t: 'pause', on: true });
-  }, [screen, landscape]);
-
   /*
    * Screens arrive with a short rise. The battle is excluded on purpose: it owns
    * a Phaser canvas that must not be remounted or transformed, and it has its own
@@ -60,13 +58,15 @@ export function App() {
 
   return (
     <>
-      <div className="stage">
+      <div className={`stage${reducedMotion ? ' reduce-motion' : ''}`}>
         <div className={animated ? 'screen-enter' : undefined} key={screen}>
           {screen === 'menu' && <MainMenu />}
           {screen === 'onboarding' && <Onboarding />}
           {screen === 'missions' && <MissionSelect />}
-          {screen === 'battle' && <BattleView />}
+          {screen === 'battle' && <BattleView key={battleId} />}
           {screen === 'debrief' && <Debrief />}
+          {screen === 'survival-debrief' && <SurvivalDebrief />}
+          {screen === 'service-record' && <ServiceRecord />}
           {screen === 'codex' && <Codex />}
           {screen === 'armoury' && <Armoury />}
           {screen === 'settings' && <Settings />}

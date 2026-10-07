@@ -1,5 +1,5 @@
 import { AGES } from '@/data/ages';
-import { commanderRank } from '@/data/career';
+import { commanderRank, nextRankXp } from '@/data/career';
 import { LEVELS, levelById } from '@/data/levels';
 import { isUnlocked, useGame, type DebriefData } from '@/state/store';
 
@@ -16,7 +16,7 @@ function mmss(seconds: number): string {
  * timed decision would be misleading.
  */
 function verdictLine(debrief: DebriefData, name: string): string {
-  const bonus = debrief.firstClear ? 'First clear bonus paid.' : 'Replay bonus paid.';
+  const bonus = debrief.firstClear ? 'First clear bonus paid.' : 'Clear reward paid.';
   if (debrief.decidedBy === 'gate') {
     return debrief.won
       ? `Their gate is rubble. ${name} is yours. ${bonus}`
@@ -32,21 +32,20 @@ export function Debrief() {
   const debrief = useGame((s) => s.debrief);
   const records = useGame((s) => s.records);
   const careerXp = useGame((s) => s.careerXp);
-  const { startMission, closeDebrief } = useGame();
+  const { startMission, closeDebrief, go } = useGame();
 
-  if (!debrief) {
-    closeDebrief();
-    return null;
-  }
+  if (!debrief) return null;
 
   const level = levelById(debrief.levelId);
   const nextLevel = LEVELS.find((l) => l.id === debrief.levelId + 1);
   const nextOpen = nextLevel ? isUnlocked(nextLevel.id, records) : false;
+  const promoted = commanderRank(careerXp) > commanderRank(careerXp - debrief.careerXpAward);
+  const nextXp = nextRankXp(careerXp);
 
   return (
     <div className={`db db--${debrief.won ? 'win' : 'loss'}`}>
       <div className="hazard-rule" />
-      <div className="db__inner">
+      <div className="db__inner scroll-y">
         <header className="db__head">
           <h2 className="db__verdict">
             <span className="num db__op">{String(level.id).padStart(2, '0')}</span>
@@ -89,7 +88,8 @@ export function Debrief() {
           </div>
         </dl>
 
-        <p className="db__rank label">Rank {commanderRank(careerXp)} · {careerXp.toLocaleString('en-GB')} total XP</p>
+        <p className="db__rank">{promoted ? 'Rank up! ' : ''}Rank {commanderRank(careerXp)} · {careerXp.toLocaleString('en-GB')} total XP{nextXp ? ` · ${nextXp - careerXp} XP to next rank` : ' · Top rank reached'}</p>
+        {!debrief.won && <p className="db__tip">{debrief.peakAge < level.maxAge ? 'Try evolving sooner. Keep a front line alive while saving XP for the next age.' : debrief.decidedBy === 'ground' ? 'When the clock runs out, ground held decides equal gates. Save for a final push.' : 'Use ranged troops against armour, and keep melee in front of your artillery.'} Retries are free.</p>}
 
         <div className="db__actions">
           <button className="btn btn--ghost" onClick={closeDebrief}>
@@ -97,6 +97,9 @@ export function Debrief() {
           </button>
           <button className="btn btn--ghost" onClick={() => startMission(level.id)}>
             Replay
+          </button>
+          <button className="btn btn--ghost" onClick={() => go('service-record')}>
+            Service record
           </button>
           {debrief.won && nextLevel && nextOpen && (
             <button className="btn btn--primary" onClick={() => startMission(nextLevel.id)}>

@@ -1,0 +1,74 @@
+import assert from 'node:assert/strict';
+import { mkdirSync, readFileSync } from 'node:fs';
+import { chromium } from 'playwright';
+
+const base = process.env.GAME_URL ?? 'http://127.0.0.1:8788/';
+mkdirSync('.shots', { recursive: true });
+const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'] });
+try {
+  const context = await browser.newContext({ viewport: { width: 667, height: 375 }, acceptDownloads: true });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto(base);
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  assert(await page.getByText('Campaign and survival are saved for offline play.', { exact: false }).isVisible());
+  const downloading = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export backup' }).click();
+  const download = await downloading;
+  const backup = JSON.parse(readFileSync(await download.path(), 'utf8'));
+  assert.equal(backup.format, 'doodlebook-battles-save');
+  assert.equal(backup.progress.credits, 0);
+  assert(!JSON.stringify(backup).includes('aow.online.token'));
+
+  await page.locator('input[type=file]').setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('{oops') });
+  await page.getByRole('alert').waitFor();
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('aow.progress.v1')).state.credits), 0);
+  backup.progress.credits = 777;
+  backup.progress.careerXp = 700;
+  backup.progress.onboardingDone = true;
+  backup.progress.ownedSkins = ['field', 'ember'];
+  backup.progress.equippedSkin = 'ember';
+  backup.progress.records = { 1: { cleared: true, bestTime: 85, bestAge: 0, clearedTiers: ['normal'] } };
+  await page.locator('input[type=file]').setInputFiles({ name: 'progress.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup)) });
+  await page.getByText('Backup ready to restore', { exact: true }).waitFor();
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('aow.progress.v1')).state.credits), 0, 'preview must not replace the current save');
+  await page.getByRole('button', { name: 'Restore this backup' }).click();
+  await page.getByRole('button', { name: 'Service record' }).click();
+  assert.equal(await page.locator('.sr__medal--earned').count(), 2);
+  assert(await page.locator('.sr__body').evaluate((el) => el.scrollWidth <= el.clientWidth));
+  await page.locator('.sr__body').evaluate((el) => { el.scrollTop = 440; });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: '.shots/service-medals-phone.png' });
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('switch', { name: /Reduced motion/ }).click();
+  assert.equal(await page.locator('.stage').evaluate((el) => el.classList.contains('reduce-motion')), true);
+  await page.locator('.st__body').evaluate((el) => { el.scrollTop = 0; });
+  await page.screenshot({ path: '.shots/save-settings-phone.png' });
+  await page.reload();
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('aow.progress.v1')).state.credits), 777);
+
+  // Exercise the production cache, not a mocked offline badge.
+  await context.setOffline(true);
+  await page.reload();
+  await page.getByRole('button', { name: 'Missions', exact: true }).click();
+  await page.getByRole('button', { name: 'Stand watch' }).click();
+  await page.locator('.unit').first().click();
+  await page.waitForTimeout(900);
+  assert(await page.evaluate(() => window.__aow.units() > 0));
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.getByText('Turn the device sideways', { exact: true }).waitFor();
+  await page.waitForTimeout(300);
+  const pausedTime = await page.evaluate(() => window.__aow.elapsed());
+  await page.waitForTimeout(350);
+  assert.equal(await page.evaluate(() => window.__aow.elapsed()), pausedTime);
+  await page.setViewportSize({ width: 667, height: 375 });
+  await page.getByRole('button', { name: 'Resume', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
+  await page.waitForFunction((time) => window.__aow.elapsed() > time, pausedTime);
+  await page.screenshot({ path: '.shots/offline-battle-phone.png' });
+  assert.deepEqual(errors, []);
+  console.log('Save export/validation/preview/restore, medals, reduced motion, offline reload/deploy and rotate/resume passed.');
+} finally { await browser.close(); }

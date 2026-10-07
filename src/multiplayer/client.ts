@@ -7,14 +7,7 @@ export interface OnlineMatchInfo {
   opponent: PublicProfile;
   seed: number;
 }
-export interface OnlineResult {
-  matchId: string;
-  won: boolean;
-  mode: MatchMode;
-  reason: string;
-  ratingDelta: number;
-  rating: number;
-}
+export type OnlineResult = Extract<ServerMessage, { t: 'result' }>;
 export interface OnlineView {
   connection: 'offline' | 'connecting' | 'online';
   profile: PublicProfile | null;
@@ -25,6 +18,7 @@ export interface OnlineView {
   match: OnlineMatchInfo | null;
   result: OnlineResult | null;
   message: string;
+  reconnectGraceMs: number;
 }
 
 const TOKEN_KEY = 'aow.online.token.v1';
@@ -42,10 +36,11 @@ class OnlineClient {
   private listeners = new Set<() => void>();
   private battleListeners = new Set<(state: OnlineBattleState) => void>();
   private reconnectTimer: number | null = null;
+  private leaveOnReconnect: string | null = null;
   private lastBattle: { matchId: string; state: OnlineBattleState } | null = null;
   private view: OnlineView = {
     connection: 'offline', profile: null, friends: [], leaderboard: [], queue: null,
-    invite: null, match: null, result: null, message: '',
+    invite: null, match: null, result: null, message: '', reconnectGraceMs: 15000,
   };
 
   snapshot = (): OnlineView => this.view;
@@ -64,23 +59,30 @@ class OnlineClient {
   }
   connect(): void {
     if (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN)) return;
+    if (this.reconnectTimer !== null) window.clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
     const url = endpoint();
     if (!url) { this.update({ message: 'Set VITE_MULTIPLAYER_URL to your game server.', connection: 'offline' }); return; }
     this.update({ connection: 'connecting', message: '' });
     const socket = new WebSocket(url);
     this.socket = socket;
-    socket.onopen = () => this.send({ t: 'hello', token: localStorage.getItem(TOKEN_KEY) ?? undefined });
+    socket.onopen = () => { if (this.socket === socket) this.send({ t: 'hello', token: localStorage.getItem(TOKEN_KEY) ?? undefined }); };
     socket.onmessage = (event) => {
+      if (this.socket !== socket) return;
       let msg: ServerMessage;
       try { msg = JSON.parse(event.data as string) as ServerMessage; } catch { return; }
       this.handle(msg);
     };
-    socket.onerror = () => this.update({ message: 'Could not reach the multiplayer server.' });
-    socket.onclose = () => {
+    socket.onerror = () => { if (this.socket === socket) this.update({ message: 'Could not reach the multiplayer server.' }); };
+    socket.onclose = (event) => {
       if (this.socket !== socket) return;
       this.socket = null;
-      this.lastBattle = null;
-      this.update({ connection: 'offline', queue: null, match: null, message: 'Connection lost. Reconnecting…' });
+      if (event.code === 4000) {
+        this.lastBattle = null;
+        this.update({ connection: 'offline', queue: null, match: null, invite: null, message: 'Your commander connected on another device. Reconnect to take over this session.' });
+        return;
+      }
+      this.update({ connection: 'offline', queue: null, invite: null, message: this.view.match ? 'Connection lost. Rejoining your battle…' : 'Connection lost. Reconnecting…' });
       this.reconnectTimer = window.setTimeout(() => { this.reconnectTimer = null; this.connect(); }, 2500);
     };
   }
@@ -88,14 +90,23 @@ class OnlineClient {
     switch (msg.t) {
       case 'welcome':
         localStorage.setItem(TOKEN_KEY, msg.token);
-        this.update({ connection: 'online', profile: msg.profile, friends: msg.friends, leaderboard: msg.leaderboard, message: '' });
+        this.update({ connection: 'online', profile: msg.profile, friends: msg.friends, leaderboard: msg.leaderboard, reconnectGraceMs: msg.reconnectGraceMs, message: '' });
         break;
       case 'profile': this.update({ profile: msg.profile, friends: msg.friends }); break;
+      case 'session_idle':
+        this.leaveOnReconnect = null; this.lastBattle = null;
+        this.update({ match: null });
+        break;
       case 'leaderboard': this.update({ leaderboard: msg.entries }); break;
       case 'queued': this.update({ queue: msg.mode, message: `Searching for a ${msg.mode === 'random' ? 'casual' : 'ranked'} opponent…` }); break;
       case 'invite': this.update({ invite: msg.from }); break;
       case 'notice': case 'error': this.update({ message: msg.message, queue: msg.message.includes('cancelled') ? null : this.view.queue }); break;
       case 'match':
+        if (this.leaveOnReconnect === msg.matchId) {
+          this.leaveOnReconnect = null;
+          this.send({ t: 'leave', matchId: msg.matchId });
+          return;
+        }
         this.lastBattle = null;
         this.update({ match: msg, result: null, queue: null, invite: null, message: '' });
         break;
@@ -124,15 +135,21 @@ class OnlineClient {
   }
   queue(mode: 'random' | 'ranked'): void { this.send({ t: 'queue', mode }); }
   cancelQueue(): void { this.update({ queue: null, message: '' }); this.send({ t: 'cancel_queue' }); }
-  command(matchId: string, command: OnlineCommand): void { this.send({ t: 'command', matchId, command }); }
-  leave(matchId: string): void { this.send({ t: 'leave', matchId }); }
+  command(matchId: string, command: OnlineCommand): void { if (this.view.connection === 'online') this.send({ t: 'command', matchId, command }); }
+  leave(matchId: string): void {
+    if (this.view.connection === 'online') this.send({ t: 'leave', matchId });
+    else { this.leaveOnReconnect = matchId; this.clearMatch(); }
+  }
   returnToLobby(): void { this.lastBattle = null; this.update({ match: null }); }
   clearMatch(): void { this.lastBattle = null; this.update({ match: null, result: null }); }
   requestLeaderboard(): void { this.send({ t: 'leaderboard' }); }
   disconnect(): void {
     if (this.reconnectTimer != null) window.clearTimeout(this.reconnectTimer);
     this.reconnectTimer = null;
+    if (this.view.match) this.send({ t: 'leave', matchId: this.view.match.matchId });
     this.socket?.close(); this.socket = null;
+    this.lastBattle = null;
+    this.update({ connection: 'offline', queue: null, match: null, invite: null, message: '' });
   }
 }
 

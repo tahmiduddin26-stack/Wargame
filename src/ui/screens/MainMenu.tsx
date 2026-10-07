@@ -2,6 +2,7 @@ import { LEVELS } from '@/data/levels';
 import { levelById } from '@/data/levels';
 import { nextMission, useGame } from '@/state/store';
 import { commanderRank } from '@/data/career';
+import { useAvailability } from '@/state/appAvailability';
 
 export function MainMenu() {
   const { go, startMission } = useGame();
@@ -10,6 +11,7 @@ export function MainMenu() {
   const credits = useGame((s) => s.credits);
   const careerXp = useGame((s) => s.careerXp);
   const onboardingDone = useGame((s) => s.onboardingDone);
+  const app = useAvailability();
 
   const cleared = LEVELS.filter((l) => records[l.id]?.cleared).length;
   const nextId = nextMission(records);
@@ -114,8 +116,8 @@ export function MainMenu() {
             <button className="btn btn--ghost" onClick={() => go('settings')}>
               Settings
             </button>
-            <button className="btn btn--ghost" onClick={() => go('onboarding')}>
-              Briefing
+            <button className="btn btn--ghost" onClick={() => go('service-record')}>
+              Service record
             </button>
           </div>
         </nav>
@@ -127,7 +129,7 @@ export function MainMenu() {
         <span className="label">Doodlebook battles</span>
         <span className="label">Ink, arrows &amp; explosions</span>
         <span className="menu__foot-spacer" />
-        <span className="label">Drawn for trouble</span>
+        <span className="label">{app.updateReady ? 'Update ready in Settings' : app.offline === 'ready' ? 'Offline ready' : 'Drawn for trouble'}</span>
       </footer>
     </div>
   );

@@ -10,6 +10,7 @@ import { useGame } from '@/state/store';
 import { GoldGlyph, XpGlyph } from '@/ui/components/Glyph';
 import { useChangeFlash, useJustChanged, useTweenedNumber } from '@/ui/useMotion';
 import { BattleCoach } from './BattleCoach';
+import { useIsLandscape } from '@/ui/useOrientation';
 import { LaneStrip } from './LaneStrip';
 import { PauseSheet } from './PauseSheet';
 import { SpecialDial } from './SpecialDial';
@@ -39,6 +40,13 @@ export function Hud({ snapshot, level, onlineMatch }: { snapshot: HudSnapshot; l
   const [denied, setDenied] = useState(false);
   const [paused, setPaused] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const landscape = useIsLandscape();
+
+  useEffect(() => {
+    if (onlineMatchId || landscape) return;
+    setPaused(true);
+    bridge.send({ t: 'pause', on: true });
+  }, [onlineMatchId, landscape]);
 
   // Phone calls and app switching should not cost an offline mission. Leave the
   // pause sheet up on return so the player chooses when to resume.

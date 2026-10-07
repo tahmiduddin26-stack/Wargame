@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useGame } from '@/state/store';
+import { SaveManager } from './SaveManager';
+import { DeviceOptions } from './DeviceOptions';
 
 export function Settings() {
   const go = useGame((s) => s.go);
@@ -20,6 +22,8 @@ export function Settings() {
       <div className="hazard-rule" />
 
       <div className="st__body scroll-y">
+        <SaveManager />
+        <DeviceOptions />
         <section className="st__group">
           <h3 className="st__label">Battle speed</h3>
           <p className="st__note">Applies to campaign and survival when you deploy. Online battles always run at normal speed.</p>
@@ -38,7 +42,7 @@ export function Settings() {
 
         <Toggle
           label="Sound effects"
-          note="Impacts, gunfire and detonations. All synthesised at runtime, so there is nothing to download."
+          note="Impacts, gunfire, explosions and button taps."
           on={settings.sfx}
           onChange={(v) => setSetting('sfx', v)}
         />
@@ -65,6 +69,13 @@ export function Settings() {
         />
 
         <Toggle
+          label="Reduced motion"
+          note="Remove interface sweeps, pulses and animated counters. Your device’s motion preference is also respected."
+          on={settings.reducedMotion}
+          onChange={(v) => setSetting('reducedMotion', v)}
+        />
+
+        <Toggle
           label="Haptics"
           note="Short buzz when a purchase is denied. Ignored on devices without a vibrator."
           on={settings.haptics}
@@ -74,7 +85,7 @@ export function Settings() {
         <section className="st__group st__group--danger">
           <h3 className="st__label">Wipe progress</h3>
           <p className="st__note">
-            Clears mission records, commander XP, credits, fitted skills, army paints and the briefing flag on this device. Your online profile is kept on the multiplayer server.
+            Clears mission records, commander XP, credits, skills, paints, medals and battle history on this device. Your online commander is kept. Export a backup first to keep your progress.
           </p>
           {!confirmWipe ? (
             <button className="btn btn--danger" onClick={() => setConfirmWipe(true)}>

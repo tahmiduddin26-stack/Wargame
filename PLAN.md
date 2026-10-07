@@ -1,5 +1,7 @@
 # Build-out plan
 
+This document describes the earlier combat build-out. The current browser release and remaining launch gates are in [the final product plan](docs/final-product.md).
+
 Where the game stood before this pass: a complete 12-mission campaign, 5 ages,
 20 units, 15 emplacements, specials, ragdolls, and the full screen set. Playable
 end to end, but missing several things that separate "a working prototype" from

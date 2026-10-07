@@ -21,7 +21,7 @@ export function OnlineLobby() {
   return (
     <div className="st online">
       <header className="st__head">
-        <button className="btn btn--ghost" onClick={() => go('menu')}>Back</button>
+        <button className="btn btn--ghost" onClick={() => { onlineClient.cancelQueue(); onlineClient.disconnect(); go('menu'); }}>Back</button>
         <h2 className="st__title">Multiplayer</h2>
         <span className="label">{online.connection === 'online' ? '● Online' : online.connection === 'connecting' ? 'Connecting…' : '○ Offline'}</span>
       </header>
@@ -41,6 +41,7 @@ export function OnlineLobby() {
             <p className="online__rating"><strong>{resultRank}</strong> · <span className="num">{online.result.rating} rating ({online.result.ratingDelta >= 0 ? '+' : ''}{online.result.ratingDelta})</span></p>
             {resultRank !== previousRank && <p>{online.result.ratingDelta > 0 ? `Promoted to ${resultRank}!` : `Moved to ${resultRank}.`}</p>}
           </> : <p>Rank and rating unchanged.</p>}
+          <p>{Math.floor(online.result.seconds / 60)}:{String(Math.floor(online.result.seconds % 60)).padStart(2, '0')} · {online.result.kills} kills / {online.result.losses} losses · Final age {online.result.peakAge + 1}</p>
           <button className="btn" onClick={() => onlineClient.clearMatch()}>Close result</button>
         </section>}
 
@@ -49,6 +50,7 @@ export function OnlineLobby() {
             <section className="online__panel panel">
               <h3>Find a battle</h3>
               <p>Casual pairs available players without changing rank. Ranked starts near your rating, then searches other ranks if needed. Both use equal armies at normal speed.</p>
+              <p>A brief disconnect can rejoin the same battle. The match keeps running; explicit Leave forfeits immediately.</p>
               <div className="online__actions">
                 <button className="btn btn--primary" disabled={!connected || !!online.queue} onClick={() => onlineClient.queue('random')}>Casual battle</button>
                 <button className="btn" disabled={!connected || !!online.queue} onClick={() => onlineClient.queue('ranked')}>Ranked battle</button>
@@ -90,6 +92,7 @@ export function OnlineLobby() {
             <p>Ranked wins raise your rating; losses lower it. The server decides every result.</p>
             <button className="btn btn--ghost" disabled={!connected} onClick={() => onlineClient.requestLeaderboard()}>Refresh</button>
             <ol>
+              {online.leaderboard.length === 0 && <li>Complete a ranked battle to start the leaderboard.</li>}
               {online.leaderboard.map((entry) => <li key={entry.id} className={entry.id === online.profile?.id ? 'online__self' : ''}>
                 <span>{entry.name}<small>{rankForRating(entry.rating)}</small></span><strong className="num">{entry.rating}</strong><small>{entry.wins}–{entry.losses}</small>
               </li>)}

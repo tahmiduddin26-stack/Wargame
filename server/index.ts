@@ -19,6 +19,7 @@ interface StoredProfile extends PublicProfile {
 interface Match {
   id: string;
   mode: MatchMode;
+  seed: number;
   left: string;
   right: string;
   sim: BattleSim;
@@ -44,6 +45,22 @@ const queues: Record<'random' | 'ranked', string[]> = { random: [], ranked: [] }
 const queuedAt = new Map<string, number>();
 const invites = new Map<string, string>();
 const matches = new Map<string, Match>();
+const disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const pendingResults = new Map<string, { result: Extract<ServerMessage, { t: 'result' }>; expires: number }>();
+const configuredGrace = Number(process.env.RECONNECT_GRACE_MS ?? 15000);
+const reconnectGrace = Number.isFinite(configuredGrace) ? Math.max(1000, Math.min(60000, configuredGrace)) : 15000;
+
+function clearDisconnect(id: string): void {
+  const timer = disconnectTimers.get(id);
+  if (timer) clearTimeout(timer);
+  disconnectTimers.delete(id);
+}
+
+function sendMatch(match: Match, id: string): void {
+  const rival = id === match.left ? match.right : match.left;
+  send(sockets.get(id), { t: 'match', matchId: match.id, mode: match.mode, opponent: publicProfile(profiles.get(rival)!), seed: match.seed });
+  send(sockets.get(id), { t: 'state', matchId: match.id, state: battleState(match, id) });
+}
 
 function save(): void {
   mkdirSync(dirname(dataFile), { recursive: true });
@@ -152,6 +169,7 @@ function finishMatch(match: Match, winner: string, reason: string): void {
   if (!matches.delete(match.id)) return;
   clearInterval(match.timer);
   const loser = winner === match.left ? match.right : match.left;
+  clearDisconnect(winner); clearDisconnect(loser);
   const winProfile = profiles.get(winner)!;
   const loseProfile = profiles.get(loser)!;
   let winDelta = 0;
@@ -168,8 +186,17 @@ function finishMatch(match: Match, winner: string, reason: string): void {
     loseProfile.losses++;
     save();
   }
-  send(sockets.get(winner), { t: 'result', matchId: match.id, won: true, mode: match.mode, reason, ratingDelta: winDelta, rating: winProfile.rating });
-  send(sockets.get(loser), { t: 'result', matchId: match.id, won: false, mode: match.mode, reason, ratingDelta: loseDelta, rating: loseProfile.rating });
+  for (const id of [winner, loser]) {
+    const won = id === winner;
+    const stats = match.sim.stats[id === match.left ? 'player' : 'enemy'];
+    const result: Extract<ServerMessage, { t: 'result' }> = {
+      t: 'result', matchId: match.id, won, mode: match.mode, reason,
+      ratingDelta: won ? winDelta : loseDelta, rating: profiles.get(id)!.rating,
+      seconds: match.sim.elapsed, kills: stats.kills, losses: stats.losses, peakAge: stats.peakAge,
+    };
+    if (sockets.get(id)?.readyState === WebSocket.OPEN) send(sockets.get(id), result);
+    else pendingResults.set(id, { result, expires: Date.now() + 10 * 60 * 1000 });
+  }
   profileUpdate(winner);
   profileUpdate(loser);
   if (match.mode === 'ranked') for (const socket of sockets.values()) send(socket, { t: 'leaderboard', entries: leaderboard() });
@@ -178,7 +205,7 @@ function startMatch(left: string, right: string, mode: MatchMode): void {
   removeFromQueues(left); removeFromQueues(right);
   invites.delete(left); invites.delete(right);
   const seed = randomInt(1, 2 ** 30);
-  const match: Match = { id: randomUUID(), mode, left, right, sim: new BattleSim(ONLINE_LEVEL, seed, 'normal', NO_PERKS), timer: null!, ticks: 0 };
+  const match: Match = { id: randomUUID(), mode, seed, left, right, sim: new BattleSim(ONLINE_LEVEL, seed, 'normal', NO_PERKS), timer: null!, ticks: 0 };
   matches.set(match.id, match);
   send(sockets.get(left), { t: 'match', matchId: match.id, mode, opponent: publicProfile(profiles.get(right)!), seed });
   send(sockets.get(right), { t: 'match', matchId: match.id, mode, opponent: publicProfile(profiles.get(left)!), seed });
@@ -219,7 +246,7 @@ function issueProfile(token?: string): { profile: StoredProfile; token: string }
   return { profile, token: freshToken };
 }
 
-const mime: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.ttf': 'font/ttf' };
+const mime: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.webmanifest': 'application/manifest+json' };
 const server = createServer((req, res) => {
   if (req.url === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: true, players: sockets.size, matches: matches.size })); return; }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); res.end(); return; }
@@ -232,16 +259,21 @@ const server = createServer((req, res) => {
   if (!candidate && extname(path)) { res.writeHead(404); res.end(); return; }
   const file = candidate ? path : resolve(distRoot, 'index.html');
   if (!existsSync(file)) { res.writeHead(503); res.end('Build the client first: npm run build'); return; }
-  res.writeHead(200, { 'Content-Type': mime[extname(file)] ?? 'application/octet-stream' });
+  res.writeHead(200, { 'Content-Type': mime[extname(file)] ?? 'application/octet-stream', 'Cache-Control': extname(file) === '.html' || file.endsWith('sw.js') ? 'no-cache' : file.includes(`${sep}assets${sep}`) ? 'public, max-age=31536000, immutable' : 'no-cache' });
   if (req.method === 'HEAD') res.end(); else createReadStream(file).pipe(res);
 });
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });
+const alive = new WeakSet<WebSocket>();
 wss.on('connection', (socket) => {
+  alive.add(socket);
+  socket.on('pong', () => alive.add(socket));
   let id: string | null = null;
+  const authTimeout = setTimeout(() => { if (!id) socket.close(4001, 'Connect first'); }, 10000);
   let commandsThisSecond = 0;
   let messagesThisSecond = 0;
   const rateReset = setInterval(() => { commandsThisSecond = 0; messagesThisSecond = 0; }, 1000);
   socket.on('message', (raw) => {
+    if (id && sockets.get(id) !== socket) return;
     if (++messagesThisSecond > 80) return;
     let msg: ClientMessage;
     try { msg = JSON.parse(raw.toString()) as ClientMessage; } catch { return; }
@@ -251,10 +283,23 @@ wss.on('connection', (socket) => {
       const token = typeof msg.token === 'string' && msg.token.length <= 128 ? msg.token : undefined;
       const issued = issueProfile(token);
       id = issued.profile.id;
+      clearTimeout(authTimeout);
+      clearDisconnect(id);
       const old = sockets.get(id);
       if (old && old !== socket) old.close(4000, 'Signed in elsewhere');
       sockets.set(id, socket);
-      send(socket, { t: 'welcome', token: issued.token, profile: publicProfile(issued.profile), friends: friendsOf(issued.profile), leaderboard: leaderboard() });
+      send(socket, { t: 'welcome', token: issued.token, profile: publicProfile(issued.profile), friends: friendsOf(issued.profile), leaderboard: leaderboard(), reconnectGraceMs: reconnectGrace });
+      const ongoing = matchFor(id);
+      if (ongoing) {
+        sendMatch(ongoing, id);
+        send(sockets.get(ongoing.left === id ? ongoing.right : ongoing.left), { t: 'notice', message: 'Your opponent rejoined the battle.' });
+      }
+      else {
+        send(socket, { t: 'session_idle' });
+        const pending = pendingResults.get(id);
+        if (pending && pending.expires > Date.now()) send(socket, pending.result);
+        pendingResults.delete(id);
+      }
       updateFriendPresence(id);
       return;
     }
@@ -307,14 +352,29 @@ wss.on('connection', (socket) => {
     }
   });
   socket.on('close', () => {
+    clearTimeout(authTimeout);
     clearInterval(rateReset);
     if (!id || sockets.get(id) !== socket) return;
     sockets.delete(id); removeFromQueues(id); invites.delete(id);
     const match = matchFor(id);
-    if (match) finishMatch(match, match.left === id ? match.right : match.left, 'disconnect');
+    if (match) {
+      const departed = id;
+      disconnectTimers.set(departed, setTimeout(() => {
+        disconnectTimers.delete(departed);
+        if (!sockets.has(departed) && matches.has(match.id)) finishMatch(match, match.left === departed ? match.right : match.left, 'disconnect');
+      }, reconnectGrace));
+      send(sockets.get(match.left === id ? match.right : match.left), { t: 'notice', message: 'Your opponent disconnected. The battle continues while they reconnect.' });
+    }
     updateFriendPresence(id);
   });
   socket.on('error', () => { /* A bad peer only loses its own connection. */ });
 });
+setInterval(() => {
+  for (const socket of wss.clients) {
+    if (!alive.has(socket)) { socket.terminate(); continue; }
+    alive.delete(socket); socket.ping();
+  }
+  for (const [id, pending] of pendingResults) if (pending.expires <= Date.now()) pendingResults.delete(id);
+}, 15000);
 setInterval(pairQueues, 1000);
 server.listen(port, host, () => console.log(`Multiplayer ready at http://${host}:${port}`));

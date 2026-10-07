@@ -15,13 +15,14 @@ export function PauseSheet({
 }) {
   const go = useGame((s) => s.go);
   const startMission = useGame((s) => s.startMission);
+  const startSurvival = useGame((s) => s.startSurvival);
 
   return (
     <div className="pause">
       <div className="pause__sheet panel panel--raised">
         <div className="hazard-rule" />
         <header className="pause__head">
-          <span className="num">OP.{String(level.id).padStart(2, '0')}</span>
+          <span className="num">{snapshot.survival ? 'WATCH' : `OP.${String(level.id).padStart(2, '0')}`}</span>
           <h3 className="pause__title">{level.name}</h3>
           <span className="label">Held</span>
         </header>
@@ -75,7 +76,7 @@ export function PauseSheet({
           <button className="btn btn--primary" onClick={onResume}>
             Resume
           </button>
-          <button className="btn btn--ghost" onClick={() => startMission(level.id)}>
+          <button className="btn btn--ghost" onClick={() => snapshot.survival ? startSurvival() : startMission(level.id)}>
             Restart
           </button>
           <button className="btn btn--danger" onClick={() => go('missions')}>

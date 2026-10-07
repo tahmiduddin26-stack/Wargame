@@ -4,7 +4,7 @@
   "description": "Age of War inspired mobile lane-war game with ragdoll physics",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/build-offline.mjs",
     "preview": "vite preview --host",
     "typecheck": "tsc --noEmit",
     "typecheck:server": "tsc --noEmit -p tsconfig.server.json",
@@ -12,6 +12,10 @@
     "test:multiplayer": "node scripts/multiplayer-test.mjs",
     "test:multiplayer-ui": "node scripts/multiplayer-ui-test.mjs",
     "test:cosmetics": "node scripts/cosmetics-check.mjs",
+    "test:progression": "node --import tsx scripts/progression-check.ts",
+    "test:progression-ui": "node scripts/progression-ui-check.mjs",
+    "test:offline-save-ui": "node scripts/offline-save-ui-check.mjs",
+    "test:survival-result-ui": "node scripts/survival-result-ui-check.mjs",
     "cap:sync": "npm run build && cap sync"
   },
   "repository": {

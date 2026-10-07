@@ -118,8 +118,8 @@ export function MissionSelect() {
           <div className="ms__survival-text">
             <h3 className="ms__survival-name">The Long Watch</h3>
             <p className="ms__survival-brief">
-              Endless authored waves on one field. No clock, no relief, and a credit for every wave
-              you hold.
+              Endless authored waves on one field. No clock, no relief. Each wave reached
+              earns 1 credit and 3 commander XP.
             </p>
           </div>
           <div className="ms__survival-score">

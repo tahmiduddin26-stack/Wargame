@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useGame } from '@/state/store';
 
 /** True when the visitor has asked for reduced motion. Re-reads on change. */
 export function usePrefersReducedMotion(): boolean {
+  const preference = useGame((s) => s.settings.reducedMotion);
   const [reduced, setReduced] = useState(
     () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
   );
@@ -12,7 +14,7 @@ export function usePrefersReducedMotion(): boolean {
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, []);
-  return reduced;
+  return reduced || preference;
 }
 
 /**

@@ -18,6 +18,8 @@ npm run typecheck
 
 ## Campaign progression and multiplayer
 
+The [final product plan](docs/final-product.md) defines the browser release, current build scope and native/competitive release gates.
+
 The [mobile game audit and economy plan](docs/mobile-game-audit.md) records the current balance evidence, cosmetic collection, monetisation approach, and release gaps.
 
 Sixteen missions unlock in order. Battle XP still unlocks ages within a match;
@@ -57,6 +59,91 @@ simulation and result. Campaign skills have no effect on online matches.
 
 The guest profile model is suitable for a self-hosted game prototype. A public
 competitive service would need account recovery and stronger abuse controls.
+
+Brief disconnects now have a 15-second grace window. The authoritative battle
+continues, and reconnecting the same guest token restores the same match and
+side. Explicit Leave forfeits immediately. If the window expires, the missed
+result is held in server memory for up to ten minutes and sent on reconnect.
+`RECONNECT_GRACE_MS` may configure 1–60 seconds. Server restart clears live
+matches and pending results; it does not clear the saved guest profiles.
+
+## Offline play and save recovery
+
+The production build includes a manifest and a complete versioned offline cache.
+After the menu says **Offline ready**, campaign, survival, skills and cosmetics
+work without a connection. Settings offers installation where the browser
+supports it and explains Add to Home Screen elsewhere. Multiplayer needs the
+server. Service workers need HTTPS outside local development
+([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers)).
+
+Settings → **Export backup** downloads a JSON copy of offline progress. Choose
+a backup to validate it and preview its rank, clears, credits and paints, then
+press **Restore this backup** to replace the device save. Invalid files do not
+change progress. The online sign-in token and ranked rating are excluded.
+
+The **Service record** contains twelve medals, offline totals and the last
+twenty finished offline battles. Historical clears and survival bests are kept;
+new battle totals begin with this update. Survival now has its own debrief with
+wave reached, duration, kills/losses, best score and the rewards paid once.
+
+Reduced motion can be enabled in Settings; OS motion preferences also apply.
+Rotating out of landscape or backgrounding an offline battle pauses it and
+leaves a Resume button on return. Restart deploys a fresh simulation in the
+same mode.
+
+## Hosting a browser beta
+
+Use Node 24 or newer. A production build and the server can run from this checkout:
+
+```bash
+npm ci
+npm run build
+npm run typecheck:server
+npm run multiplayer
+```
+
+For a container host, the included Dockerfile builds and serves the same game:
+
+```bash
+docker build -t war-game .
+docker run --rm -p 8787:8787 -v war-game-profiles:/data war-game
+```
+
+The container template still needs testing on the destination host. Put HTTPS/WSS
+in front of the server and keep the `/data` volume (or `.data/multiplayer.json`
+for the checkout) in backups. `/health` reports readiness, online players and
+active matches. Do not delete the profile file during an upgrade. Live matches
+are in memory, so drain them before restarting the server. Public deployment,
+native signing, store billing and real account recovery are separate release
+gates in the final product plan.
+
+## Checks for this release
+
+With a built client and a local server running, set the test addresses. For the
+default server on port 8787, in PowerShell:
+
+```powershell
+$env:GAME_URL='http://127.0.0.1:8787/'
+$env:MULTIPLAYER_HTTP='http://127.0.0.1:8787/'
+$env:MULTIPLAYER_URL='ws://127.0.0.1:8787/ws'
+```
+
+```bash
+npm run test:progression       # reward guards, save migration, imports and history
+npm run test:progression-ui    # service record and real battle restarts
+npm run test:offline-save-ui   # backup UI, cached offline play and rotation
+npm run test:survival-result-ui # real defeat, debrief, single payout and history
+npm run test:cosmetics         # purchase/equip/persistence/rendering
+npm run test:multiplayer       # friend/casual/ranked protocol and reconnect
+npm run test:multiplayer-ui    # two real browser players, rejoin and ratings
+```
+
+Browser checks use installed Playwright Chromium. `GAME_URL` controls progression,
+cosmetics, offline/save and survival checks; their defaults are port 4173 for
+progression/cosmetics and 8788 for offline/save/survival. `MULTIPLAYER_HTTP` and
+`MULTIPLAYER_URL` control online checks.
+Use a separate `MULTIPLAYER_DATA_FILE` when running tests: they create guest
+profiles. Browser screenshots are saved to `.shots/` and excluded from Git.
 
 With the server running, `npm run test:multiplayer` checks the protocol,
 matchmaking, friend challenges and ranked results. `npm run
@@ -182,9 +269,11 @@ portrait you get about a third of the readable lane, which forces either a
 zoomed-out camera nobody can read on a phone, or a vertical lane, which is a
 different game.
 
-So landscape is locked in the Capacitor config, and the web build shows an honest
-`OrientationGate` instead of a squashed HUD. Rotating away mid-match pauses rather
-than losing it.
+The web manifest requests landscape for installed browser play, and the web
+build shows an `OrientationGate` instead of a squashed HUD. Native orientation
+must be configured and verified in each generated platform project; the
+Capacitor config alone does not lock it. Rotating away mid-match pauses offline
+play; online battles continue on the server.
 
 ## Architecture
 
