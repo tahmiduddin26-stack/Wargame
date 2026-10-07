@@ -23,7 +23,9 @@ The loop is **choose a battle → deploy and evolve → see why it ended → ear
 | Mobile resilience | Rotation/background pause, fresh restarts, reduced motion, 44px primary controls | Built; real-device profiling remains a release gate |
 | Online | Friend codes/challenges, casual queue, ranked queue, rating/divisions and leaderboard | Built and checked locally |
 | Online resilience | Brief reconnect window; server keeps the match running; rejoin the same match; one result and rating change | Built and checked locally |
-| Hosting | One server serves client plus WebSocket; durable profile file; health endpoint; reproducible checks | Local server checked; container template and operating guide supplied |
+| Online accounts | Upgrade a guest, recover on another device, change password and sign out | Built and checked locally; email reset remains a gate |
+| Online record | Last 20 battles with opponent, result, duration and rating changes | Built and checked locally; retained after server restart |
+| Hosting | One server serves client plus WebSocket; SQLite profiles/accounts/results; safe legacy import and backup tool | Local server checked; container template and operating guide supplied |
 
 ### Rules that keep the game fair
 
@@ -47,11 +49,11 @@ The loop is **choose a battle → deploy and evolve → see why it ended → ear
 
 ### Browser beta
 
-All implementation and automated checks above pass. Serve over HTTPS/WSS on a reachable host, back up `.data/multiplayer.json`, and run a two-device smoke test. Service workers require HTTPS except on local development origins ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers)). Human testing must cover small landscape phones, font readability, thumb reach, pause/resume, strategy clarity and reconnecting on mobile data.
+All implementation and automated checks above pass. Serve over HTTPS/WSS on a reachable host, back up `.data/multiplayer.sqlite` with the database backup command, and run a two-device smoke test. Service workers require HTTPS except on local development origins ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers)). Human testing must cover small landscape phones, font readability, thumb reach, pause/resume, strategy clarity and reconnecting on mobile data.
 
 ### Public competitive release
 
-Replace recoverable-by-token guest identity with real account recovery; add durable database storage, moderation/report/block controls, operational limits, match logs and privacy documentation. Test rating drift, side advantage, queue spread and abuse using real sessions. Do not describe this prototype as a hardened public ranked service until these gates are met.
+Username/password accounts, SQLite storage, finished match logs and an in-game data notice are now built. Complete forgotten-password recovery, moderation/report/block controls, account deletion, a published privacy policy and operational limits before public release. The single-process server still holds active matches in memory. Test rating drift, side advantage, queue spread and abuse using real sessions. Do not describe this prototype as a hardened public ranked service until these gates are met. Account and database details are in [online accounts and operations](online-accounts.md).
 
 ### Native store release
 
@@ -79,4 +81,8 @@ After beta playtests: prioritise confusing mission losses and frame-time spikes 
 
 The production build and client/server TypeScript checks pass. Progression tests cover single payouts, restart IDs, legacy migration, history persistence, invalid imports and backup round trips. Browser checks cover preview-before-restore, cosmetics, 667×375 layouts, cached offline reload/deployment, rotation pause/resume and real campaign/survival restarts. An undefended real survival run ends at wave 6 and verifies the debrief, six credits, eighteen XP, a single history entry and persistence after reload. Protocol tests cover friend/casual/ranked results, mirrored state, same-match rejoin, grace expiry and a recovered missed result. Two-browser tests cover rendered shared units, casual/ranked ratings, rejoining after a page reload and stopping a search when leaving the lobby.
 
-The full Normal harness repeats **14/16 greedy, 10/16 swarm and 13/16 mixed** wins. Operation 1 finishes in 1:29 / 3:00 / 1:01 respectively. Survival reaches 32 / 33 / 31 waves in about 6:42–6:55. This pass adds no combat or economy tuning. These are local automated results; mobile hardware performance, a public deployment, native builds, billing and account recovery have not been verified or shipped.
+The full Normal harness repeats **14/16 greedy, 10/16 swarm and 13/16 mixed** wins. Operation 1 finishes in 1:29 / 3:00 / 1:01 respectively. Survival reaches 32 / 33 / 31 waves in about 6:42–6:55. This pass adds no combat or economy tuning. These are local automated results; mobile hardware performance, a public deployment, native builds and billing have not been verified or shipped.
+
+### Account and storage continuation
+
+This increment adds recoverable commander accounts, private recent online history, safe legacy-profile migration and a live database backup command. Storage checks cover corruption rejection, retained source files, transaction rollback, duplicate settlements, password hashing and reopen/backup. Account protocol checks use isolated servers and verify guest upgrades, private account names, replacement sessions, password-based rejoin of an active battle, password changes, revoked logout tokens and ratings/friends/results after restart. Phone browser checks cover 667×375 forms, validation, ranked records, reload and recovery on a second browser. The existing friend/casual/ranked/reconnect checks also pass. Forgotten-password recovery and public account operations remain future gates.

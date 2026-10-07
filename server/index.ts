@@ -1,8 +1,9 @@
 import { createHash, randomBytes, randomInt, randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync, createReadStream, statSync } from 'node:fs';
-import { createServer } from 'node:http';
+import { existsSync, createReadStream, statSync } from 'node:fs';
+import { createServer, type IncomingMessage } from 'node:http';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isIP } from 'node:net';
 import { WebSocket, WebSocketServer } from 'ws';
 import { BattleSim } from '../src/game/sim/BattleSim';
 import { SIM } from '../src/game/config';
@@ -11,11 +12,10 @@ import { ONLINE_LEVEL, type ClientMessage, type FriendProfile, type OnlineBattle
 import { canPairRanked } from '../src/multiplayer/ranks';
 import type { Faction } from '../src/data/types';
 import type { SimEvent, SimProjectile } from '../src/game/sim/types';
+import type { TLSSocket } from 'node:tls';
+import { OnlineStorage, type StoredProfile } from './storage';
+import { AccountLimiter, hashPassword, username, validPassword, verifyPassword } from './accounts';
 
-interface StoredProfile extends PublicProfile {
-  tokenHash: string;
-  friends: string[];
-}
 interface Match {
   id: string;
   mode: MatchMode;
@@ -30,16 +30,13 @@ interface Match {
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const distRoot = resolve(projectRoot, 'dist');
 const dataFile = resolve(process.env.MULTIPLAYER_DATA_FILE ?? resolve(projectRoot, '.data', 'multiplayer.json'));
+const databaseFile = resolve(process.env.MULTIPLAYER_DB_FILE ?? dataFile.replace(/\.json$/i, '') + '.sqlite');
 const port = Number(process.env.PORT ?? 8787);
 const host = process.env.HOST ?? '127.0.0.1';
 
-function readProfiles(): StoredProfile[] {
-  try {
-    const parsed: unknown = JSON.parse(readFileSync(dataFile, 'utf8'));
-    return Array.isArray(parsed) ? parsed as StoredProfile[] : [];
-  } catch { return []; }
-}
-const profiles = new Map(readProfiles().map((p) => [p.id, p]));
+const storage = new OnlineStorage(databaseFile, dataFile);
+const profiles = new Map(storage.profiles().map((p) => [p.id, p]));
+const accountLimiter = new AccountLimiter();
 const sockets = new Map<string, WebSocket>();
 const queues: Record<'random' | 'ranked', string[]> = { random: [], ranked: [] };
 const queuedAt = new Map<string, number>();
@@ -62,12 +59,7 @@ function sendMatch(match: Match, id: string): void {
   send(sockets.get(id), { t: 'state', matchId: match.id, state: battleState(match, id) });
 }
 
-function save(): void {
-  mkdirSync(dirname(dataFile), { recursive: true });
-  const tmp = `${dataFile}.tmp`;
-  writeFileSync(tmp, JSON.stringify([...profiles.values()], null, 2));
-  renameSync(tmp, dataFile);
-}
+function save(...changed: StoredProfile[]): void { storage.saveProfiles(...changed); }
 function send(socket: WebSocket | undefined, msg: ServerMessage): void {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(msg));
 }
@@ -101,6 +93,10 @@ function removeFromQueues(id: string): void {
     const index = q.indexOf(id);
     if (index >= 0) q.splice(index, 1);
   }
+}
+function clearInvites(id: string): void {
+  invites.delete(id);
+  for (const [target, sender] of invites) if (sender === id) invites.delete(target);
 }
 function pairQueues(): void {
   for (const mode of ['random', 'ranked'] as const) {
@@ -170,8 +166,8 @@ function finishMatch(match: Match, winner: string, reason: string): void {
   clearInterval(match.timer);
   const loser = winner === match.left ? match.right : match.left;
   clearDisconnect(winner); clearDisconnect(loser);
-  const winProfile = profiles.get(winner)!;
-  const loseProfile = profiles.get(loser)!;
+  const winProfile = { ...profiles.get(winner)! };
+  const loseProfile = { ...profiles.get(loser)! };
   let winDelta = 0;
   let loseDelta = 0;
   if (match.mode === 'ranked') {
@@ -184,18 +180,26 @@ function finishMatch(match: Match, winner: string, reason: string): void {
     loseDelta = loseProfile.rating - oldLoserRating;
     winProfile.wins++;
     loseProfile.losses++;
-    save();
   }
-  for (const id of [winner, loser]) {
+  const finishedAt = new Date().toISOString();
+  const records = [winner, loser].map((id) => {
     const won = id === winner;
     const stats = match.sim.stats[id === match.left ? 'player' : 'enemy'];
-    const result: Extract<ServerMessage, { t: 'result' }> = {
-      t: 'result', matchId: match.id, won, mode: match.mode, reason,
-      ratingDelta: won ? winDelta : loseDelta, rating: profiles.get(id)!.rating,
+    const rival = profiles.get(won ? loser : winner)!;
+    return {
+      matchId: match.id, finishedAt, opponent: { id: rival.id, name: rival.name }, won, mode: match.mode, reason,
+      ratingDelta: won ? winDelta : loseDelta, rating: won ? winProfile.rating : loseProfile.rating,
       seconds: match.sim.elapsed, kills: stats.kills, losses: stats.losses, peakAge: stats.peakAge,
     };
+  });
+  if (!storage.finishMatch({ ...match, winner, reason, finishedAt }, [winProfile, loseProfile], records)) return;
+  profiles.set(winner, winProfile); profiles.set(loser, loseProfile);
+  for (const [index, id] of [winner, loser].entries()) {
+    const { finishedAt: _finishedAt, opponent: _opponent, ...record } = records[index];
+    const result: Extract<ServerMessage, { t: 'result' }> = { t: 'result', ...record };
     if (sockets.get(id)?.readyState === WebSocket.OPEN) send(sockets.get(id), result);
     else pendingResults.set(id, { result, expires: Date.now() + 10 * 60 * 1000 });
+    send(sockets.get(id), { t: 'history', entries: storage.history(id) });
   }
   profileUpdate(winner);
   profileUpdate(loser);
@@ -242,8 +246,12 @@ function issueProfile(token?: string): { profile: StoredProfile; token: string }
   while ([...profiles.values()].some((p) => p.code === code));
   const profile: StoredProfile = { id: randomUUID(), name: `Commander ${code.slice(0, 3)}`, code, rating: 1000, wins: 0, losses: 0, friends: [], tokenHash: createHash('sha256').update(freshToken).digest('hex') };
   profiles.set(profile.id, profile);
-  save();
+  save(profile);
   return { profile, token: freshToken };
+}
+function rotateToken(profile: StoredProfile): { profile: StoredProfile; token: string } {
+  const token = randomBytes(32).toString('base64url');
+  return { profile: { ...profile, tokenHash: createHash('sha256').update(token).digest('hex') }, token };
 }
 
 const mime: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.webmanifest': 'application/manifest+json' };
@@ -262,16 +270,120 @@ const server = createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': mime[extname(file)] ?? 'application/octet-stream', 'Cache-Control': extname(file) === '.html' || file.endsWith('sw.js') ? 'no-cache' : file.includes(`${sep}assets${sep}`) ? 'public, max-age=31536000, immutable' : 'no-cache' });
   if (req.method === 'HEAD') res.end(); else createReadStream(file).pipe(res);
 });
-const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });
+const loopback = (address: string) => ['localhost', '127.0.0.1', '::1', '[::1]', '::ffff:127.0.0.1'].includes(address);
+const allowedOrigins = new Set((process.env.ALLOWED_ORIGINS ?? '').split(',').map((value) => value.trim()).filter(Boolean));
+const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024, verifyClient: ({ origin, req }: { origin: string; req: IncomingMessage }) => {
+  if (!origin) return true; // Non-browser protocol clients authenticate with their own credentials.
+  if (allowedOrigins.size) return allowedOrigins.has(origin);
+  try {
+    const page = new URL(origin);
+    const target = new URL(`http://${req.headers.host}`);
+    return /^https?:$/.test(page.protocol) && (page.host === target.host || loopback(page.hostname) && loopback(target.hostname));
+  } catch { return false; }
+} });
 const alive = new WeakSet<WebSocket>();
-wss.on('connection', (socket) => {
+wss.on('connection', (socket, request) => {
   alive.add(socket);
   socket.on('pong', () => alive.add(socket));
   let id: string | null = null;
+  let accountBusy = false;
   const authTimeout = setTimeout(() => { if (!id) socket.close(4001, 'Connect first'); }, 10000);
   let commandsThisSecond = 0;
   let messagesThisSecond = 0;
   const rateReset = setInterval(() => { commandsThisSecond = 0; messagesThisSecond = 0; }, 1000);
+  function bindProfile(issued: { profile: StoredProfile; token: string }): void {
+    if (id && id !== issued.profile.id) {
+      const departed = id;
+      sockets.delete(departed); removeFromQueues(departed);
+      clearInvites(departed); updateFriendPresence(departed);
+    }
+    id = issued.profile.id;
+    clearTimeout(authTimeout); clearDisconnect(id);
+    const old = sockets.get(id);
+    if (old && old !== socket) old.close(4000, 'Signed in elsewhere');
+    sockets.set(id, socket);
+    const account = storage.account(id);
+    send(socket, { t: 'welcome', token: issued.token, profile: publicProfile(issued.profile), friends: friendsOf(issued.profile), leaderboard: leaderboard(), reconnectGraceMs: reconnectGrace, account: account ? { username: account.username } : null });
+    send(socket, { t: 'history', entries: storage.history(id) });
+    const ongoing = matchFor(id);
+    if (ongoing) {
+      sendMatch(ongoing, id);
+      send(sockets.get(ongoing.left === id ? ongoing.right : ongoing.left), { t: 'notice', message: 'Your opponent rejoined the battle.' });
+    } else {
+      send(socket, { t: 'session_idle' });
+      const pending = pendingResults.get(id);
+      if (pending && pending.expires > Date.now()) send(socket, pending.result);
+      pendingResults.delete(id);
+    }
+    updateFriendPresence(id);
+  }
+  async function accountAction(msg: Extract<ClientMessage, { t: 'account_register' | 'account_login' | 'account_password' | 'account_logout' }>): Promise<void> {
+    if (!id || accountBusy) return;
+    const secure = (request.socket as TLSSocket).encrypted || loopback(request.socket.remoteAddress ?? '') ||
+      process.env.TRUST_PROXY_TLS === '1' && request.headers['x-forwarded-proto'] === 'https';
+    if (!secure) { send(socket, { t: 'account_error', message: 'Accounts require a secure HTTPS connection.' }); return; }
+    const sourceId = id;
+    if (matchFor(sourceId) || queuedAt.has(sourceId)) {
+      send(socket, { t: 'account_error', message: 'Finish your battle or cancel your search before changing accounts.' }); return;
+    }
+    const profile = profiles.get(sourceId)!;
+    const current = storage.account(sourceId);
+    const name = msg.t === 'account_register' || msg.t === 'account_login' ? username(msg.username) : current?.username ?? sourceId;
+    const forwardedIp = request.headers['x-forwarded-for'];
+    const clientIp = process.env.TRUST_PROXY_TLS === '1' && request.headers['x-forwarded-proto'] === 'https' &&
+      typeof forwardedIp === 'string' && isIP(forwardedIp) ? forwardedIp : request.socket.remoteAddress ?? 'unknown';
+    if (msg.t !== 'account_logout' && !accountLimiter.allow(clientIp, name ?? 'invalid')) {
+      send(socket, { t: 'account_error', message: 'Too many account attempts. Try again in 15 minutes.' }); return;
+    }
+    clearInvites(sourceId);
+    accountBusy = true;
+    // The socket may be closed or superseded while scrypt runs off the event loop.
+    const stillCurrent = () => id === sourceId && sockets.get(sourceId) === socket && socket.readyState === WebSocket.OPEN;
+    try {
+      if (msg.t === 'account_logout') {
+        if (!current) throw new Error('Create an account before signing out, so you can return to this commander.');
+        const rotated = rotateToken(profile);
+        save(rotated.profile); profiles.set(sourceId, rotated.profile);
+        bindProfile(issueProfile());
+        send(socket, { t: 'account_status', account: null, message: 'Signed out. You are playing as a new guest.' });
+      } else if (msg.t === 'account_register') {
+        if (current) throw new Error('This commander already has an account.');
+        if (!name) throw new Error('Username needs 3–24 letters, numbers or underscores.');
+        if (!validPassword(msg.password)) throw new Error('Use a password between 15 and 128 characters.');
+        const hash = await hashPassword(msg.password);
+        if (!stillCurrent()) return;
+        const issued = rotateToken(profile);
+        if (!storage.register(issued.profile, name, hash)) throw new Error('That username is unavailable. Choose another.');
+        profiles.set(sourceId, issued.profile); bindProfile(issued);
+        send(socket, { t: 'account_status', account: { username: name }, message: 'Account created. Sign in on another device to recover this commander.' });
+      } else if (msg.t === 'account_login') {
+        if (!name || !validPassword(msg.password)) throw new Error('Username or password is incorrect.');
+        const target = storage.findAccount(name);
+        const verified = await verifyPassword(msg.password, target?.passwordHash);
+        if (!stillCurrent()) return;
+        if (!target || !verified || storage.account(target.profileId)?.passwordHash !== target.passwordHash) throw new Error('Username or password is incorrect.');
+        const issued = rotateToken(profiles.get(target.profileId)!);
+        save(issued.profile); profiles.set(issued.profile.id, issued.profile);
+        bindProfile(issued);
+        send(socket, { t: 'account_status', account: { username: name }, message: 'Signed in. Your online rating, friends and battle record are restored.' });
+      } else {
+        if (!current) throw new Error('Create an account first.');
+        if (!validPassword(msg.password)) throw new Error('Use a password between 15 and 128 characters.');
+        if (!validPassword(msg.currentPassword)) throw new Error('Current password is incorrect.');
+        const verified = await verifyPassword(msg.currentPassword, current.passwordHash);
+        if (!stillCurrent()) return;
+        if (!verified) throw new Error('Current password is incorrect.');
+        const hash = await hashPassword(msg.password);
+        if (!stillCurrent()) return;
+        const issued = rotateToken(profile);
+        storage.changePassword(issued.profile, hash); profiles.set(sourceId, issued.profile);
+        bindProfile(issued);
+        send(socket, { t: 'account_status', account: { username: current.username }, message: 'Password changed. Previous device sessions are no longer valid.' });
+      }
+    } catch (error) {
+      if (stillCurrent()) send(socket, { t: 'account_error', message: error instanceof Error && !('code' in error) ? error.message : 'Account service is unavailable. Try again shortly.' });
+    } finally { accountBusy = false; }
+  }
   socket.on('message', (raw) => {
     if (id && sockets.get(id) !== socket) return;
     if (++messagesThisSecond > 80) return;
@@ -281,38 +393,23 @@ wss.on('connection', (socket) => {
     if (msg.t === 'hello') {
       if (id) return;
       const token = typeof msg.token === 'string' && msg.token.length <= 128 ? msg.token : undefined;
-      const issued = issueProfile(token);
-      id = issued.profile.id;
-      clearTimeout(authTimeout);
-      clearDisconnect(id);
-      const old = sockets.get(id);
-      if (old && old !== socket) old.close(4000, 'Signed in elsewhere');
-      sockets.set(id, socket);
-      send(socket, { t: 'welcome', token: issued.token, profile: publicProfile(issued.profile), friends: friendsOf(issued.profile), leaderboard: leaderboard(), reconnectGraceMs: reconnectGrace });
-      const ongoing = matchFor(id);
-      if (ongoing) {
-        sendMatch(ongoing, id);
-        send(sockets.get(ongoing.left === id ? ongoing.right : ongoing.left), { t: 'notice', message: 'Your opponent rejoined the battle.' });
-      }
-      else {
-        send(socket, { t: 'session_idle' });
-        const pending = pendingResults.get(id);
-        if (pending && pending.expires > Date.now()) send(socket, pending.result);
-        pendingResults.delete(id);
-      }
-      updateFriendPresence(id);
+      bindProfile(issueProfile(token));
       return;
     }
     if (!id) { send(socket, { t: 'error', message: 'Connect first.' }); return; }
+    if (msg.t === 'account_register' || msg.t === 'account_login' || msg.t === 'account_password' || msg.t === 'account_logout') {
+      void accountAction(msg); return;
+    }
+    if (accountBusy) return;
     const profile = profiles.get(id)!;
     if (msg.t === 'set_name') {
       const name = String(msg.name ?? '').trim().replace(/\s+/g, ' ').slice(0, 20);
       if (name.length < 2) { send(socket, { t: 'error', message: 'Name must be at least 2 characters.' }); return; }
-      profile.name = name; save(); profileUpdate(id); updateFriendPresence(id);
+      profile.name = name; save(profile); profileUpdate(id); updateFriendPresence(id);
     } else if (msg.t === 'friend_add') {
       const target = [...profiles.values()].find((p) => p.code === String(msg.code ?? '').trim().toUpperCase());
       if (!target || target.id === id) { send(socket, { t: 'error', message: 'Friend code not found.' }); return; }
-      if (!profile.friends.includes(target.id)) { profile.friends.push(target.id); target.friends.push(id); save(); }
+      if (!profile.friends.includes(target.id)) { profile.friends.push(target.id); target.friends.push(id); save(profile, target); }
       profileUpdate(id); profileUpdate(target.id);
       send(socket, { t: 'notice', message: `${target.name} added to friends.` });
     } else if (msg.t === 'challenge') {
@@ -349,13 +446,15 @@ wss.on('connection', (socket) => {
       if (match?.id === msg.matchId) finishMatch(match, match.left === id ? match.right : match.left, 'forfeit');
     } else if (msg.t === 'leaderboard') {
       send(socket, { t: 'leaderboard', entries: leaderboard() });
+    } else if (msg.t === 'history') {
+      send(socket, { t: 'history', entries: storage.history(id) });
     }
   });
   socket.on('close', () => {
     clearTimeout(authTimeout);
     clearInterval(rateReset);
     if (!id || sockets.get(id) !== socket) return;
-    sockets.delete(id); removeFromQueues(id); invites.delete(id);
+    sockets.delete(id); removeFromQueues(id); clearInvites(id);
     const match = matchFor(id);
     if (match) {
       const departed = id;

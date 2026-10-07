@@ -28,7 +28,7 @@ Do not add random paid loot boxes. If they are ever introduced, both stores requ
 
 ## Highest-priority missing release work
 
-1. **Account recovery and cloud save.** Campaign cosmetics and credits are local storage; online identity uses a guest token. Device loss currently loses the local collection. Paid ownership must be server validated and restorable before any real-money sale.
+1. **Account recovery and cloud save.** Online commanders now support username/password sign-in, with durable ratings, friends and recent battles. Forgotten-password recovery remains unfinished. Campaign cosmetics and credits remain local, with manual backup/restore; online sign-in does not sync that collection. Paid ownership must be server validated and restorable before any real-money sale. See [online accounts and operations](online-accounts.md).
 2. **Native billing and entitlement handling.** StoreKit/Play Billing, receipt or purchase-token validation, restore, refund/revocation handling, and a clear purchase history. No billing is integrated today.
 3. **Human playtests and metrics.** Test first-session clarity, thumb reach, text on small landscape phones, mission failure reasons, late-game strategy diversity, and disconnect recovery. Collect only the data needed for balancing, with a privacy notice and appropriate consent.
 4. **Mobile performance and resilience.** Profile mid-range devices for frame time, heat and battery during 12v12 fights and ragdoll bursts. Verify background/resume, phone calls and network loss. Google's current game quality guidance emphasizes stability and 60 fps active gameplay on reference devices ([Android: Game quality guidelines](https://developer.android.com/games/guidelines)).

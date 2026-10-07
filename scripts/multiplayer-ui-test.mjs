@@ -98,8 +98,8 @@ try {
   await b.page.screenshot({ path: `${out}/online-rejoined-phone.png` });
   await a.page.getByRole('button', { name: 'Leave battle' }).click();
   await a.page.getByRole('button', { name: 'Forfeit' }).click();
-  await a.page.getByText('Defeat').waitFor({ timeout: 8000 });
-  await b.page.getByText('Victory').waitFor({ timeout: 8000 });
+  await a.page.locator('.online__result').getByText('Defeat').waitFor({ timeout: 8000 });
+  await b.page.locator('.online__result').getByText('Victory').waitFor({ timeout: 8000 });
   assert(await a.page.getByText('Rank and rating unchanged.').isVisible());
   await a.page.getByRole('button', { name: 'Close result' }).click();
   await b.page.getByRole('button', { name: 'Close result' }).click();
@@ -111,10 +111,10 @@ try {
   await a.page.screenshot({ path: `${out}/progress-ranked-battle.png` });
   await b.page.getByRole('button', { name: 'Leave battle' }).click();
   await b.page.getByRole('button', { name: 'Forfeit' }).click();
-  await a.page.getByText('Victory').waitFor({ timeout: 8000 });
-  await b.page.getByText('Defeat').waitFor({ timeout: 8000 });
-  assert(await a.page.getByText('1016 rating (+16)').isVisible());
-  assert(await b.page.getByText('984 rating (-16)').isVisible());
+  await a.page.locator('.online__result').getByText('Victory').waitFor({ timeout: 8000 });
+  await b.page.locator('.online__result').getByText('Defeat').waitFor({ timeout: 8000 });
+  assert(await a.page.locator('.online__result').getByText('1016 rating (+16)', { exact: true }).isVisible());
+  assert(await b.page.locator('.online__result').getByText('984 rating (-16)', { exact: true }).isVisible());
   await a.page.getByRole('button', { name: 'Close result' }).click();
   await b.page.getByRole('button', { name: 'Close result' }).click();
   await a.page.getByRole('button', { name: 'Casual battle' }).click();

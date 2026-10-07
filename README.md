@@ -47,8 +47,22 @@ $env:VITE_MULTIPLAYER_URL='wss://your-game-host.example/ws'
 npm run build
 ```
 
-Online profiles are guest profiles held by a private token in the browser and
-persisted in `.data/multiplayer.json` on the server. Share the six-character
+Online play begins as a guest. **Multiplayer → Commander account** lets you add
+a username and password to that same commander, sign in on another device,
+change the password, or sign out. Existing ratings, friend codes and friends
+are preserved. Passwords require 15–128 characters; use a password manager.
+Email password reset is not implemented. Offline campaign saves and cosmetics
+remain separate from the online account.
+
+Online profiles, account hashes and finished match results are stored in
+`.data/multiplayer.sqlite`. On first start, the server validates and imports
+the old `.data/multiplayer.json` without changing it. A damaged source stops
+startup instead of silently creating empty profiles. `MULTIPLAYER_DB_FILE`
+overrides the database path; `MULTIPLAYER_DATA_FILE` selects the legacy import
+source and, if no database override is set, its corresponding `.sqlite` path.
+Do not run two game servers against the same database.
+
+Share the six-character
 friend code to challenge a friend. Casual battles pair available players;
 ranked battles start near the same rating and widen the search across divisions
 over time. Rating determines Bronze (under 1,100), Silver (1,100), Gold (1,300),
@@ -57,15 +71,20 @@ enter the leaderboard. Every online battle
 starts with equal resources, runs at normal speed, and uses the server's
 simulation and result. Campaign skills have no effect on online matches.
 
-The guest profile model is suitable for a self-hosted game prototype. A public
-competitive service would need account recovery and stronger abuse controls.
+The lobby shows the last 20 finished online battles, including opponent,
+duration, outcome and rating change. Both players' results and ranked rating
+changes commit in one database transaction. Match IDs prevent duplicate payouts.
+Account operations have limits across connections and bounded asynchronous
+password hashing. Public competitive release still needs moderation, recovery
+for forgotten passwords and further operational controls.
 
 Brief disconnects now have a 15-second grace window. The authoritative battle
 continues, and reconnecting the same guest token restores the same match and
 side. Explicit Leave forfeits immediately. If the window expires, the missed
 result is held in server memory for up to ten minutes and sent on reconnect.
 `RECONNECT_GRACE_MS` may configure 1–60 seconds. Server restart clears live
-matches and pending results; it does not clear the saved guest profiles.
+matches and pending result notifications; saved profiles, accounts and finished
+battle records survive. A password sign-in can also rejoin an active match.
 
 ## Offline play and save recovery
 
@@ -110,11 +129,30 @@ docker run --rm -p 8787:8787 -v war-game-profiles:/data war-game
 ```
 
 The container template still needs testing on the destination host. Put HTTPS/WSS
-in front of the server and keep the `/data` volume (or `.data/multiplayer.json`
-for the checkout) in backups. `/health` reports readiness, online players and
-active matches. Do not delete the profile file during an upgrade. Live matches
+in front of the server and keep the `/data` volume in backups. Browser account
+forms require a secure context (HTTPS or localhost). Set `ALLOWED_ORIGINS` to a
+comma-separated list of exact browser origins if using a separate client host.
+The default accepts the same host and local development origins. Behind a trusted
+TLS reverse proxy, set `TRUST_PROXY_TLS=1` and have the proxy overwrite
+`X-Forwarded-Proto` and `X-Forwarded-For` (a single client IP). This preserves
+per-player IP limits instead of limiting all users under the proxy's address.
+Restrict direct access to the backend when trusting those headers.
+
+`/health` reports readiness, online players and active matches. Create a
+consistent database backup, including any live WAL contents, with:
+
+```bash
+npm run backup:online -- .data/backups/online-2026-10-07.sqlite
+```
+
+The command refuses to overwrite an existing destination. Use the same database
+environment variables as the server. In the container, use `docker exec` to run
+`npm run backup:online -- /data/backups/online-2026-10-07.sqlite`.
+See [online accounts and operations](docs/online-accounts.md) for restore steps,
+data handling and remaining limits. Do not delete the database or legacy source
+during an upgrade. Live matches
 are in memory, so drain them before restarting the server. Public deployment,
-native signing, store billing and real account recovery are separate release
+native signing, store billing and public account operations are separate release
 gates in the final product plan.
 
 ## Checks for this release
@@ -136,13 +174,16 @@ npm run test:survival-result-ui # real defeat, debrief, single payout and histor
 npm run test:cosmetics         # purchase/equip/persistence/rendering
 npm run test:multiplayer       # friend/casual/ranked protocol and reconnect
 npm run test:multiplayer-ui    # two real browser players, rejoin and ratings
+npm run test:online-storage    # migration, transaction rollback, passwords and backup
+npm run test:accounts          # isolated server restart and account protocol checks
+npm run test:accounts-ui       # phone forms, sign-in, ranked history and sign-out
 ```
 
 Browser checks use installed Playwright Chromium. `GAME_URL` controls progression,
 cosmetics, offline/save and survival checks; their defaults are port 4173 for
 progression/cosmetics and 8788 for offline/save/survival. `MULTIPLAYER_HTTP` and
 `MULTIPLAYER_URL` control online checks.
-Use a separate `MULTIPLAYER_DATA_FILE` when running tests: they create guest
+Use a separate `MULTIPLAYER_DB_FILE` and legacy `MULTIPLAYER_DATA_FILE` when running tests: they create guest
 profiles. Browser screenshots are saved to `.shots/` and excluded from Git.
 
 With the server running, `npm run test:multiplayer` checks the protocol,
@@ -518,8 +559,9 @@ and visible escalation so nothing grinds forever; and the ragdolls.
 - **Battlefield character art.** Units still use procedural rigs. The skeleton
   spec has a `texture` slot per bone for when sprites arrive; the interface
   insignias are finished vector drawings.
-- **Public multiplayer hardening.** Casual, ranked and friend battles exist,
-  but guest profiles still need account recovery and stronger abuse controls.
+- **Public multiplayer hardening.** Casual, ranked, friends and recoverable
+  username/password accounts exist. Forgotten-password recovery, moderation,
+  account deletion and stronger operational controls remain release work.
 - **Phaser is a 1.2MB chunk** (330KB gzipped). Already split out; worth lazy-loading
   behind the menu if startup time matters.
 - Balance beyond mission 5 is tuned against scripted players, not humans.

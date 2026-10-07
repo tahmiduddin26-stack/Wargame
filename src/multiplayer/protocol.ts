@@ -33,6 +33,21 @@ export interface FriendProfile extends PublicProfile {
   online: boolean;
 }
 
+export interface OnlineBattleRecord {
+  matchId: string;
+  finishedAt: string;
+  opponent: { id: string; name: string };
+  won: boolean;
+  mode: MatchMode;
+  reason: string;
+  ratingDelta: number;
+  rating: number;
+  seconds: number;
+  kills: number;
+  losses: number;
+  peakAge: number;
+}
+
 /** Every state sent to a client is mirrored into its own left-side perspective. */
 export interface OnlineBattleState {
   player: Commander;
@@ -48,6 +63,11 @@ export interface OnlineBattleState {
 
 export type ClientMessage =
   | { t: 'hello'; token?: string }
+  | { t: 'account_register'; username: string; password: string }
+  | { t: 'account_login'; username: string; password: string }
+  | { t: 'account_password'; currentPassword: string; password: string }
+  | { t: 'account_logout' }
+  | { t: 'history' }
   | { t: 'set_name'; name: string }
   | { t: 'friend_add'; code: string }
   | { t: 'challenge'; friendId: string }
@@ -59,7 +79,10 @@ export type ClientMessage =
   | { t: 'leaderboard' };
 
 export type ServerMessage =
-  | { t: 'welcome'; token: string; profile: PublicProfile; friends: FriendProfile[]; leaderboard: PublicProfile[]; reconnectGraceMs: number }
+  | { t: 'welcome'; token: string; profile: PublicProfile; friends: FriendProfile[]; leaderboard: PublicProfile[]; reconnectGraceMs: number; account: { username: string } | null }
+  | { t: 'account_status'; account: { username: string } | null; message: string }
+  | { t: 'account_error'; message: string }
+  | { t: 'history'; entries: OnlineBattleRecord[] }
   | { t: 'session_idle' }
   | { t: 'profile'; profile: PublicProfile; friends: FriendProfile[] }
   | { t: 'leaderboard'; entries: PublicProfile[] }

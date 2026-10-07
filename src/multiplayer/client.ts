@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { ClientMessage, FriendProfile, MatchMode, OnlineBattleState, OnlineCommand, PublicProfile, ServerMessage } from './protocol';
+import type { ClientMessage, FriendProfile, MatchMode, OnlineBattleRecord, OnlineBattleState, OnlineCommand, PublicProfile, ServerMessage } from './protocol';
 
 export interface OnlineMatchInfo {
   matchId: string;
@@ -19,6 +19,11 @@ export interface OnlineView {
   result: OnlineResult | null;
   message: string;
   reconnectGraceMs: number;
+  account: { username: string } | null;
+  accountBusy: boolean;
+  accountMessage: string;
+  accountError: boolean;
+  history: OnlineBattleRecord[];
 }
 
 const TOKEN_KEY = 'aow.online.token.v1';
@@ -41,6 +46,7 @@ class OnlineClient {
   private view: OnlineView = {
     connection: 'offline', profile: null, friends: [], leaderboard: [], queue: null,
     invite: null, match: null, result: null, message: '', reconnectGraceMs: 15000,
+    account: null, accountBusy: false, accountMessage: '', accountError: false, history: [],
   };
 
   snapshot = (): OnlineView => this.view;
@@ -79,10 +85,10 @@ class OnlineClient {
       this.socket = null;
       if (event.code === 4000) {
         this.lastBattle = null;
-        this.update({ connection: 'offline', queue: null, match: null, invite: null, message: 'Your commander connected on another device. Reconnect to take over this session.' });
+        this.update({ connection: 'offline', accountBusy: false, queue: null, match: null, invite: null, message: 'Your commander connected on another device. Reconnect to continue or sign in again.' });
         return;
       }
-      this.update({ connection: 'offline', queue: null, invite: null, message: this.view.match ? 'Connection lost. Rejoining your battle…' : 'Connection lost. Reconnecting…' });
+      this.update({ connection: 'offline', accountBusy: false, queue: null, invite: null, message: this.view.match ? 'Connection lost. Rejoining your battle…' : 'Connection lost. Reconnecting…' });
       this.reconnectTimer = window.setTimeout(() => { this.reconnectTimer = null; this.connect(); }, 2500);
     };
   }
@@ -90,8 +96,15 @@ class OnlineClient {
     switch (msg.t) {
       case 'welcome':
         localStorage.setItem(TOKEN_KEY, msg.token);
-        this.update({ connection: 'online', profile: msg.profile, friends: msg.friends, leaderboard: msg.leaderboard, reconnectGraceMs: msg.reconnectGraceMs, message: '' });
+        if (this.view.profile?.id !== msg.profile.id) {
+          this.lastBattle = null; this.leaveOnReconnect = null;
+          this.update({ match: null, result: null, history: [], queue: null, invite: null });
+        }
+        this.update({ connection: 'online', profile: msg.profile, friends: msg.friends, leaderboard: msg.leaderboard, reconnectGraceMs: msg.reconnectGraceMs, account: msg.account ?? null, message: '' });
         break;
+      case 'account_status': this.update({ account: msg.account, accountBusy: false, accountMessage: msg.message, accountError: false }); break;
+      case 'account_error': this.update({ accountBusy: false, accountMessage: msg.message, accountError: true }); break;
+      case 'history': this.update({ history: msg.entries }); break;
       case 'profile': this.update({ profile: msg.profile, friends: msg.friends }); break;
       case 'session_idle':
         this.leaveOnReconnect = null; this.lastBattle = null;
@@ -127,6 +140,15 @@ class OnlineClient {
     if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify(msg));
   }
   setName(name: string): void { this.send({ t: 'set_name', name }); }
+  accountAction(msg: Extract<ClientMessage, { t: 'account_register' | 'account_login' | 'account_password' | 'account_logout' }>): void {
+    if (this.view.connection !== 'online' || this.view.accountBusy) return;
+    if (!window.isSecureContext) {
+      this.update({ accountMessage: 'Use a secure HTTPS connection to create or sign in to an account.', accountError: true }); return;
+    }
+    this.update({ accountBusy: true, accountMessage: '', accountError: false, invite: null });
+    this.send(msg);
+  }
+  requestHistory(): void { this.send({ t: 'history' }); }
   addFriend(code: string): void { this.send({ t: 'friend_add', code }); }
   challenge(friendId: string): void { this.send({ t: 'challenge', friendId }); }
   answerInvite(fromId: string, accept: boolean): void {
@@ -149,7 +171,7 @@ class OnlineClient {
     if (this.view.match) this.send({ t: 'leave', matchId: this.view.match.matchId });
     this.socket?.close(); this.socket = null;
     this.lastBattle = null;
-    this.update({ connection: 'offline', queue: null, match: null, invite: null, message: '' });
+    this.update({ connection: 'offline', accountBusy: false, queue: null, match: null, invite: null, message: '' });
   }
 }
 

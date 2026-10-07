@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { onlineClient, useOnline } from '@/multiplayer/client';
 import { nextRankForRating, rankForRating } from '@/multiplayer/ranks';
 import { useGame } from '@/state/store';
+import { OnlineAccount } from './OnlineAccount';
+import { OnlineHistory } from './OnlineHistory';
 
 export function OnlineLobby() {
   const go = useGame((s) => s.go);
@@ -52,8 +54,8 @@ export function OnlineLobby() {
               <p>Casual pairs available players without changing rank. Ranked starts near your rating, then searches other ranks if needed. Both use equal armies at normal speed.</p>
               <p>A brief disconnect can rejoin the same battle. The match keeps running; explicit Leave forfeits immediately.</p>
               <div className="online__actions">
-                <button className="btn btn--primary" disabled={!connected || !!online.queue} onClick={() => onlineClient.queue('random')}>Casual battle</button>
-                <button className="btn" disabled={!connected || !!online.queue} onClick={() => onlineClient.queue('ranked')}>Ranked battle</button>
+                <button className="btn btn--primary" disabled={!connected || online.accountBusy || !!online.queue} onClick={() => onlineClient.queue('random')}>Casual battle</button>
+                <button className="btn" disabled={!connected || online.accountBusy || !!online.queue} onClick={() => onlineClient.queue('ranked')}>Ranked battle</button>
                 {online.queue && <button className="btn btn--ghost" onClick={() => onlineClient.cancelQueue()}>Cancel search</button>}
               </div>
             </section>
@@ -63,7 +65,7 @@ export function OnlineLobby() {
               {online.profile && <>
                 <div className="online__name">
                   <input aria-label="Commander name" maxLength={20} value={name} onChange={(event) => setName(event.target.value)} />
-                  <button className="btn" onClick={() => onlineClient.setName(name)}>Save</button>
+                  <button className="btn" disabled={!connected || online.accountBusy} onClick={() => onlineClient.setName(name)}>Save</button>
                 </div>
                 <p>Friend code <strong className="num">{online.profile.code}</strong></p>
                 <p className="online__rank-line"><strong className={`online__rank online__rank--${myRank?.toLowerCase()}`}>{myRank}</strong> <span className="num">{online.profile.rating} rating</span></p>
@@ -71,20 +73,22 @@ export function OnlineLobby() {
               </>}
             </section>
 
+            <OnlineAccount />
             <section className="online__panel panel">
               <h3>Friends</h3>
               <div className="online__name">
                 <input aria-label="Friend code" placeholder="Enter friend code" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} />
-                <button className="btn" disabled={!connected} onClick={() => { onlineClient.addFriend(code); setCode(''); }}>Add</button>
+                <button className="btn" disabled={!connected || online.accountBusy} onClick={() => { onlineClient.addFriend(code); setCode(''); }}>Add</button>
               </div>
               {online.friends.length === 0 && <p>Share your code, then add a friend to challenge them.</p>}
               <ul className="online__friends">
                 {online.friends.map((friend) => <li key={friend.id}>
                   <span><b>{friend.name}</b><small>{friend.online ? 'Online' : 'Offline'} · {rankForRating(friend.rating)} · {friend.rating} rating</small></span>
-                  <button className="btn" disabled={!friend.online || !connected} onClick={() => onlineClient.challenge(friend.id)}>Challenge</button>
+                  <button className="btn" disabled={!friend.online || !connected || online.accountBusy} onClick={() => onlineClient.challenge(friend.id)}>Challenge</button>
                 </li>)}
               </ul>
             </section>
+            <OnlineHistory />
           </div>
 
           <section className="online__panel panel online__leaders">
