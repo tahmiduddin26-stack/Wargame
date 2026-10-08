@@ -70,7 +70,7 @@ export function Settings() {
 
         <Toggle
           label="Reduced motion"
-          note="Remove interface sweeps, pulses and animated counters. Your device’s motion preference is also respected."
+          note="Reduce interface movement and animated counters. Your device’s motion preference is also respected."
           on={settings.reducedMotion}
           onChange={(v) => setSetting('reducedMotion', v)}
         />

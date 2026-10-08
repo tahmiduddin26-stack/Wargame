@@ -1,15 +1,15 @@
 /*
  * Motion system.
  *
- * Motion explains state and acknowledges input. EVOLVE remains the one longer
- * sequence because it changes the entire roster and battlefield at once.
+ * Motion explains state and acknowledges input. New roster cards settle into
+ * place when the army evolves.
  *
  * Rules the rest of the file holds to:
  *
  *   - Compositor properties only. A 60fps canvas is already running underneath
  *     the HUD, so nothing here animates width, height, top, left or margin.
  *   - Feedback is 100-150ms, state changes 150-300ms, overlays 300-400ms, and
- *     the focal sequence up to 700ms. Exits run faster than entrances.
+ *     exits run faster than entrances.
  *   - Quick settling movement, so the loose sketchbook shapes still feel
  *     responsive while the battle is running.
  *   - Nothing loops that is not communicating a live state.
@@ -27,7 +27,6 @@
   --t-feedback: 140ms;
   --t-state: 220ms;
   --t-overlay: 320ms;
-  --t-focal: 640ms;
 
   /*
    * The HUD snapshot arrives about every 80ms. Anything driven by it is
@@ -72,54 +71,8 @@
   transform: scale(0.975);
 }
 
-.dial:active {
+.dial:active:not(:disabled) {
   transform: scale(0.955);
-}
-
-/* --------------------------------------------------------------- attention */
-
-/*
- * A control that has just become usable pulls the eye once, then stops. These
- * are state announcements, not idle loops: each is keyed to the transition into
- * the ready state and plays a fixed number of times.
- */
-@keyframes ready-bloom {
-  0% {
-    box-shadow: 0 0 0 0 var(--ochre);
-    opacity: 0.55;
-  }
-  100% {
-    box-shadow: 0 0 0 1.1em transparent;
-    opacity: 0;
-  }
-}
-
-.bloom::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  pointer-events: none;
-  animation: ready-bloom 620ms var(--ease-out) 1 both;
-}
-
-/*
- * Evolve is the one control allowed to keep asking. It is the single most
- * consequential decision in a match and it is easy to miss while fighting, so
- * the edge breathes for as long as the option is live.
- */
-@keyframes edge-breathe {
-  0%,
-  100% {
-    border-color: var(--ochre);
-  }
-  50% {
-    border-color: color-mix(in srgb, var(--ochre) 45%, var(--rule-bright));
-  }
-}
-
-.evolve--ready {
-  animation: edge-breathe 2.4s var(--ease-move) infinite;
 }
 
 /* Urgency: the survival wave clock and the last thirty seconds of a mission. */
@@ -140,24 +93,24 @@
 /* ------------------------------------------------------------------ values */
 
 /*
- * A figure that just changed gets a brief tint rather than a size change, so
+ * A figure that just changed gets a brief opacity change, so
  * columns of tabular numbers never reflow.
  */
 @keyframes value-gain {
   0% {
-    color: var(--ochre);
+    opacity: 0.65;
   }
   100% {
-    color: inherit;
+    opacity: 1;
   }
 }
 
 @keyframes value-loss {
   0% {
-    color: var(--oxide);
+    opacity: 0.65;
   }
   100% {
-    color: inherit;
+    opacity: 1;
   }
 }
 
@@ -169,72 +122,11 @@
   animation: value-loss 420ms var(--ease-out) 1;
 }
 
-/* ------------------------------------------------------------ focal: evolve */
+/* -------------------------------------------------------------- age change */
 
 /*
- * The age change. A light sweep crosses the dock left to right, the age plate
- * wipes to the new era's accent, and the roster cards arrive behind it.
- *
- * This is the only sequence in the game longer than a third of a second, and it
- * fires at most four times a match.
- */
-@keyframes era-sweep {
-  0% {
-    transform: translateX(-110%) skewX(-12deg);
-    opacity: 0;
-  }
-  35% {
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateX(110%) skewX(-12deg);
-    opacity: 0;
-  }
-}
-
-.era-sweep {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 4;
-}
-
-.era-sweep::before {
-  content: '';
-  position: absolute;
-  inset: -20% -30%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--accent) 60%, transparent),
-    transparent
-  );
-  animation: era-sweep var(--t-focal) var(--ease-move) 1 both;
-}
-
-/*
- * The age plate wipe keeps the era's own colour. This is the one place it still
- * appears in the DOM, and it earns it by being a 520ms event rather than a
- * persistent tint.
- */
-@keyframes era-plate {
-  0% {
-    box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 100em var(--accent);
-    color: var(--steel-900);
-  }
-  100% {
-    box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 0 transparent;
-  }
-}
-
-.hud__age--changed {
-  animation: era-plate 520ms var(--ease-out) 1;
-}
-
-/*
- * The roster genuinely becomes a different list on evolve, which is the one
- * place a sibling stagger is honest. Capped at four cards and 120ms total.
+ * The roster becomes a different list on evolve. Four cards arrive with a
+ * small stagger, capped at 120ms between the first and last.
  */
 @keyframes card-arrive {
   0% {
@@ -364,13 +256,9 @@
     transform: none;
   }
 
-  .bloom::after,
-  .evolve--ready,
   .hud__clock--urgent .num,
   .tick--up,
   .tick--down,
-  .era-sweep::before,
-  .hud__age--changed,
   .units--changed .unit,
   .screen-enter,
   .pause__sheet,

@@ -42,14 +42,14 @@
   --bone-faint: #706959;
   --player: #e39a32;
   --enemy: #579db8;
-  --ochre: #ad592e;
-  --ochre-deep: #93502f;
+  --ochre: var(--ink);
+  --ochre-deep: var(--ink);
   --oxide: #bf493e;
   --oxide-deep: #a9403c;
   --moss: #4f8662;
   --font-display: 'Kalam', 'Comic Sans MS', cursive;
   --font-body: 'Patrick Hand', 'Comic Sans MS', cursive;
-  --hazard: repeating-linear-gradient(-25deg, #ffca62 0 7px, #f7e4b4 7px 14px);
+  --hazard: repeating-linear-gradient(-25deg, #e6dcc8 0 7px, var(--paper-bright) 7px 14px);
 }
 
 html,
@@ -103,9 +103,9 @@ h3,
 }
 
 .hazard-rule {
-  height: 0.65em;
-  background: repeating-linear-gradient(100deg, var(--coral) 0 2.8em, transparent 2.8em 3.45em);
-  border-bottom: 2px solid var(--ink);
+  height: 2px;
+  background: var(--ink);
+  border: 0;
   opacity: 1;
 }
 
@@ -149,25 +149,29 @@ h3,
 .btn:active:not(:disabled),
 .st__choice:active,
 .am__buy:active:not(:disabled) {
-  background: #ffe4a5;
+  background: var(--paper-deep);
   box-shadow: 1px 1px 0 var(--ink);
 }
 
 .btn:focus-visible,
 button:focus-visible {
-  outline: 3px dashed var(--coral);
+  outline: 3px dashed var(--ink);
   outline-offset: 3px;
 }
 
-.btn--primary,
-.st__choice--on {
-  background: var(--sun);
+.btn--primary {
+  background: var(--ink);
   border-color: var(--ink);
-  color: var(--ink);
+  color: var(--paper-bright);
+}
+
+.btn--primary .label,
+.btn--primary .num {
+  color: inherit;
 }
 
 .btn--primary:active {
-  background: #f2ad42;
+  background: var(--ink-soft);
 }
 
 .btn--danger {
@@ -267,7 +271,7 @@ button:focus-visible {
   height: 0.65em;
   border-radius: 50%;
   transform: rotate(-2deg);
-  background: var(--coral);
+  background: var(--ink);
   margin: 0.55em 0 0.1em;
 }
 
@@ -314,7 +318,7 @@ button:focus-visible {
 }
 
 .menu__deploy {
-  background: #cde8e4;
+  background: var(--paper-bright);
   border: 3px solid var(--ink);
   border-radius: 22px 17px 25px 15px;
   box-shadow: 7px 8px 0 var(--ink);
@@ -323,7 +327,7 @@ button:focus-visible {
 }
 
 .menu__deploy:active {
-  background: #acd9d9;
+  background: var(--paper-deep);
 }
 
 .menu__deploy-name {
@@ -336,7 +340,7 @@ button:focus-visible {
 .ms__featured-op,
 .db__op,
 .ob__step {
-  color: var(--oxide-deep);
+  color: var(--ink);
   font-family: var(--font-display);
 }
 
@@ -353,20 +357,21 @@ button:focus-visible {
   color: var(--ink);
 }
 
-.menu__deploy-arrow,
+.menu__deploy-arrow {
+  background: var(--ink);
+}
+
 .menu__deploy-arrow::after {
-  background: var(--coral);
-  border-color: var(--coral);
+  background: transparent;
+  border-color: var(--ink);
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  transform-origin: center;
 }
 
 .menu__row .btn {
   padding: 0.5em 0.8em;
   font-size: 1.8em;
-}
-
-.menu__row:nth-of-type(2) .btn:first-child,
-.menu__row:nth-of-type(3) .btn:last-child {
-  background: #ffe9b7;
 }
 
 .menu__foot {
@@ -390,7 +395,7 @@ button:focus-visible {
 }
 
 .ob__rule {
-  background: #fff1bd;
+  background: var(--paper-bright);
   border: 2px solid var(--ink);
   border-radius: 12px 16px 11px 17px;
   box-shadow: 3px 4px 0 var(--ink);
@@ -423,7 +428,8 @@ button:focus-visible {
 }
 
 .ob-card--hot {
-  background: var(--sun);
+  background: var(--paper-bright);
+  border-width: 3px;
 }
 
 .ob-pill,
@@ -432,7 +438,7 @@ button:focus-visible {
 }
 
 .ob-pill--xp {
-  background: #dceecf;
+  background: var(--paper-bright);
 }
 
 .ob-mount--sealed {
@@ -445,7 +451,7 @@ button:focus-visible {
 }
 
 .ob-special__ring {
-  background: var(--sun);
+  background: var(--paper-bright);
   border: 3px solid var(--ink);
   box-shadow: 4px 4px 0 var(--ink);
   color: var(--ink);
@@ -459,11 +465,13 @@ button:focus-visible {
 }
 
 .ob__tick--done {
-  background: var(--grass);
+  background: var(--ink);
 }
 
 .ob__tick--on {
-  background: var(--coral);
+  background: var(--ink);
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
 }
 
 /* Mission sheets, sticker tabs, and paper rows. */
@@ -488,7 +496,7 @@ button:focus-visible {
 }
 
 .ms__featured {
-  background: #ffe6ad;
+  background: var(--paper-bright);
   border: 3px solid var(--ink);
   border-radius: 21px 15px 24px 17px;
   box-shadow: 6px 7px 0 var(--ink);
@@ -541,9 +549,10 @@ button:focus-visible {
   color: var(--ink-soft);
 }
 
-.rail__stop--on {
-  background: var(--sun);
-  color: var(--ink);
+.rail__stop.rail__stop--on,
+.rail--tight .rail__stop--on {
+  background: var(--ink);
+  color: var(--paper-bright);
   transform: rotate(-1deg);
 }
 
@@ -564,11 +573,11 @@ button:focus-visible {
 
 .rail__stop--on .rail__name,
 .rail__stop--on .rail__note {
-  color: var(--ink);
+  color: inherit;
 }
 
 .ms__survival {
-  background: #d7eeda;
+  background: var(--paper-bright);
   border: 2px solid var(--ink);
   border-radius: 15px 21px 13px 18px;
   box-shadow: 4px 5px 0 var(--ink);
@@ -602,7 +611,7 @@ button:focus-visible {
 }
 
 .ms__row--open {
-  background: #fff1c8;
+  background: var(--paper-bright);
 }
 
 .ms__row--locked {
@@ -633,7 +642,7 @@ button:focus-visible {
 
 /* Roster and counters: a marked-up field notebook. */
 .cx__era {
-  background: #dcecf0;
+  background: var(--paper-bright);
   border: 2px solid var(--ink);
   border-radius: 14px 20px 15px 18px;
   box-shadow: 4px 5px 0 var(--ink);
@@ -663,7 +672,7 @@ button:focus-visible {
 }
 
 .cx__table th {
-  background: #ffe4a5;
+  background: var(--paper-deep);
   color: var(--ink);
   border-bottom: 2px solid var(--ink);
   font-family: var(--font-body);
@@ -691,12 +700,12 @@ button:focus-visible {
 }
 
 .cx__insignia {
-  color: var(--ochre);
+  color: var(--ink);
 }
 
 .cx__mult--good {
   color: var(--ink);
-  background: #deefc5;
+  background: transparent;
   font-weight: 700;
 }
 
@@ -725,7 +734,7 @@ button:focus-visible {
   gap: 0.45em 1em;
   padding: 0.8em 1.1em;
   margin: 0 0 1em;
-  background: #dceecf;
+  background: var(--paper-bright);
 }
 
 .am__career .meter {
@@ -772,7 +781,7 @@ button:focus-visible {
 }
 
 .am__row--owned {
-  background: #e2f0d9;
+  background: var(--paper-bright);
 }
 
 .am__tabs {
@@ -809,7 +818,7 @@ button:focus-visible {
   box-shadow: 4px 5px 0 var(--ink);
 }
 
-.am__skin--equipped { background: #e2f0d9; }
+.am__skin--equipped { background: var(--paper-bright); border-width: 3px; }
 .am__skin-copy { min-width: 0; }
 .am__skin-copy h3 { margin: 0; font-size: max(16px, 1.8em); line-height: 1; }
 .am__skin-copy p { margin: 0.2em 0; font-size: max(12px, 1.35em); line-height: 1.15; }
@@ -951,12 +960,13 @@ button:focus-visible {
 
 .st__choice--on,
 .st__switch--on {
-  background: var(--sun);
+  background: var(--ink);
   border-color: var(--ink);
+  color: var(--paper-bright);
 }
 
 .st__switch--on .label {
-  color: var(--ink);
+  color: inherit;
 }
 
 /* The result is a big sticker with six little stat scraps. */
@@ -1018,7 +1028,7 @@ button:focus-visible {
 }
 
 .db__stat--reward dd {
-  color: var(--ochre-deep);
+  color: var(--ink);
 }
 
 /* Multiplayer is a set of notebook cards, with its own scroll region. */
@@ -1124,7 +1134,7 @@ button:focus-visible {
 }
 
 .online__name input:focus-visible {
-  outline: 2px solid var(--coral);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
@@ -1174,21 +1184,21 @@ button:focus-visible {
 }
 
 .online__leaders .online__self {
-  background: #ffe5a7;
+  background: var(--paper-deep);
   padding-inline: 0.45em;
 }
 
 .online__notice {
   margin: 0 0 0.9em;
   padding: 0.55em 0.8em;
-  background: #ffe5a7;
+  background: var(--paper-bright);
   border: 2px dashed var(--ink);
   font-size: 1.2em;
 }
 
 .online__result {
   margin-bottom: 1em;
-  background: #d9eccf;
+  background: var(--paper-bright);
 }
 
 .online__invite {
@@ -1273,14 +1283,6 @@ button:focus-visible {
   color: var(--ink);
 }
 
-.hud__age {
-  box-shadow: inset 0 4px 0 var(--sun), 2px 3px 0 var(--ink);
-}
-
-.hud__enemy {
-  box-shadow: inset 0 4px 0 var(--sky), 2px 3px 0 var(--ink);
-}
-
 .hud__clock--urgent {
   background: #ffe2d2;
   border-color: var(--oxide);
@@ -1308,10 +1310,6 @@ button:focus-visible {
   border-radius: 3px;
 }
 
-.hud__mine {
-  box-shadow: inset 0 4px 0 var(--sun), 2px 3px 0 var(--ink);
-}
-
 .hud__mine .num,
 .hud__xp-text,
 .hud__age-i,
@@ -1334,7 +1332,7 @@ button:focus-visible {
 }
 
 .unit--ready {
-  background: #ffe7ab;
+  background: var(--paper-bright);
   border-color: var(--ink);
 }
 
@@ -1349,7 +1347,7 @@ button:focus-visible {
 }
 
 .unit--ready .unit__insignia {
-  color: var(--ochre-deep);
+  color: var(--ink);
 }
 
 .unit__name {
@@ -1404,21 +1402,22 @@ button:focus-visible {
 }
 
 .evolve {
-  background: #dcedd2;
+  background: var(--paper-bright);
   border-bottom: 2px solid var(--ink);
   border-radius: 11px 14px 8px 12px;
 }
 
 .evolve--ready {
-  background: #bfe3ad;
+  background: var(--ink);
   border-color: var(--ink);
   border-bottom-color: var(--ink);
-  color: var(--ink);
+  color: var(--paper-bright);
 }
 
 .evolve--ready .evolve__name,
-.evolve--ready .evolve__need {
-  color: var(--ink);
+.evolve--ready .evolve__need,
+.evolve--ready .evolve__kicker {
+  color: inherit;
 }
 
 .mount {
@@ -1431,9 +1430,9 @@ button:focus-visible {
 }
 
 .mount--built {
-  background: #ffe5a7;
+  background: var(--paper-bright);
   border-color: var(--ink);
-  color: var(--ochre-deep);
+  color: var(--ink);
 }
 
 .mount--locked {
@@ -1455,7 +1454,7 @@ button:focus-visible {
 }
 
 .picker__opt:active {
-  background: #ffe9b5;
+  background: var(--paper-deep);
 }
 
 .picker__opt-text b {
@@ -1463,14 +1462,29 @@ button:focus-visible {
 }
 
 .picker__opt-cost {
-  color: var(--ochre-deep);
+  color: var(--ink);
 }
 
 .dial {
-  background: #ffe6a8;
-  border: 3px solid var(--ink);
-  border-radius: 50%;
+  background: var(--paper-bright);
+  border: 2px solid var(--ink);
+  border-radius: 12px 17px 11px 15px;
   box-shadow: 3px 4px 0 var(--ink);
+}
+
+.dial--ready {
+  background: var(--ink);
+  color: var(--paper-bright);
+}
+
+.dial:disabled {
+  color: var(--ink-soft);
+  box-shadow: 1px 2px 0 var(--ink-soft);
+}
+
+.dial:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
 }
 
 .dial__track {
@@ -1479,7 +1493,7 @@ button:focus-visible {
 }
 
 .dial__arc {
-  stroke: var(--coral);
+  stroke: currentColor;
   stroke-width: 4;
   stroke-linecap: round;
 }
@@ -1488,15 +1502,13 @@ button:focus-visible {
 .dial__count,
 .dial--ready .dial__name,
 .dial__name {
-  color: var(--ink);
+  color: inherit;
 }
 
 .dial__name {
-  top: 0.55em;
   font-family: var(--font-body);
-  font-size: max(10px, 0.95em);
-  letter-spacing: 0;
-  padding: 0 0.8em;
+  font-size: max(11px, 1em);
+  line-height: 1.25;
 }
 
 .hud__res,
@@ -1509,8 +1521,8 @@ button:focus-visible {
 
 .dial__ready {
   font-family: var(--font-body);
-  font-size: 1.2em;
-  letter-spacing: 0.02em;
+  font-size: max(12px, 1.2em);
+  line-height: 1.25;
 }
 
 .coach__text {
@@ -1543,11 +1555,11 @@ button:focus-visible {
 }
 
 .pause__stats > div {
-  background: #fff0c7;
+  background: var(--paper-bright);
 }
 
 .coach {
-  background: #fff0b8;
+  background: var(--paper-bright);
   border: 2px solid var(--ink);
   border-radius: 13px 16px 11px 15px;
   box-shadow: 4px 5px 0 var(--ink);
@@ -1619,9 +1631,6 @@ button:focus-visible {
     display: none;
   }
 
-  .dial__name {
-    padding: 0 0.3em;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

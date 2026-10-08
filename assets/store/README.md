@@ -26,6 +26,10 @@ The rounded icon in the overview is a mask preview. Upload the full square maste
 
 ## Actual app screen drafts
 
+Current captures include the revised ink-and-paper controls and the Call button
+with separate attack-name, status and action rows. Decorative colour highlights
+and HUD edge strips are removed.
+
 | Screen | Android 1920×1080 PNG | iPhone 2622×1206 PNG |
 | --- | --- | --- |
 | Main menu | [Android](screenshots/android/01-cover.png) | [iPhone](screenshots/iphone/01-cover.png) |

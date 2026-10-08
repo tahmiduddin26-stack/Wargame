@@ -2,8 +2,8 @@
  * Verifies the motion actually moves, which a screenshot cannot show.
  *
  * Checks that lane blips interpolate on the compositor rather than snapping,
- * that no HUD element animates a layout-driving property, and that the evolve
- * focal sequence fires. Mission 1 is age-capped, so the evolve check runs on a
+ * that no HUD element animates a layout-driving property, and that the roster
+ * arrival fires. Mission 1 is age-capped, so the evolve check runs on a
  * later mission unlocked through localStorage.
  *
  *   npx vite preview --port 4173 &
@@ -16,7 +16,7 @@ const OUT = process.env.SHOT_DIR ?? '.shots';
 mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({
-  executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+  ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}),
   args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'],
 });
 const page = await browser.newPage({ viewport: { width: 1024, height: 576 } });
@@ -27,7 +27,7 @@ page.on('console', (m) => {
 });
 page.on('pageerror', (e) => errors.push('PAGEERROR: ' + e.message));
 
-await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
+await page.goto(process.env.GAME_URL ?? 'http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
 
 // Unlock through mission 5, which is the first with the age cap lifted.
 await page.evaluate(() => {
@@ -108,12 +108,11 @@ if (layoutAnimated.length) {
 }
 console.log('layout-animated elements:', layoutAnimated.length ? layoutAnimated : 'none');
 
-// --- 3. The evolve focal sequence fires -----------------------------------
-let sweepSeen = false;
-let plateSeen = false;
+// --- 3. The evolved roster arrives without decorative accent flashes ------
+let accentSeen = false;
 let staggerSeen = false;
 
-for (let i = 0; i < 90 && !sweepSeen; i++) {
+for (let i = 0; i < 90 && !staggerSeen; i++) {
   for (const n of [0, 1, 2]) {
     await page.locator('.unit').nth(n).click({ force: true }).catch(() => {});
   }
@@ -121,17 +120,15 @@ for (let i = 0; i < 90 && !sweepSeen; i++) {
   if (await evolve.count()) {
     await page.screenshot({ path: `${OUT}/40-evolve-ready.png` });
     await evolve.click({ force: true }).catch(() => {});
-    // Sample fast: the sweep lives for 640ms.
+    // Sample while the new cards settle into place.
     for (let k = 0; k < 8; k++) {
       const seen = await page.evaluate(() => ({
-        sweep: !!document.querySelector('.era-sweep'),
-        plate: !!document.querySelector('.hud__age--changed'),
+        accent: !!document.querySelector('.era-sweep, .hud__age--changed, .bloom'),
         stagger: !!document.querySelector('.units--changed'),
       }));
-      sweepSeen ||= seen.sweep;
-      plateSeen ||= seen.plate;
+      accentSeen ||= seen.accent;
       staggerSeen ||= seen.stagger;
-      if (k === 1) await page.screenshot({ path: `${OUT}/41-evolve-sweep.png` });
+      if (k === 1) await page.screenshot({ path: `${OUT}/41-evolve-roster.png` });
       await page.waitForTimeout(70);
     }
     break;
@@ -139,9 +136,8 @@ for (let i = 0; i < 90 && !sweepSeen; i++) {
   await page.waitForTimeout(600);
 }
 
-console.log(`evolve sequence: sweep=${sweepSeen} plate=${plateSeen} stagger=${staggerSeen}`);
-if (!sweepSeen) problems.push('era sweep never rendered');
-if (!plateSeen) problems.push('age plate never flagged as changed');
+console.log(`evolve: roster arrival=${staggerSeen}, decorative accent=${accentSeen}`);
+if (accentSeen) problems.push('decorative accent flash rendered');
 if (!staggerSeen) problems.push('roster never restacked');
 
 // --- 4. Reduced motion disables it ----------------------------------------

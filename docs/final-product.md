@@ -92,3 +92,9 @@ This increment adds recoverable commander accounts, private recent online histor
 The live soldiers now follow the promotional illustration's round faces, bold ink outlines, chunky limbs and age-specific gear. All 20 units have authored drawings; mounts, siege carts, vehicles and mechs use distinct rigs. Shared paint atlases retain orange/blue factions and all four earned paints. Deaths inherit the current limb transforms and equipment; a Matter shutdown cleanup error found in the battle test is fixed. Combat stats and economy are unchanged.
 
 The production build, complete 40-character roster, four paints, mirrored death poses, bounded corpse recycling, real-mission smoke check, offline phone reload/rotation and two-client casual/ranked/reconnect UI checks pass. Fourteen store browser screenshots and the downloadable pack are refreshed. Native performance and store-launch gates still apply.
+
+### UI correction — 8 October 2026
+
+Decorative coloured card fills, HUD edge strips, age-change sweeps and ready-state pulses are removed. Selections use ink fill with paper lettering; focus outlines use ink. The Call button is a rounded paper control with separate rows for the full attack name, status ring and action. Cooldown shows remaining seconds and disables repeated activation.
+
+The production build and focused browser check pass: all five specials in ready/cooldown states at 667×375, 960×540 and 1311×603, non-overlapping labels and dock controls, keyboard activation, a real battle cooldown and settings/campaign contrast. Store browser captures and the download pack are refreshed.

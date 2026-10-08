@@ -206,7 +206,7 @@ npm run cap:sync
 ## Design system
 
 The interface is a battle notebook: warm dotted paper, loose ink borders, offset
-shadows, coloured cutouts and little hand-drawn scenes. The same visual language
+shadows and little hand-drawn scenes. The same visual language
 carries through the menu, briefing, campaign, roster, armoury, settings, battle
 HUD, pause sheet and debrief. The battlefield has bright age-specific skies,
 rounded hills, doodled clouds and five distinct fort silhouettes, including a
@@ -221,9 +221,16 @@ headings and unit names; JetBrains Mono aligns dense figures. All are self-hoste
 for the offline mobile shell. Licences and source links are in
 `src/assets/fonts/LICENSES.md`.
 
-Age and difficulty choices appear as paper stickers. The chosen sticker fills
-yellow, so selection is readable without relying on a hue change alone. Player
-orange and enemy blue are also reinforced by position on the lane strip.
+Age and difficulty choices appear as paper stickers. The chosen sticker uses
+ink fill and paper lettering. Buttons, settings and cards use outlines, weight
+and spacing for emphasis; decorative colour strips and accent pulses are removed.
+Player orange and enemy blue are reinforced by position on the lane strip.
+
+The battle Call button has separate rows for the full attack name, status ring
+and action. It shows the remaining seconds and disables activation while charging.
+`npm run test:hud-ui` checks all five specials at three phone layouts, keyboard
+activation, real-battle cooldown and selected-control contrast. Use `GAME_URL`
+to target a production preview (default port 8787).
 
 ## Colour and colour vision
 
@@ -242,17 +249,13 @@ node scripts/colour-check.mjs
 The current orange/blue faction pair stays above 60 dE in all three simulated
 colour-vision conditions. On the lane strip your blips grow up from the floor
 and theirs hang down from the ceiling, so colour is not the only channel. Strong
-counter-table values also use a filled cell and heavier weight.
+counter-table values also use heavier weight.
 
 ## Motion
 
 `src/styles/motion.css` keeps motion tied to state: controls acknowledge a press,
-and the age change remains the one large sequence in a battle.
-
-**The focal moment is the evolve**, because the whole game is a race to it. A
-light sweep crosses the dock, the age plate wipes to the new era's accent, and the
-roster arrives behind it as a short stagger. That stagger is the one place a
-sibling sequence is honest here: the roster genuinely becomes a different list.
+and new roster cards settle into place after an age change. The HUD stays on its
+ink and paper palette throughout the match.
 
 **The most useful animation is the least showy one.** The lane strip is fed about
 twelve samples a second while units move at sixty, so every blip used to visibly
@@ -261,24 +264,21 @@ stuttering readout into a battle you can read.
 
 Supporting motion, all of it tied to state:
 
-- Gold eases toward its value and tints in the direction it moved, so a large
-  payment feels different from a small one.
+- Gold eases toward its value and briefly changes opacity.
 - Gate meters carry a trailing ghost bar that catches up half a second later, so
   the gap is how much that hit took.
-- The special blooms once when it comes off cooldown; the evolve button breathes
-  for as long as the option is live, because it is the most consequential
-  decision in a match and easy to miss mid-fight.
+- Call and Evolve use a solid ink fill when ready. They do not pulse or bloom.
 - Buttons acknowledge the press themselves rather than waiting for the sim.
 
 Rules it holds to: compositor properties only (a 60fps canvas is running
-underneath), 100-150ms for feedback up to 700ms for the focal sequence, exits
+underneath), 100-150ms for feedback and 300-400ms for arrivals, exits
 faster than entrances, deceleration rather than bounce, and nothing loops that is
 not communicating a live state. `prefers-reduced-motion` removes all of it.
 
 `scripts/motion-probe.mjs` verifies this in a browser, because a screenshot
 cannot show motion. It asserts that blips take several intermediate positions
 between samples, that **no element in the HUD transitions a layout-driving
-property**, that the evolve sequence actually fires, and that reduced motion is
+property**, that the new roster arrives after evolving, and that reduced motion is
 honoured. Its first run caught three real defects: two lane bands were
 transitioning `width`, and the reduced-motion block was losing the cascade to
 `hud.css` because `motion.css` was imported before it.

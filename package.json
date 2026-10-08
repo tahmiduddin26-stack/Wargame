@@ -17,6 +17,7 @@
     "backup:online": "node scripts/backup-online.mjs",
     "test:cosmetics": "node scripts/cosmetics-check.mjs",
     "test:unit-art": "node scripts/unit-art-check.mjs",
+    "test:hud-ui": "node scripts/hud-ui-check.mjs",
     "test:progression": "node --import tsx scripts/progression-check.ts",
     "test:progression-ui": "node scripts/progression-ui-check.mjs",
     "test:offline-save-ui": "node scripts/offline-save-ui-check.mjs",

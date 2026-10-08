@@ -77,12 +77,11 @@ export function Hud({ snapshot, level, onlineMatch }: { snapshot: HudSnapshot; l
   );
 
   // Gold arrives in lumps from loot and leaves in lumps on purchase, so the
-  // figure eases rather than snapping and tints for a moment in the direction
-  // it moved.
+  // figure eases rather than snapping and briefly changes opacity.
   const gold = useTweenedNumber(snapshot.gold);
   const goldDir = useChangeFlash(snapshot.gold);
 
-  // The focal moment. Every piece of the evolve sequence hangs off this.
+  // Settle the new roster into place after an age change.
   const eraChanged = useJustChanged(snapshot.ageIndex, 700);
 
   const age = AGES[snapshot.ageIndex];
@@ -120,10 +119,7 @@ export function Hud({ snapshot, level, onlineMatch }: { snapshot: HudSnapshot; l
           </span>
         </div>
 
-        <div
-          className={`hud__age${eraChanged ? ' hud__age--changed' : ''}`}
-          style={{ '--accent': age.accent } as React.CSSProperties}
-        >
+        <div className="hud__age">
           <div className="hud__age-line">
             <span className="label hud__age-name">{age.name.replace(' Age', '')}</span>
             <span className="num hud__age-i">
@@ -248,14 +244,6 @@ export function Hud({ snapshot, level, onlineMatch }: { snapshot: HudSnapshot; l
       </div>
 
       <div className={`hud__dock${denied ? ' deny' : ''}`}>
-        {/* Focal: a light sweep crosses the dock as the era turns over. */}
-        {eraChanged && (
-          <span
-            className="era-sweep"
-            style={{ '--accent': age.accent } as React.CSSProperties}
-            aria-hidden="true"
-          />
-        )}
         <UnitBar snapshot={snapshot} eraChanged={eraChanged} />
 
         <div className="hud__mid">
@@ -263,9 +251,6 @@ export function Hud({ snapshot, level, onlineMatch }: { snapshot: HudSnapshot; l
             className={`evolve${snapshot.canEvolve ? ' evolve--ready' : ''}`}
             disabled={!snapshot.canEvolve}
             onClick={() => bridge.send({ t: 'evolve' })}
-            style={
-              { '--accent': (nextAge ?? age).accent } as React.CSSProperties
-            }
           >
             <span className="label evolve__kicker">
               {capped ? 'Age capped' : nextAge ? 'Evolve to' : 'Final age'}
