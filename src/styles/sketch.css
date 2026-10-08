@@ -29,6 +29,10 @@
   --sky: #8ec9df;
   --coral: #e87754;
   --grass: #80ac72;
+  --radius-card: 15px 12px 17px 11px;
+  --radius-control: 11px 8px 12px 9px;
+  --radius-small: 8px 11px 9px 12px;
+  --radius-pill: 999px;
 
   --steel-900: var(--paper);
   --steel-800: var(--paper-bright);
@@ -92,7 +96,7 @@ h3,
 .panel--raised {
   background: var(--paper-bright);
   border: 2px solid var(--ink);
-  border-radius: 15px 12px 17px 11px;
+  border-radius: var(--radius-card);
   box-shadow: 4px 5px 0 rgba(45, 48, 46, 0.22);
 }
 
@@ -131,6 +135,10 @@ h3,
   transform: rotate(13deg);
 }
 
+button {
+  border-radius: var(--radius-control);
+}
+
 .btn,
 .st__choice,
 .am__buy {
@@ -142,7 +150,7 @@ h3,
   color: var(--ink);
   background: var(--paper-bright);
   border: 2px solid var(--ink);
-  border-radius: 13px 9px 14px 11px;
+  border-radius: var(--radius-control);
   box-shadow: 3px 4px 0 var(--ink);
 }
 
@@ -212,7 +220,7 @@ button:focus-visible {
 .meter {
   background: #d9c99f;
   border: 1.5px solid var(--ink);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .meter__fill {
@@ -679,6 +687,14 @@ button:focus-visible {
   font-weight: 400;
   font-size: 1.15em;
   letter-spacing: 0.02em;
+}
+
+.cx__table thead th:first-child {
+  border-top-left-radius: 10px;
+}
+
+.cx__table thead th:last-child {
+  border-top-right-radius: 10px;
 }
 
 .cx__table td {
@@ -1186,6 +1202,7 @@ button:focus-visible {
 .online__leaders .online__self {
   background: var(--paper-deep);
   padding-inline: 0.45em;
+  border-radius: var(--radius-small);
 }
 
 .online__notice {
@@ -1193,6 +1210,7 @@ button:focus-visible {
   padding: 0.55em 0.8em;
   background: var(--paper-bright);
   border: 2px dashed var(--ink);
+  border-radius: var(--radius-control);
   font-size: 1.2em;
 }
 
@@ -1266,7 +1284,7 @@ button:focus-visible {
 .rack--disabled {
   background: rgba(255, 250, 240, 0.95);
   border: 2px solid var(--ink);
-  border-radius: 11px 8px 12px 9px;
+  border-radius: var(--radius-control);
   box-shadow: 2px 3px 0 rgba(45, 48, 46, 0.7);
   color: var(--ink);
 }
@@ -1296,7 +1314,7 @@ button:focus-visible {
 .lane__track {
   background: #e2d5b4;
   border: 1px solid var(--ink);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 
@@ -1307,7 +1325,7 @@ button:focus-visible {
 .lane__window {
   border: 2px solid var(--ink);
   background: rgba(255, 255, 255, 0.18);
-  border-radius: 3px;
+  border-radius: var(--radius-pill);
 }
 
 .hud__mine .num,
@@ -1422,7 +1440,7 @@ button:focus-visible {
 
 .mount {
   background: #fff4d8;
-  border-radius: 8px 11px 9px 12px;
+  border-radius: var(--radius-small);
 }
 
 .mount--empty {
@@ -1551,7 +1569,9 @@ button:focus-visible {
 
 .pause__stats {
   background: var(--ink);
-  border-color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-control);
+  overflow: hidden;
 }
 
 .pause__stats > div {

@@ -28,7 +28,8 @@ The rounded icon in the overview is a mask preview. Upload the full square maste
 
 Current captures include the revised ink-and-paper controls and the Call button
 with separate attack-name, status and action rows. Decorative colour highlights
-and HUD edge strips are removed.
+and HUD edge strips are removed. Castle and unit HP bars now have rounded tracks
+and fills, and small control frames follow the rounded UI style.
 
 | Screen | Android 1920×1080 PNG | iPhone 2622×1206 PNG |
 | --- | --- | --- |

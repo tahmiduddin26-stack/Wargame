@@ -64,6 +64,19 @@ async function layout(page) {
   });
 }
 
+async function roundedFrames(page) {
+  const square = await page.evaluate(() => [...document.querySelectorAll('.stage *')].filter(el => {
+    // The paint preview contains a drawn flag and fort, rather than UI frames.
+    if (el.closest('.am__skin-preview') && !el.matches('.am__skin-preview')) return false;
+    const c = getComputedStyle(el), r = el.getBoundingClientRect();
+    const framed = ['Top','Right','Bottom','Left'].every(side => parseFloat(c[`border${side}Width`]) > 0 && c[`border${side}Style`] !== 'none');
+    return framed && r.width > 8 && r.height > 8 &&
+      ['TopLeft','TopRight','BottomLeft','BottomRight'].some(corner => parseFloat(c[`border${corner}Radius`]) === 0);
+  }).map(el => el.className));
+  assert.deepEqual(square, [], 'Visible framed UI should have rounded corners');
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'UI fits the phone');
+}
+
 try {
   const context = await browser.newContext({ serviceWorkers:'block', viewport:{width:667,height:375} });
   const page = await context.newPage();
@@ -93,6 +106,7 @@ try {
         assert(r.units.right <= r.mid.x && r.mid.right <= r.control.x, `Dock controls cannot overlap: ${label}`);
         assert.deepEqual(r.insets, [false,false,false], `No decorative HUD edge strips: ${label}`);
         assert.equal(r.nameColour, r.colour, `Label keeps button contrast: ${label}`);
+        await roundedFrames(page);
         if (!cd) {
           assert.equal(r.background, 'rgb(45, 48, 46)');
           assert.equal(r.colour, 'rgb(255, 250, 240)');
@@ -132,11 +146,14 @@ try {
   const r = await layout(game);
   assert(r.children[0].bottom <= r.children[1].y && r.children[1].bottom <= r.children[2].y);
   await game.getByRole('button', {name:'Pause',exact:true}).click();
+  await roundedFrames(game);
+  await game.screenshot({path:`${out}/phone-pause.png`});
   await live.close();
   const screens = await browser.newContext({serviceWorkers:'block', viewport:{width:667,height:375}});
   const ui = await screens.newPage();
   ui.on('pageerror', e => errors.push(e.message));
   await ui.goto(base);
+  await roundedFrames(ui);
   await ui.getByRole('button', {name:'Settings',exact:true}).click();
   await ui.locator('.st__choice').nth(1).click();
   await ui.waitForTimeout(170);
@@ -150,6 +167,7 @@ try {
   });
   assert.deepEqual(choice, {bg:'rgb(45, 48, 46)', text:'rgb(255, 250, 240)', focus:'rgb(45, 48, 46)'});
   await ui.screenshot({path:`${out}/phone-settings.png`});
+  await roundedFrames(ui);
   await ui.getByRole('button', {name:'Back',exact:true}).click();
   await ui.getByRole('button', {name:'Missions',exact:true}).click();
   await ui.waitForTimeout(350);
@@ -157,9 +175,21 @@ try {
     bg:getComputedStyle(el).backgroundColor, text:getComputedStyle(el.querySelector('.rail__name')).color}));
   assert.deepEqual(selection, {bg:'rgb(45, 48, 46)',text:'rgb(255, 250, 240)'});
   await ui.screenshot({path:`${out}/phone-campaign.png`});
+  await roundedFrames(ui);
+  await ui.getByRole('button', {name:'Back',exact:true}).click();
+  for (const name of ['Roster','Armoury','Service record','Multiplayer']) {
+    await ui.getByRole('button', {name,exact:true}).click();
+    await ui.waitForTimeout(350);
+    await roundedFrames(ui);
+    if (name === 'Armoury') {
+      await ui.getByRole('tab', {name:'Army paints'}).click();
+      await roundedFrames(ui);
+    }
+    await ui.getByRole('button', {name:'Back',exact:true}).click();
+  }
   await screens.close();
   assert.deepEqual(errors, []);
-  console.log('Real battle Call starts cooldown; settings/campaign selections retain contrast; no runtime errors.');
+  console.log('Real Call cooldown, selected-state contrast and rounded frames across battle, pause and seven phone screens pass.');
 } finally {
   await browser.close();
 }

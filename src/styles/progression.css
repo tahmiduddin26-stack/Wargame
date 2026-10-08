@@ -23,10 +23,10 @@
 .sr__career .label, .sr__xp { font-size: max(13px, 1.5em); }
 .sr__xp p { margin: 0 0 0.4em; }
 .sr__xp > span { display: block; margin-top: 0.3em; }
-.sr progress { display: block; width: 100%; height: 8px; appearance: none; border: 1px solid var(--ink); border-radius: 4px; overflow: hidden; background: var(--paper); accent-color: var(--moss); }
-.sr progress::-webkit-progress-bar { background: var(--paper); }
-.sr progress::-webkit-progress-value { background: var(--moss); }
-.sr progress::-moz-progress-bar { background: var(--moss); }
+.sr progress { display: block; width: 100%; height: 8px; appearance: none; border: 1px solid var(--ink); border-radius: var(--radius-pill); overflow: hidden; background: var(--paper); accent-color: var(--moss); }
+.sr progress::-webkit-progress-bar { background: var(--paper); border-radius: inherit; }
+.sr progress::-webkit-progress-value { background: var(--moss); border-radius: inherit; }
+.sr progress::-moz-progress-bar { background: var(--moss); border-radius: inherit; }
 .sr__totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1em; margin: 1.4em 0; }
 .sr__totals > div { background: var(--paper-bright); border: 2px solid var(--ink); border-radius: 10px 14px 9px 12px; padding: 1em; min-width: 0; }
 .sr__totals dt { font-size: max(12px, 1.4em); color: var(--ink-soft); }
@@ -80,7 +80,7 @@
 .save__preview h4 { font-family: var(--font-display); margin: 0; font-size: 1.35em; }
 .save__preview dl { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8em; }
 .save__preview dd { margin: 0.2em 0 0; font-family: var(--font-mono); }
-.db__tip { font-size: max(13px, 1.5em); line-height: 1.3; background: var(--paper-bright); border: 1px dashed var(--ink-soft); padding: 0.6em 0.8em; margin: 0 0 1em; }
+.db__tip { font-size: max(13px, 1.5em); line-height: 1.3; background: var(--paper-bright); border: 1px dashed var(--ink-soft); border-radius: var(--radius-control); padding: 0.6em 0.8em; margin: 0 0 1em; }
 .device .btn { min-height: 44px; font-size: max(14px, 1.6em); }
 .device__update { font-size: max(13px, 1.5em); border-top: 2px dashed var(--ink); margin-top: 1em; }
 .network-veil { position: absolute; inset: 0; z-index: 20; background: rgba(45, 48, 46, 0.55); display: grid; place-items: center; padding: 2em; }

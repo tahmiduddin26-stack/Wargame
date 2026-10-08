@@ -3,6 +3,7 @@ import type { AgeDef, Faction } from '@/data/types';
 import { armySkin, type ArmySkinId } from '@/data/cosmetics';
 import { VIEW, WORLD } from '@/game/config';
 import type { Commander } from '@/game/sim/types';
+import { HealthBar } from './HealthBar';
 
 const SLOT_Y = [-0.9, -0.78, -0.66, -0.54];
 const INK = 0x2d302e;
@@ -41,8 +42,7 @@ export class BaseView {
   private skinId: ArmySkinId;
   private g: Phaser.GameObjects.Graphics;
   private mounts: Phaser.GameObjects.Graphics;
-  private hpBack: Phaser.GameObjects.Rectangle;
-  private hpFill: Phaser.GameObjects.Rectangle;
+  private hpBar: HealthBar;
   private hpText: Phaser.GameObjects.Text;
   private ageRibbon: Phaser.GameObjects.Text;
   private x: number;
@@ -63,14 +63,9 @@ export class BaseView {
 
     const barW = 132;
     const barY = VIEW.groundY - WORLD.baseHeight - 30;
-    this.hpBack = scene.add
-      .rectangle(x, barY, barW, 9, 0xfff5da)
-      .setStrokeStyle(2, 0x2d302e, 1)
+    this.hpBar = new HealthBar(scene, barW, 10, faction === 'player' ? 0xffc55c : 0x8ec9df)
+      .setPosition(x, barY)
       .setDepth(20);
-    this.hpFill = scene.add
-      .rectangle(x - barW / 2, barY, barW, 9, faction === 'player' ? 0xffc55c : 0x8ec9df)
-      .setOrigin(0, 0.5)
-      .setDepth(21);
     this.hpText = scene.add
       .text(x, barY - 15, '', {
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
@@ -272,10 +267,9 @@ export class BaseView {
     }
 
     const ratio = Phaser.Math.Clamp(c.baseHp / c.baseMaxHp, 0, 1);
-    this.hpFill.width = this.hpBack.width * ratio;
     this.hpText.setText(`${Math.ceil(Math.max(0, c.baseHp))}`);
     // Critical structure goes red on both sides: that is danger, not identity.
-    this.hpFill.setFillStyle(
+    this.hpBar.setProgress(ratio,
       ratio < 0.25 ? 0xd45b4a : this.faction === 'player' ? 0xffc55c : 0x8ec9df,
     );
   }
@@ -294,9 +288,9 @@ export class BaseView {
       if (i >= c.unlockedSlots) {
         // Sealed plate, with short pencil hatches contained inside its frame.
         g.fillStyle(0xfff5da, 0.55);
-        g.fillRect(mx - 8, my - 8, 16, 16);
+        g.fillRoundedRect(mx - 8, my - 8, 16, 16, 3);
         g.lineStyle(1.5, INK, 0.85);
-        g.strokeRect(mx - 8, my - 8, 16, 16);
+        g.strokeRoundedRect(mx - 8, my - 8, 16, 16, 3);
         for (const k of [-4, 0, 4]) g.lineBetween(mx + k - 3, my + 5, mx + k + 3, my - 5);
         continue;
       }
@@ -304,7 +298,7 @@ export class BaseView {
       if (!slot) {
         // Open mount: empty bracket.
         g.lineStyle(2, 0x2d302e, 0.9);
-        g.strokeRect(mx - 9, my - 7, 18, 14);
+        g.strokeRoundedRect(mx - 9, my - 7, 18, 14, 3);
         continue;
       }
 
@@ -312,9 +306,9 @@ export class BaseView {
       const barrel = slot.def.role === 'marksman' ? 26 : slot.def.role === 'mortar' ? 12 : 18;
       const pitch = slot.def.role === 'mortar' ? -0.6 : -0.08;
       g.fillStyle(0x2d302e, 1);
-      g.fillRect(mx - 10, my - 6, 20, 14);
+      g.fillRoundedRect(mx - 10, my - 6, 20, 14, 3);
       g.fillStyle(accent, 1);
-      g.fillRect(mx - 8, my - 8, 16, 5);
+      g.fillRoundedRect(mx - 8, my - 8, 16, 5, 2);
       g.lineStyle(4, 0x2d302e, 1);
       g.lineBetween(
         mx,
@@ -342,8 +336,7 @@ export class BaseView {
   destroy(): void {
     this.g.destroy();
     this.mounts.destroy();
-    this.hpBack.destroy();
-    this.hpFill.destroy();
+    this.hpBar.destroy();
     this.hpText.destroy();
     this.ageRibbon.destroy();
   }

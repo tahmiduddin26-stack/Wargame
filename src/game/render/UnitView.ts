@@ -5,6 +5,7 @@ import { VIEW } from '@/game/config';
 import type { SimUnit } from '@/game/sim/types';
 import { skeletonFor, type BoneSpec, type UnitPose } from './skeleton';
 import { unitImage, visualHeight } from './UnitArt';
+import { HealthBar } from './HealthBar';
 
 interface LiveLimb {
   img: Phaser.GameObjects.Image;
@@ -23,8 +24,7 @@ interface LiveLimb {
 export class UnitView {
   readonly container: Phaser.GameObjects.Container;
   private limbs: LiveLimb[] = [];
-  private hpBack: Phaser.GameObjects.Rectangle;
-  private hpFill: Phaser.GameObjects.Rectangle;
+  private hpBar: HealthBar;
   private def: UnitDef;
   /** Eases 0 to 1 and back on every swing. */
   private swing = 0;
@@ -54,15 +54,10 @@ export class UnitView {
 
     const barW = Math.max(22, H * 0.7);
     const barY = -H * (def.id === 'dino-rider' || def.id === 'cuirassier' ? 1.32 : 1.18) - 8;
-    this.hpBack = scene.add
-      .rectangle(0, barY, barW, 4, 0x1a1613)
-      .setStrokeStyle(1, 0x000000, 0.5)
+    this.hpBar = new HealthBar(scene, barW, 4, faction === 'player' ? 0xe0aa2e : 0x46a6c8, 0xfff5da, 1)
+      .setPosition(0, barY)
       .setVisible(false);
-    this.hpFill = scene.add
-      .rectangle(-barW / 2, barY, barW, 4, faction === 'player' ? 0xe0aa2e : 0x46a6c8)
-      .setOrigin(0, 0.5)
-      .setVisible(false);
-    this.container.add([this.hpBack, this.hpFill]);
+    this.container.add(this.hpBar);
 
     layer.add(this.container);
   }
@@ -118,11 +113,8 @@ export class UnitView {
 
     const ratio = Phaser.Math.Clamp(u.hp / u.maxHp, 0, 1);
     const damaged = ratio < 0.999;
-    this.hpBack.setVisible(damaged);
-    this.hpFill.setVisible(damaged);
-    if (damaged) {
-      this.hpFill.width = this.hpBack.width * ratio;
-    }
+    this.hpBar.setVisible(damaged);
+    if (damaged) this.hpBar.setProgress(ratio);
   }
 
   /** Walk-cycle phase, handed to the ragdoll so the pose carries over. */

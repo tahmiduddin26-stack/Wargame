@@ -98,3 +98,9 @@ The production build, complete 40-character roster, four paints, mirrored death 
 Decorative coloured card fills, HUD edge strips, age-change sweeps and ready-state pulses are removed. Selections use ink fill with paper lettering; focus outlines use ink. The Call button is a rounded paper control with separate rows for the full attack name, status ring and action. Cooldown shows remaining seconds and disables repeated activation.
 
 The production build and focused browser check pass: all five specials in ready/cooldown states at 667×375, 960×540 and 1311×603, non-overlapping labels and dock controls, keyboard activation, a real battle cooldown and settings/campaign contrast. Store browser captures and the download pack are refreshed.
+
+### Rounded UI consistency — 8 October 2026
+
+Castle and soldier HP bars now share rounded tracks and fills. Very small remainders stay inside the curved end, zero HP leaves an empty track, and critical castle HP retains its warning colour. Graphics paths rebuild only on HP or colour changes. Fort mount frames, small buttons, notice boxes, pause stats, lane viewport and career progress meters also use rounded corners. Shared card/control/pill tokens keep new UI consistent with the notebook style.
+
+Build, all ten fort views, nine HP render samples, age changes and cleanup pass. The phone UI check covers framed controls across menu, settings, campaign, roster, skills/paints, service record, multiplayer, battle and pause. Store browser captures and the download pack are updated.

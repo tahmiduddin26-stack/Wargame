@@ -232,6 +232,12 @@ and action. It shows the remaining seconds and disables activation while chargin
 activation, real-battle cooldown and selected-control contrast. Use `GAME_URL`
 to target a production preview (default port 8787).
 
+Cards and controls share rounded corner tokens. Notice boxes, the pause stats,
+progress meters and lane viewport follow the same shapes. Castle and soldier HP
+use the shared `HealthBar` renderer with rounded tracks and fills. Paths are only
+rebuilt when HP or its colour changes. `npm run test:health-bars` checks all five
+fort ages, both factions and full, partial, near-zero and empty HP fills.
+
 ## Colour and colour vision
 
 Friend and foe identification is the entire read of a lane war: which blips are
