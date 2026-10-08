@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <title>Doodlebook Battles — paper fort</title>
+  <rect width="1024" height="1024" fill="#f6ebd3"/>
+  <path d="M0 152H1024M0 332H1024M0 512H1024M0 692H1024M0 872H1024" fill="none" stroke="#d7c9a9" stroke-width="3"/>
+  <path d="M125 0V1024" stroke="#e87754" stroke-width="5" opacity=".28"/>
+  <path d="m250 633-32-280 48-44 49 40-15 284M708 631l-7-276 46-39 48 40-39 288" fill="#8ec9df" stroke="#2d302e" stroke-width="25" stroke-linejoin="round"/>
+  <path d="m189 567 130-14m368 10 118 8" stroke="#2d302e" stroke-width="27" stroke-linecap="round"/>
+  <path d="m209 797 21-320 106 8 3-83 115 5 3 88 124-3 4-84 114 4-1 85 108-5 16 303Z" fill="#ffc55c" stroke="#2d302e" stroke-width="27" stroke-linejoin="round"/>
+  <path d="m231 672 9-80 573 4 8 192-604 9Z" fill="#e6ad46"/>
+  <path d="M452 797V677q58-86 122-1v121" fill="#fffaf0" stroke="#2d302e" stroke-width="26" stroke-linejoin="round"/>
+  <path d="m293 550 32 2-2 67-33-2Zm409 2 32-2 4 68-31 1Z" fill="#2d302e"/>
+  <path d="m367 550 69 2m183-1 41-2m-397 152 108 3m270-5 113 2" stroke="#2d302e" stroke-width="11" stroke-linecap="round" opacity=".42"/>
+  <path d="M520 400V182" stroke="#2d302e" stroke-width="27" stroke-linecap="round"/>
+  <path d="m524 186 215 24-55 71 39 59-199-21Z" fill="#e87754" stroke="#2d302e" stroke-width="26" stroke-linejoin="round"/>
+  <path d="m174 822q333 27 678-3" fill="none" stroke="#2d302e" stroke-width="27" stroke-linecap="round"/>
+  <path d="m190 263-36-23m239-76 14-38m395 288 42-12" fill="none" stroke="#2d302e" stroke-width="15" stroke-linecap="round"/>
+</svg>

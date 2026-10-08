@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Age of War — Doodlebook Battles",
-  "short_name": "War Game",
+  "name": "Doodlebook Battles",
+  "short_name": "Doodlebook",
   "description": "Sketchbook lane battles through five ages. Campaign and survival play offline after the game is saved to your device.",
   "start_url": "./",
   "scope": "./",
@@ -9,5 +9,9 @@
   "orientation": "landscape",
   "background_color": "#f6ebd3",
   "theme_color": "#f6ebd3",
-  "icons": [{ "src": "./app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+  "icons": [
+    { "src": "./app-icon-doodlebook-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./app-icon-doodlebook-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./app-icon-doodlebook.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
 }

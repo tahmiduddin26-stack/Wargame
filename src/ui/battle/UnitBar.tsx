@@ -46,7 +46,7 @@ export function UnitBar({
               <span className="label">{ROLE_LABEL[def.role]}</span>
               <UnitInsignia id={def.id} className="unit__insignia" />
             </span>
-            <span className="unit__name">{def.name}</span>
+            <span className={`unit__name${def.name.split(' ').some((word) => word.length > 7) ? ' unit__name--compact' : ''}`}>{def.name}</span>
             <span className="unit__foot">
               <span className="num unit__cost">{def.gold.toLocaleString('en-GB')}</span>
               {queued > 0 && <span className="num unit__queued">&times;{queued}</span>}

@@ -51,7 +51,9 @@ export function useTweenedNumber(target: number, durationMs = 260): number {
     startRef.current = performance.now();
 
     const step = (now: number) => {
-      const t = Math.min(1, (now - startRef.current) / durationMs);
+      // rAF's frame timestamp may precede the effect's performance.now() in the
+      // same frame. Clamp both ends so a fresh tween cannot run backwards.
+      const t = Math.max(0, Math.min(1, (now - startRef.current) / durationMs));
       // Exponential ease-out: fast commit, soft landing.
       const eased = 1 - Math.pow(1 - t, 3);
       setDisplay(fromRef.current + (target - fromRef.current) * eased);

@@ -1,4 +1,4 @@
-# Age of War // Doodlebook Battles
+# Doodlebook Battles
 
 A modernised take on Louissi's 2007 Flash game *Age of War*: one horizontal lane,
 two gates, five ages between a sharpened rock and an orbital lance. Built for
@@ -19,6 +19,8 @@ npm run typecheck
 ## Campaign progression and multiplayer
 
 The [final product plan](docs/final-product.md) defines the browser release, current build scope and native/competitive release gates.
+
+The [Android and iOS launch plan](docs/store-launch-plan.md) records the current publishing requirements, readiness decision and remaining release work. Downloadable PNG icons, feature art and real browser screenshot drafts are in the [store artwork pack](assets/store/README.md).
 
 The [mobile game audit and economy plan](docs/mobile-game-audit.md) records the current balance evidence, cosmetic collection, monetisation approach, and release gaps.
 

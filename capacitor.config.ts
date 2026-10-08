@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 /**
- * Native shell config. Landscape is locked at the OS level here; the web build
- * falls back to the OrientationGate screen (see src/ui/OrientationGate.tsx).
+ * Native shell template. Set and verify landscape orientation in each generated
+ * native project; the web build uses src/ui/OrientationGate.tsx.
  *
  * To generate the native projects:
  *   npm i -D @capacitor/cli && npm i @capacitor/core @capacitor/android @capacitor/ios
@@ -11,11 +11,11 @@ import type { CapacitorConfig } from '@capacitor/cli';
  */
 const config: CapacitorConfig = {
   appId: 'com.fieldcommand.ageofwar',
-  appName: 'Age of War',
+  appName: 'Doodlebook Battles',
   webDir: 'dist',
   android: {
-    // Keeps the GPU-composited canvas from being throttled behind the WebView.
-    webContentsDebuggingEnabled: true,
+    // Release template: keep remote WebView debugging disabled.
+    webContentsDebuggingEnabled: false,
   },
   plugins: {
     SplashScreen: {

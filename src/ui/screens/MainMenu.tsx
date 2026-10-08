@@ -32,7 +32,7 @@ export function MainMenu() {
           {/* No kicker above the title. The identifier lives in the footer,
               where it reads as a plate stamp instead of an eyebrow. */}
           <h1 className="menu__title display--caps">
-            Age of<br />War
+            Doodlebook<br />Battles
           </h1>
           <div className="menu__underline" />
           <svg className="menu__doodle" viewBox="0 0 300 82" aria-hidden="true">

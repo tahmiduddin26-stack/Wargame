@@ -254,7 +254,7 @@ button:focus-visible {
 }
 
 .menu__title {
-  font-size: 7.7em;
+  font-size: 6.2em;
   line-height: 0.91;
   color: var(--ink);
   text-shadow: 3px 3px 0 var(--paper-bright);
@@ -1358,6 +1358,12 @@ button:focus-visible {
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.38;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.unit__name--compact {
+  font-size: 1.1em;
 }
 
 .unit__cost,
@@ -1373,8 +1379,8 @@ button:focus-visible {
 }
 
 .unit__insignia {
-  width: 2.3em;
-  height: 2.3em;
+  width: 1.9em;
+  height: 1.9em;
 }
 
 .evolve,

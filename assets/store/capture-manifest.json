@@ -1,0 +1,213 @@
+{
+  "capturedAt": "2026-10-08T09:29:07.973Z",
+  "base": "http://127.0.0.1:8787/",
+  "status": "Browser drafts. Recapture and verify inside signed Android/iOS builds before submission.",
+  "fixtures": {
+    "ordinary": {
+      "credits": 1000,
+      "careerXp": 3350,
+      "onboardingDone": true,
+      "records": {
+        "1": {
+          "cleared": true,
+          "bestTime": 150,
+          "bestAge": 0,
+          "clearedTiers": [
+            "normal"
+          ]
+        },
+        "2": {
+          "cleared": true,
+          "bestTime": 150,
+          "bestAge": 0,
+          "clearedTiers": [
+            "normal"
+          ]
+        },
+        "3": {
+          "cleared": true,
+          "bestTime": 150,
+          "bestAge": 0,
+          "clearedTiers": [
+            "normal"
+          ]
+        },
+        "4": {
+          "cleared": true,
+          "bestTime": 150,
+          "bestAge": 0,
+          "clearedTiers": [
+            "normal"
+          ]
+        }
+      },
+      "ownedSkins": [
+        "field",
+        "ember"
+      ],
+      "equippedSkin": "field",
+      "settings": {
+        "sfx": false,
+        "music": false
+      }
+    },
+    "medieval": {
+      "credits": 1000,
+      "careerXp": 3350,
+      "onboardingDone": true,
+      "records": {
+        "1": {
+          "cleared": true,
+          "bestTime": 150,
+          "bestAge": 0,
+          "clearedTiers": [
+            "normal"
+          ]
+        },
+        "2": {
+          "cleared": true,
+          "bestTime": 150,
+          "bestAge": 0,
+          "clearedTiers": [
+            "normal"
+          ]
+        },
+        "3": {
+          "cleared": true,
+          "bestTime": 150,
+          "bestAge": 0,
+          "clearedTiers": [
+            "normal"
+          ]
+        },
+        "4": {
+          "cleared": true,
+          "bestTime": 150,
+          "bestAge": 0,
+          "clearedTiers": [
+            "normal"
+          ]
+        }
+      },
+      "ownedSkins": [
+        "field",
+        "ember"
+      ],
+      "equippedSkin": "field",
+      "settings": {
+        "sfx": false,
+        "music": false
+      },
+      "perks": [
+        "quartermaster",
+        "scavengers",
+        "drill-yard",
+        "engineers",
+        "field-hospital",
+        "forward-scouts",
+        "shell-crates",
+        "war-college"
+      ]
+    }
+  },
+  "captures": [
+    {
+      "file": "screenshots/android/01-cover.png",
+      "width": 1920,
+      "height": 1080,
+      "source": "actual production browser UI",
+      "note": "Approved working title; fixture commander save."
+    },
+    {
+      "file": "screenshots/android/05-campaign.png",
+      "width": 1920,
+      "height": 1080,
+      "source": "actual production browser UI",
+      "note": "Existing 16-operation campaign; first four marked cleared in fixture."
+    },
+    {
+      "file": "screenshots/android/02-stone-battle.png",
+      "width": 1920,
+      "height": 1080,
+      "source": "actual production browser UI",
+      "note": "Actual operation 1 replay; units bought through normal controls."
+    },
+    {
+      "file": "screenshots/android/03-medieval-battle.png",
+      "width": 1920,
+      "height": 1080,
+      "source": "actual production browser UI",
+      "note": "Actual operation 5; earned War College skill starts at Medieval. All eight skills fitted in fixture."
+    },
+    {
+      "file": "screenshots/android/04-survival.png",
+      "width": 1920,
+      "height": 1080,
+      "source": "actual production browser UI",
+      "note": "Actual Long Watch survival; normal controls and simulation."
+    },
+    {
+      "file": "screenshots/android/06-skills.png",
+      "width": 1920,
+      "height": 1080,
+      "source": "actual production browser UI",
+      "note": "Actual three-branch skill UI; rank 10 and two skills fitted in fixture."
+    },
+    {
+      "file": "screenshots/android/07-paints.png",
+      "width": 1920,
+      "height": 1080,
+      "source": "actual production browser UI",
+      "note": "Existing earned paints. No paid checkout."
+    },
+    {
+      "file": "screenshots/iphone/01-cover.png",
+      "width": 2622,
+      "height": 1206,
+      "source": "actual production browser UI",
+      "note": "Approved working title; fixture commander save."
+    },
+    {
+      "file": "screenshots/iphone/05-campaign.png",
+      "width": 2622,
+      "height": 1206,
+      "source": "actual production browser UI",
+      "note": "Existing 16-operation campaign; first four marked cleared in fixture."
+    },
+    {
+      "file": "screenshots/iphone/02-stone-battle.png",
+      "width": 2622,
+      "height": 1206,
+      "source": "actual production browser UI",
+      "note": "Actual operation 1 replay; units bought through normal controls."
+    },
+    {
+      "file": "screenshots/iphone/03-medieval-battle.png",
+      "width": 2622,
+      "height": 1206,
+      "source": "actual production browser UI",
+      "note": "Actual operation 5; earned War College skill starts at Medieval. All eight skills fitted in fixture."
+    },
+    {
+      "file": "screenshots/iphone/04-survival.png",
+      "width": 2622,
+      "height": 1206,
+      "source": "actual production browser UI",
+      "note": "Actual Long Watch survival; normal controls and simulation."
+    },
+    {
+      "file": "screenshots/iphone/06-skills.png",
+      "width": 2622,
+      "height": 1206,
+      "source": "actual production browser UI",
+      "note": "Actual three-branch skill UI; rank 10 and two skills fitted in fixture."
+    },
+    {
+      "file": "screenshots/iphone/07-paints.png",
+      "width": 2622,
+      "height": 1206,
+      "source": "actual production browser UI",
+      "note": "Existing earned paints. No paid checkout."
+    }
+  ]
+}
