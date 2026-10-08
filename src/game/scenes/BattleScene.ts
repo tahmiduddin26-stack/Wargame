@@ -349,6 +349,7 @@ export class BattleScene extends Phaser.Scene {
               accent,
               skinId: this.skinId,
               phase: view ? view.phase : 0,
+              pose: view?.pose,
             });
           }
           view?.destroy();

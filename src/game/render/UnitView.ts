@@ -3,7 +3,8 @@ import type { Faction, UnitDef } from '@/data/types';
 import type { ArmySkinId } from '@/data/cosmetics';
 import { VIEW } from '@/game/config';
 import type { SimUnit } from '@/game/sim/types';
-import { palette, skeletonFor, type BoneSpec } from './skeleton';
+import { skeletonFor, type BoneSpec, type UnitPose } from './skeleton';
+import { unitImage, visualHeight } from './UnitArt';
 
 interface LiveLimb {
   img: Phaser.GameObjects.Image;
@@ -28,41 +29,37 @@ export class UnitView {
   /** Eases 0 to 1 and back on every swing. */
   private swing = 0;
   private lastReload = 0;
+  private walkPhase = 0;
 
   constructor(
     scene: Phaser.Scene,
     layer: Phaser.GameObjects.Layer,
     def: UnitDef,
     faction: Faction,
-    accent: number,
+    _accent: number,
     skinId: ArmySkinId = 'field',
   ) {
     this.def = def;
     const spec = skeletonFor(def);
-    const H = def.height;
-    const colours = palette(faction, accent, skinId);
+    const H = visualHeight(def);
 
     this.container = scene.add.container(0, VIEW.groundY);
     this.container.setScale(faction === 'player' ? 1 : -1, 1);
 
     for (const bone of [...spec.bones].sort((a, b) => a.z - b.z)) {
-      const w = Math.max(3, bone.w * H);
-      const h = Math.max(3, bone.h * H);
-      const img = scene.add
-        .image(bone.x * H, bone.y * H, bone.texture ?? (bone.shape === 'disc' ? 'rd-disc' : 'rd-quad'))
-        .setDisplaySize(w, h)
-        .setTintFill(colours[bone.tint]);
+      const img = unitImage(scene, def, bone, faction, skinId).setPosition(bone.x * H, bone.y * H);
       this.container.add(img);
       this.limbs.push({ img, spec: bone, baseX: bone.x * H, baseY: bone.y * H });
     }
 
     const barW = Math.max(22, H * 0.7);
+    const barY = -H * (def.id === 'dino-rider' || def.id === 'cuirassier' ? 1.32 : 1.18) - 8;
     this.hpBack = scene.add
-      .rectangle(0, -H - 12, barW, 4, 0x1a1613)
+      .rectangle(0, barY, barW, 4, 0x1a1613)
       .setStrokeStyle(1, 0x000000, 0.5)
       .setVisible(false);
     this.hpFill = scene.add
-      .rectangle(-barW / 2, -H - 12, barW, 4, faction === 'player' ? 0xe0aa2e : 0x46a6c8)
+      .rectangle(-barW / 2, barY, barW, 4, faction === 'player' ? 0xe0aa2e : 0x46a6c8)
       .setOrigin(0, 0.5)
       .setVisible(false);
     this.container.add([this.hpBack, this.hpFill]);
@@ -72,13 +69,14 @@ export class UnitView {
 
   sync(u: SimUnit, dt: number): void {
     this.container.x = u.x;
+    this.walkPhase = u.phase;
 
     // Rising edge on the reload timer means a swing just went out.
     if (u.reload > this.lastReload) this.swing = 1;
     this.lastReload = u.reload;
     this.swing = Math.max(0, this.swing - dt * 4.5);
 
-    const H = this.def.height;
+    const H = visualHeight(this.def);
     const walking = !u.engaging;
     const stride = walking ? Math.sin(u.phase) : 0;
     const bob = walking ? Math.abs(Math.cos(u.phase)) * H * 0.02 : 0;
@@ -90,12 +88,15 @@ export class UnitView {
       let dx = 0;
       let dy = 0;
 
-      if (name === 'legFront') rot = stride * 0.45;
-      else if (name === 'legBack') rot = -stride * 0.45;
-      else if (name === 'armBack') rot = -stride * 0.35;
+      if (name === 'legFront' || name === 'legBack') {
+        rot = stride * (name === 'legFront' ? 0.65 : -0.65);
+        dy = -Math.abs(stride) * H * 0.035;
+      } else if (name === 'armBack') rot = -stride * 0.35;
       else if (name === 'armFront') {
-        rot = walking ? stride * 0.35 : -0.5 - jab * 1.5;
-        dx = jab * H * 0.12;
+        const firearm = this.def.age === 'modern' || this.def.age === 'future' || this.def.id === 'musketeer';
+        const bow = this.def.id === 'longbowman';
+        rot = firearm || bow ? (walking ? stride * 0.045 : -jab * 0.07) : (walking ? stride * 0.18 : -0.2 + jab);
+        dx = jab * H * (firearm ? -0.045 : 0.08);
       } else if (name === 'torso') {
         dy = -bob;
         rot = walking ? stride * 0.04 : -jab * 0.12;
@@ -126,7 +127,13 @@ export class UnitView {
 
   /** Walk-cycle phase, handed to the ragdoll so the pose carries over. */
   get phase(): number {
-    return this.lastReload;
+    return this.walkPhase;
+  }
+
+  /** Include the equipment's current swing, not just an approximate walking pose. */
+  get pose(): UnitPose {
+    return Object.fromEntries(this.limbs.map(({ img, spec }) => [spec.name,
+      { x: img.x, y: img.y, rotation: img.rotation }]));
   }
 
   destroy(): void {

@@ -86,3 +86,9 @@ The full Normal harness repeats **14/16 greedy, 10/16 swarm and 13/16 mixed** wi
 ### Account and storage continuation
 
 This increment adds recoverable commander accounts, private recent online history, safe legacy-profile migration and a live database backup command. Storage checks cover corruption rejection, retained source files, transaction rollback, duplicate settlements, password hashing and reopen/backup. Account protocol checks use isolated servers and verify guest upgrades, private account names, replacement sessions, password-based rejoin of an active battle, password changes, revoked logout tokens and ratings/friends/results after restart. Phone browser checks cover 667×375 forms, validation, ranked records, reload and recovery on a second browser. The existing friend/casual/ranked/reconnect checks also pass. Forgotten-password recovery and public account operations remain future gates.
+
+### Character art correction — 8 October 2026
+
+The live soldiers now follow the promotional illustration's round faces, bold ink outlines, chunky limbs and age-specific gear. All 20 units have authored drawings; mounts, siege carts, vehicles and mechs use distinct rigs. Shared paint atlases retain orange/blue factions and all four earned paints. Deaths inherit the current limb transforms and equipment; a Matter shutdown cleanup error found in the battle test is fixed. Combat stats and economy are unchanged.
+
+The production build, complete 40-character roster, four paints, mirrored death poses, bounded corpse recycling, real-mission smoke check, offline phone reload/rotation and two-client casual/ranked/reconnect UI checks pass. Fourteen store browser screenshots and the downloadable pack are refreshed. Native performance and store-launch gates still apply.

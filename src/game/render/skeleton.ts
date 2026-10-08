@@ -9,9 +9,8 @@ import { armySkin, type ArmySkinId } from '@/data/cosmetics';
  * feet, with negative Y pointing up. That keeps a Clubman and an Assault Mech
  * on the same rig maths.
  *
- * `texture` is the swap point for real art: today every bone renders a tinted
- * 1px quad, but dropping in a sprite named `knight.torso` and setting it here
- * changes nothing else in the pipeline.
+ * Artwork is painted into shared atlases by UnitArt. These dimensions describe
+ * the body underneath it, so equipment needs no extra physics bodies.
  */
 
 export type TintRole = 'skin' | 'cloth' | 'trim' | 'metal' | 'dark';
@@ -49,22 +48,25 @@ export interface SkeletonSpec {
   joints: JointSpec[];
 }
 
+/** Local limb transforms, captured before converting a soldier to physics. */
+export type UnitPose = Record<string, { x: number; y: number; rotation: number }>;
+
 /** Two-arm, two-leg infantry rig. Six bodies, five joints. */
 export const HUMANOID: SkeletonSpec = {
   bones: [
-    { name: 'legBack', shape: 'box', x: 0.05, y: -0.17, w: 0.11, h: 0.34, z: 0, tint: 'dark' },
-    { name: 'armBack', shape: 'box', x: 0.08, y: -0.62, w: 0.09, h: 0.27, z: 1, tint: 'dark' },
-    { name: 'legFront', shape: 'box', x: -0.05, y: -0.17, w: 0.11, h: 0.34, z: 2, tint: 'cloth' },
-    { name: 'torso', shape: 'box', x: 0, y: -0.55, w: 0.25, h: 0.36, z: 3, tint: 'cloth', density: 0.0014 },
-    { name: 'armFront', shape: 'box', x: -0.08, y: -0.62, w: 0.09, h: 0.27, z: 4, tint: 'trim' },
-    { name: 'head', shape: 'disc', x: 0, y: -0.85, w: 0.24, h: 0.24, z: 5, tint: 'skin', density: 0.0018 },
+    { name: 'legBack', shape: 'box', x: -0.085, y: -0.15, w: 0.14, h: 0.3, z: 0, tint: 'dark' },
+    { name: 'armBack', shape: 'box', x: -0.14, y: -0.53, w: 0.13, h: 0.29, z: 1, tint: 'skin' },
+    { name: 'legFront', shape: 'box', x: 0.085, y: -0.15, w: 0.14, h: 0.3, z: 2, tint: 'dark' },
+    { name: 'torso', shape: 'box', x: 0, y: -0.48, w: 0.35, h: 0.37, z: 3, tint: 'cloth', density: 0.0014 },
+    { name: 'armFront', shape: 'box', x: 0.17, y: -0.53, w: 0.13, h: 0.29, z: 4, tint: 'skin' },
+    { name: 'head', shape: 'disc', x: 0.035, y: -0.85, w: 0.42, h: 0.4, z: 5, tint: 'skin', density: 0.0018 },
   ],
   joints: [
-    { a: 'torso', b: 'head', ax: 0, ay: -0.18, bx: 0, by: 0.1, stiffness: 0.9 },
-    { a: 'torso', b: 'armFront', ax: -0.08, ay: -0.14, bx: 0, by: -0.11, stiffness: 0.55 },
-    { a: 'torso', b: 'armBack', ax: 0.08, ay: -0.14, bx: 0, by: -0.11, stiffness: 0.55 },
-    { a: 'torso', b: 'legFront', ax: -0.05, ay: 0.18, bx: 0, by: -0.16, stiffness: 0.7 },
-    { a: 'torso', b: 'legBack', ax: 0.05, ay: 0.18, bx: 0, by: -0.16, stiffness: 0.7 },
+    { a: 'torso', b: 'head', ax: 0.035, ay: -0.18, bx: 0, by: 0.18, stiffness: 0.9 },
+    { a: 'torso', b: 'armFront', ax: 0.16, ay: -0.12, bx: 0, by: -0.12, stiffness: 0.55 },
+    { a: 'torso', b: 'armBack', ax: -0.14, ay: -0.12, bx: 0, by: -0.12, stiffness: 0.55 },
+    { a: 'torso', b: 'legFront', ax: 0.085, ay: 0.18, bx: 0, by: -0.14, stiffness: 0.7 },
+    { a: 'torso', b: 'legBack', ax: -0.085, ay: 0.18, bx: 0, by: -0.14, stiffness: 0.7 },
   ],
 };
 
@@ -75,21 +77,53 @@ export const HUMANOID: SkeletonSpec = {
  */
 export const CHASSIS: SkeletonSpec = {
   bones: [
-    { name: 'wheelBack', shape: 'disc', x: 0.19, y: -0.15, w: 0.3, h: 0.3, z: 0, tint: 'dark' },
-    { name: 'wheelFront', shape: 'disc', x: -0.19, y: -0.15, w: 0.3, h: 0.3, z: 1, tint: 'dark' },
-    { name: 'hull', shape: 'box', x: 0, y: -0.38, w: 0.72, h: 0.3, z: 2, tint: 'metal', density: 0.002 },
-    { name: 'cabin', shape: 'box', x: -0.1, y: -0.66, w: 0.34, h: 0.26, z: 3, tint: 'trim' },
-    { name: 'barrel', shape: 'box', x: 0.24, y: -0.62, w: 0.42, h: 0.08, z: 4, tint: 'dark' },
+    { name: 'hull', shape: 'box', x: 0, y: -0.32, w: 0.92, h: 0.27, z: 0, tint: 'cloth', density: 0.002 },
+    { name: 'wheelBack', shape: 'disc', x: -0.29, y: -0.15, w: 0.3, h: 0.3, z: 1, tint: 'dark' },
+    { name: 'wheelFront', shape: 'disc', x: 0.29, y: -0.15, w: 0.3, h: 0.3, z: 2, tint: 'dark' },
+    { name: 'cabin', shape: 'box', x: -0.1, y: -0.58, w: 0.34, h: 0.26, z: 3, tint: 'trim' },
+    { name: 'barrel', shape: 'box', x: 0.22, y: -0.6, w: 0.48, h: 0.12, z: 4, tint: 'dark' },
   ],
   joints: [
-    { a: 'hull', b: 'wheelBack', ax: 0.19, ay: 0.22, bx: 0, by: 0, stiffness: 0.6 },
-    { a: 'hull', b: 'wheelFront', ax: -0.19, ay: 0.22, bx: 0, by: 0, stiffness: 0.6 },
-    { a: 'hull', b: 'cabin', ax: -0.1, ay: -0.28, bx: 0, by: 0.13, stiffness: 0.8 },
-    { a: 'hull', b: 'barrel', ax: 0.2, ay: -0.24, bx: -0.1, by: 0, stiffness: 0.7 },
+    { a: 'hull', b: 'wheelBack', ax: -0.29, ay: 0.17, bx: 0, by: 0, stiffness: 0.6 },
+    { a: 'hull', b: 'wheelFront', ax: 0.29, ay: 0.17, bx: 0, by: 0, stiffness: 0.6 },
+    { a: 'hull', b: 'cabin', ax: -0.1, ay: -0.26, bx: 0, by: 0.13, stiffness: 0.8 },
+    { a: 'hull', b: 'barrel', ax: 0.22, ay: -0.28, bx: 0, by: 0, stiffness: 0.7 },
   ],
 };
 
+const MOUNT: SkeletonSpec = {
+  bones: [
+    { name: 'legBack', shape: 'box', x: -0.27, y: -0.17, w: 0.15, h: 0.34, z: 0, tint: 'dark' },
+    { name: 'legFront', shape: 'box', x: 0.27, y: -0.17, w: 0.15, h: 0.34, z: 1, tint: 'dark' },
+    { name: 'hull', shape: 'box', x: 0, y: -0.46, w: 0.88, h: 0.34, z: 2, tint: 'cloth' },
+    { name: 'torso', shape: 'box', x: -0.07, y: -0.76, w: 0.3, h: 0.28, z: 3, tint: 'cloth' },
+    { name: 'armFront', shape: 'box', x: 0.1, y: -0.78, w: 0.12, h: 0.23, z: 4, tint: 'skin' },
+    { name: 'head', shape: 'disc', x: -0.07, y: -1.04, w: 0.34, h: 0.34, z: 5, tint: 'skin' },
+  ],
+  joints: [
+    { a: 'hull', b: 'legBack', ax: -0.27, ay: 0.17, bx: 0, by: -0.12 },
+    { a: 'hull', b: 'legFront', ax: 0.27, ay: 0.17, bx: 0, by: -0.12 },
+    { a: 'hull', b: 'torso', ax: -0.07, ay: -0.16, bx: 0, by: 0.14 },
+    { a: 'torso', b: 'head', ax: 0, ay: -0.14, bx: 0, by: 0.14 },
+    { a: 'torso', b: 'armFront', ax: 0.17, ay: -0.09, bx: 0, by: -0.07 },
+  ],
+};
+
+const MECH: SkeletonSpec = {
+  bones: HUMANOID.bones.map((b) => ({ ...b,
+    w: b.name === 'torso' ? 0.52 : b.name.startsWith('arm') ? 0.2 : b.name.startsWith('leg') ? 0.2 : 0.36,
+    x: b.name === 'armFront' ? 0.31 : b.name === 'armBack' ? -0.31 : b.x,
+    shape: 'box',
+  })),
+  joints: HUMANOID.joints.map((j) => ({ ...j,
+    ax: j.b === 'armFront' ? 0.31 : j.b === 'armBack' ? -0.31 : j.ax,
+  })),
+};
+
 export function skeletonFor(def: UnitDef): SkeletonSpec {
+  if (def.id === 'dino-rider' || def.id === 'cuirassier') return MOUNT;
+  if (def.id === 'assault-mech') return MECH;
+  if (def.id === 'boulder-hurler') return CHASSIS;
   return def.chassis ? CHASSIS : HUMANOID;
 }
 

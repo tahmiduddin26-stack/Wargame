@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import type { DamageKind, Faction, UnitDef } from '@/data/types';
 import type { ArmySkinId } from '@/data/cosmetics';
 import { MATTER_CATEGORY, RAGDOLL, VIEW } from '@/game/config';
-import { palette, skeletonFor, type BoneSpec, type SkeletonSpec } from './skeleton';
+import { skeletonFor, type BoneSpec, type SkeletonSpec, type UnitPose } from './skeleton';
+import { unitImage, visualHeight } from './UnitArt';
 
 interface Limb {
   body: MatterJS.BodyType;
@@ -32,6 +33,7 @@ export interface RagdollRequest {
   skinId?: ArmySkinId;
   /** Walk-cycle phase at the moment of death, so the pose carries over. */
   phase: number;
+  pose?: UnitPose;
 }
 
 /**
@@ -76,8 +78,7 @@ export class RagdollPool {
     }
 
     const spec = skeletonFor(req.def);
-    const H = req.def.height;
-    const colours = palette(req.faction, req.accent, req.skinId);
+    const H = visualHeight(req.def);
     const facing = req.faction === 'player' ? 1 : -1;
     const feetY = VIEW.groundY;
 
@@ -85,8 +86,9 @@ export class RagdollPool {
     const byName = new Map<string, MatterJS.BodyType>();
 
     for (const bone of spec.bones) {
-      const bx = req.x + bone.x * H * facing;
-      const by = feetY + bone.y * H;
+      const pose = req.pose?.[bone.name];
+      const bx = req.x + (pose?.x ?? bone.x * H) * facing;
+      const by = feetY + (pose?.y ?? bone.y * H);
       const w = Math.max(3, bone.w * H);
       const h = Math.max(3, bone.h * H);
 
@@ -96,16 +98,15 @@ export class RagdollPool {
           : this.scene.matter.add.rectangle(bx, by, w, h, this.bodyOptions(bone));
 
       // A little pose carry-over: limbs that were mid-stride start rotated.
-      if (bone.name.startsWith('leg') || bone.name.startsWith('arm')) {
+      if (pose) {
+        this.scene.matter.body.setAngle(body, pose.rotation * facing);
+      } else if (bone.name.startsWith('leg') || bone.name.startsWith('arm')) {
         const swing = Math.sin(req.phase + (bone.name.endsWith('Back') ? Math.PI : 0)) * 0.5;
-        this.scene.matter.body.setAngle(body, swing);
+        this.scene.matter.body.setAngle(body, swing * facing);
       }
 
-      const img = this.scene.add
-        .image(bx, by, bone.texture ?? (bone.shape === 'disc' ? 'rd-disc' : 'rd-quad'))
-        .setDisplaySize(w, h)
-        .setTintFill(colours[bone.tint])
-        .setDepth(bone.z);
+      const img = unitImage(this.scene, req.def, bone, req.faction, req.skinId)
+        .setPosition(bx, by).setFlipX(facing < 0).setRotation(body.angle).setDepth(bone.z);
       this.layer.add(img);
 
       limbs.push({ body, img, spec: bone });
@@ -216,9 +217,12 @@ export class RagdollPool {
   }
 
   private destroyCorpse(corpse: Corpse): void {
-    for (const c of corpse.constraints) this.scene.matter.world.removeConstraint(c);
+    // Phaser's Matter shutdown listener can run before the scene's own cleanup.
+    // In that case the world already removed every body and constraint.
+    const world = this.scene.matter.world;
+    for (const c of corpse.constraints) world?.removeConstraint(c);
     for (const limb of corpse.limbs) {
-      this.scene.matter.world.remove(limb.body);
+      world?.remove(limb.body);
       limb.img.destroy();
     }
   }
@@ -230,9 +234,8 @@ export class RagdollPool {
 }
 
 /**
- * One white quad and one white disc, tinted per limb at runtime. Keeping every
- * bone on two textures means the whole corpse layer batches into a couple of
- * draw calls, which is what makes 20-plus ragdolls viable on a phone.
+ * Small neutral textures for projectiles and other effects. Soldier/corpse
+ * artwork shares the painted atlases in UnitArt rather than tinting these.
  */
 export function createRagdollTextures(scene: Phaser.Scene): void {
   if (!scene.textures.exists('rd-quad')) {

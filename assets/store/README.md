@@ -6,6 +6,10 @@ Everything linked below is a saved file in this repository. Open the PNG to prev
 
 [Visual overview](art/launch-pack-preview.png) · [Download gallery](index.html) · [Draft listing copy](store-copy.md)
 
+## Game characters
+
+[View the full unit roster](art/unit-roster-preview.png): all 20 game units in orange and blue, captured from the actual character renderer. The game now uses hand-authored ink paths for round faces, chunky limbs, age-specific outfits, weapons, mounts and vehicles. The same painted parts carry into ragdoll deaths; earned army paints still apply. This contact sheet is a development preview, not an app-store gameplay screenshot.
+
 ## Icons and promotional art
 
 | File | Use |
@@ -48,6 +52,7 @@ From the project root, with the production game server running on port 8787:
 
 ```powershell
 npm run build
+node scripts/unit-art-check.mjs
 node scripts/capture-store-assets.mjs
 node scripts/render-store-art.mjs
 node scripts/verify-store-assets.mjs

@@ -363,14 +363,16 @@ mid-stride limb angles, and the force of the blow that killed it. Overkill throw
 the corpse further; blast and energy damage add lift; specials apply a shockwave to
 corpses already on the ground.
 
-`src/game/render/skeleton.ts` holds one rig used by both the living unit and its
-corpse, so the ragdoll appears in exactly the pose the unit was standing in. Two
-rigs exist: a six-bone humanoid, and a five-part chassis for vehicles and mounts,
-which shed a hull and wheels rather than limbs.
+`src/game/render/skeleton.ts` shares the living and corpse rigs: six-part infantry,
+mounted riders and walking mechs, plus five-part wheeled vehicles and siege carts.
+The current limb transforms carry across on death, including attacks and enemy mirroring.
 
-Every bone renders a tinted quad or disc, so the whole corpse layer batches into a
-couple of draw calls. **To drop in real art**, set `texture` on the bone specs; the
-physics, joints and pooling do not change.
+`src/game/render/UnitArt.ts` paints hand-authored ink paths into a shared atlas per
+army paint. Round faces, hair, helmets, tunics, shields and weapons make all 20
+units readable by age and role. Equipment stays attached to its limb without
+adding physics bodies. Artwork is cached once and never repainted per frame.
+`npm run test:unit-art` exports the complete orange/blue roster and checks all
+paints, mirrored death poses, texture margins and corpse recycling.
 
 The pool is hard-capped (22, halved by the "reduced corpses" setting) and recycles
 the oldest corpse on overflow.
@@ -558,9 +560,9 @@ and visible escalation so nothing grinds forever; and the ragdolls.
 
 ## Known gaps
 
-- **Battlefield character art.** Units still use procedural rigs. The skeleton
-  spec has a `texture` slot per bone for when sprites arrive; the interface
-  insignias are finished vector drawings.
+- **Character performance on mobile hardware.** The finished browser character
+  drawings share texture atlases; frame-time and memory profiling on the signed
+  native builds remain a release gate.
 - **Public multiplayer hardening.** Casual, ranked, friends and recoverable
   username/password accounts exist. Forgotten-password recovery, moderation,
   account deletion and stronger operational controls remain release work.

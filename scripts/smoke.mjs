@@ -11,11 +11,8 @@ import { mkdirSync } from 'node:fs';
 const OUT = process.env.SHOT_DIR ?? '.shots';
 mkdirSync(OUT, { recursive: true });
 
-const CHROME =
-  process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
-
 const browser = await chromium.launch({
-  executablePath: CHROME,
+  ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}),
   args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'],
 });
 const page = await browser.newPage({ viewport: { width: 1024, height: 576 } });
@@ -26,7 +23,7 @@ page.on('console', (m) => {
 });
 page.on('pageerror', (e) => errors.push('PAGEERROR: ' + e.message));
 
-await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
+await page.goto(process.env.GAME_URL ?? 'http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(500);
 await page.screenshot({ path: `${OUT}/01-menu.png` });
 
